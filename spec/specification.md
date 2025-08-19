@@ -74,7 +74,7 @@ Simple, clean interface for selecting a game to start recording statistics. User
 ## Frame 2 – Game Roster
 
 ### Description
-In this frame the teams are automatically pre-selected from the chosen scheduled game, and the user chooses 5 players from each team's roster for the game. For MVP/POC, each team roster has up to 12 players, and exactly 5 are selected to play.
+Modern, sleek interface for selecting players from pre-determined team rosters. Teams are automatically loaded from the selected game, and player selection is instant with beautiful visual feedback.
 
 ### League Teams Data (MVP)
 **4 Placeholder Teams with Player Rosters:**
@@ -86,79 +86,71 @@ In this frame the teams are automatically pre-selected from the chosen scheduled
 ### Components
 
 #### Main Title
-- **Description**: Main title of frame
+- **Description**: Clean main title
 - **Type**: Text
-- **Location**: Top left corner
-- **Content**: "Game roster"
+- **Location**: Top center
+- **Content**: "Select Players"
 - **Clickable**: No
 
 #### Team A Section
 
 ##### Team A Display
-- **Description**: Shows the pre-selected home team from the chosen scheduled game
-- **Type**: Text Label
-- **Location**: Top left under main title
-- **Content**: "[Team Name] (Home)" - automatically filled from scheduled game
+- **Description**: Shows the pre-selected home team with modern card design
+- **Type**: Team Card
+- **Location**: Left side of screen
+- **Content**: "[Team Name] (Home)" with team branding
+- **Design**: Card-based layout with team colors
 - **Clickable**: No
-- **Details**: Team is pre-determined from the selected scheduled game
+- **Background**: Dynamic - changes to green when 5 players selected ("Ready" state)
 
-##### Team A Player Selection
-- **Description**: List of available players from Team A, with checkboxes to select exactly 5 players
-- **Type**: Checkbox List
+##### Team A Player Grid
+- **Description**: Modern grid of player cards for instant selection
+- **Type**: Card Grid
 - **Location**: Left side under team display
-- **Clickable**: Yes  
-- **Content**: Team A's roster (up to 12 players with numbers and names)
-- **Validation**: Must select exactly 5 players
-- **Details**: Players are automatically loaded from the pre-selected team
-
-##### Approve Roster Button (Team A)
-- **Description**: When user selects exactly 5 players, button enables to lock the selection
-- **Type**: Button
-- **Location**: Under team A player selection
-- **Content**: "Approve roster"
-- **Clickable**: Yes (only when exactly 5 players selected)
-- **When clicked**:
-  - Player selection becomes read-only (light grey)
-  - Edit button becomes enabled
-
-##### Edit Roster Button (Team A)
-- **Description**: User clicks to modify Team A player selection
-- **Type**: Button
-- **Location**: Under team A player selection
-- **Content**: "Edit roster"
-- **Clickable**: Yes (only after roster approved)
-- **When clicked**:
-  - Re-enables player selection checkboxes
-  - Approve button becomes enabled again
+- **Clickable**: Yes - Instant select/deselect
+- **Content**: 12 player cards showing "#Number Name"
+- **Design**: 
+  - **Unselected**: Light grey background, dark text
+  - **Selected**: Blue background, white text (highlighted)
+  - **Card Style**: Rounded corners, clean typography, touch-friendly
+- **Validation**: Maximum 5 players can be selected
+- **Feedback**: 
+  - Player cards highlight immediately on tap
+  - Team section background turns green when exactly 5 selected
+  - Selection counter shows "X/5 selected"
 
 #### Team B Section
 
-##### Team B Display
-- **Description**: Shows the pre-selected away team from the chosen scheduled game
-- **Type**: Text Label
-- **Location**: Right side, parallel to Team A display
-- **Content**: "[Team Name] (Away)" - automatically filled from scheduled game
+##### Team B Display  
+- **Description**: Shows the pre-selected away team with modern card design
+- **Type**: Team Card
+- **Location**: Right side of screen
+- **Content**: "[Team Name] (Away)" with team branding
+- **Design**: Card-based layout with team colors
 - **Clickable**: No
-- **Details**: Team is pre-determined from the selected scheduled game
+- **Background**: Dynamic - changes to green when 5 players selected ("Ready" state)
 
-##### Team B Player Selection
-- **Description**: List of available players from Team B, with checkboxes to select exactly 5 players
-- **Type**: Checkbox List
+##### Team B Player Grid
+- **Description**: Modern grid of player cards for instant selection
+- **Type**: Card Grid
 - **Location**: Right side under team display
-- **Clickable**: Yes  
-- **Content**: Team B's roster (up to 12 players with numbers and names)
-- **Validation**: Must select exactly 5 players
-- **Details**: Players are automatically loaded from the pre-selected team
-
-##### Approve/Edit Buttons (Team B)
-*[Team B buttons mirror Team A functionality]*
+- **Clickable**: Yes - Instant select/deselect
+- **Content**: 12 player cards showing "#Number Name"
+- **Design**: Same styling as Team A player grid
+- **Validation**: Maximum 5 players can be selected
+- **Feedback**: Same instant feedback as Team A
 
 #### Start Game Button
-- **Description**: User clicks the button when rosters are complete and ready to start game
+- **Description**: Large, prominent button that auto-enables when both teams ready
 - **Type**: Button
-- **Content**: "Start game"
-- **Clickable**: Yes
-- **When clicked**: Enable start game pop-up
+- **Location**: Bottom center, full width
+- **Content**: "Start Game"
+- **Design**: Large, modern button with rounded corners
+- **Clickable**: Yes (auto-enables when both teams have exactly 5 players selected)
+- **Visual States**:
+  - **Disabled**: Grey background when teams not ready
+  - **Enabled**: Green background when both teams ready
+- **When clicked**: Proceed directly to live game recording (Frame 3)
 
 #### Start Game Pop-up
 - **Description**: A pop-up frame that asks if you are sure you want to start the game
@@ -178,14 +170,21 @@ In this frame the teams are automatically pre-selected from the chosen scheduled
   - Game status remains "Scheduled" (user can return later to complete setup)
 
 ### Flow
-1. Frame automatically displays pre-selected teams from chosen scheduled game
-2. User sees Team A (Home) and Team B (Away) team names (non-editable)
-3. User selects exactly 5 players from Team A's roster using checkboxes
-4. User clicks "Approve roster" to lock Team A selection
-5. User selects exactly 5 players from Team B's roster using checkboxes  
-6. User clicks "Approve roster" to lock Team B selection
-7. When both team rosters are approved, "Start game" button becomes enabled
-8. User clicks "Start game" to proceed to live game recording interface
+1. Frame automatically displays pre-selected teams from chosen game in modern card design
+2. User sees Team A (Home) and Team B (Away) team cards with player grids
+3. User taps player cards to select/deselect - immediate visual highlighting
+4. Team A section background turns green when exactly 5 players selected ("Ready")
+5. User taps Team B player cards to select/deselect players
+6. Team B section background turns green when exactly 5 players selected ("Ready")  
+7. "Start Game" button automatically enables when both teams show "Ready" state
+8. User taps "Start Game" to proceed to live game recording interface
+
+### Modern Design Principles
+- **Instant feedback**: Player selection highlights immediately on tap
+- **Visual status**: Team sections show "Ready" state with green background
+- **No workflow complexity**: No approve/edit buttons needed
+- **Auto-enabling**: Start Game button enables automatically when ready
+- **Touch-friendly**: Large player cards optimized for mobile tapping
 
 ### Future Feature: Team/Player Management
 - **Separate screen** for editing league teams and player rosters

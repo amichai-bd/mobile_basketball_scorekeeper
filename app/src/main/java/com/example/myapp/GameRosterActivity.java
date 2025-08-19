@@ -3,15 +3,13 @@ package com.example.myapp;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
+import android.widget.GridLayout;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.example.myapp.models.Player;
@@ -22,24 +20,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Game Roster Activity - Player selection interface (Frame 2) - SPECIFICATION ALIGNED
- * Teams are pre-selected from scheduled game, user chooses 5 players from each team's roster
+ * Game Roster Activity - Modern Player Selection (Frame 2) - SLEEK & INSTANT
+ * Teams are pre-selected, instant player card selection with visual feedback
  */
 public class GameRosterActivity extends Activity {
     
     // UI Components
     private TextView tvTeamATitle, tvTeamBTitle;
-    private TextView tvTeamAPlayersTitle, tvTeamBPlayersTitle;
-    private LinearLayout llTeamAPlayers, llTeamBPlayers;
-    private Button btnApproveTeamA, btnEditTeamA, btnApproveTeamB, btnEditTeamB, btnStartGame;
+    private TextView tvTeamACounter, tvTeamBCounter;
+    private GridLayout gridTeamAPlayers, gridTeamBPlayers;
+    private LinearLayout teamASection, teamBSection;
+    private Button btnStartGame;
     
     // Data
     private int gameId;
     private String homeTeamName, awayTeamName;
-    private Team preselectedTeamA, preselectedTeamB; // Pre-selected from scheduled game
+    private Team preselectedTeamA, preselectedTeamB;
     private List<TeamPlayer> selectedTeamAPlayers, selectedTeamBPlayers;
-    private List<CheckBox> teamACheckboxes, teamBCheckboxes;
-    private boolean teamAApproved = false, teamBApproved = false;
+    private List<TextView> teamAPlayerCards, teamBPlayerCards;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,21 +71,23 @@ public class GameRosterActivity extends Activity {
     }
     
     private void initializeViews() {
-        // Team title displays (pre-selected teams)
+        // Team displays
         tvTeamATitle = findViewById(R.id.tvTeamATitle);
         tvTeamBTitle = findViewById(R.id.tvTeamBTitle);
         
-        // Player selection containers
-        tvTeamAPlayersTitle = findViewById(R.id.tvTeamAPlayersTitle);
-        tvTeamBPlayersTitle = findViewById(R.id.tvTeamBPlayersTitle);
-        llTeamAPlayers = findViewById(R.id.llTeamAPlayers);
-        llTeamBPlayers = findViewById(R.id.llTeamBPlayers);
+        // Selection counters
+        tvTeamACounter = findViewById(R.id.tvTeamACounter);
+        tvTeamBCounter = findViewById(R.id.tvTeamBCounter);
         
-        // Buttons
-        btnApproveTeamA = findViewById(R.id.btnApproveTeamA);
-        btnEditTeamA = findViewById(R.id.btnEditTeamA);
-        btnApproveTeamB = findViewById(R.id.btnApproveTeamB);
-        btnEditTeamB = findViewById(R.id.btnEditTeamB);
+        // Player grids
+        gridTeamAPlayers = findViewById(R.id.gridTeamAPlayers);
+        gridTeamBPlayers = findViewById(R.id.gridTeamBPlayers);
+        
+        // Team sections (for background color changes)
+        teamASection = findViewById(R.id.teamASection);
+        teamBSection = findViewById(R.id.teamBSection);
+        
+        // Start game button
         btnStartGame = findViewById(R.id.btnStartGame);
     }
     
@@ -100,9 +100,9 @@ public class GameRosterActivity extends Activity {
         selectedTeamAPlayers = new ArrayList<>();
         selectedTeamBPlayers = new ArrayList<>();
         
-        // Initialize checkbox lists
-        teamACheckboxes = new ArrayList<>();
-        teamBCheckboxes = new ArrayList<>();
+        // Initialize player card lists
+        teamAPlayerCards = new ArrayList<>();
+        teamBPlayerCards = new ArrayList<>();
     }
     
     private void setupPreselectedTeams() {
@@ -110,42 +110,16 @@ public class GameRosterActivity extends Activity {
         tvTeamATitle.setText(homeTeamName + " (Home)");
         tvTeamBTitle.setText(awayTeamName + " (Away)");
         
-        // Automatically populate player lists for both teams
-        populateTeamAPlayers();
-        populateTeamBPlayers();
+        // Automatically populate player grids for both teams
+        populateTeamAPlayerCards();
+        populateTeamBPlayerCards();
+        
+        // Update counters
+        updateTeamAStatus();
+        updateTeamBStatus();
     }
     
-
-    
     private void setupEventListeners() {
-        btnApproveTeamA.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                approveTeamA();
-            }
-        });
-        
-        btnEditTeamA.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                editTeamA();
-            }
-        });
-        
-        btnApproveTeamB.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                approveTeamB();
-            }
-        });
-        
-        btnEditTeamB.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                editTeamB();
-            }
-        });
-        
         btnStartGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -154,190 +128,185 @@ public class GameRosterActivity extends Activity {
         });
     }
     
-    private void populateTeamAPlayers() {
+    private void populateTeamAPlayerCards() {
         if (preselectedTeamA == null) {
             Toast.makeText(this, "Error: Team A not found in league data", Toast.LENGTH_LONG).show();
             return;
         }
         
-        llTeamAPlayers.removeAllViews();
-        teamACheckboxes.clear();
+        gridTeamAPlayers.removeAllViews();
+        teamAPlayerCards.clear();
         
-        // Create checkboxes for all 12 players from pre-selected Team A
+        // Create modern player cards for all 12 players from pre-selected Team A
         for (TeamPlayer player : preselectedTeamA.getPlayers()) {
-            CheckBox checkbox = new CheckBox(this);
-            checkbox.setText(player.toString()); // Shows "#5 Player Name"
-            checkbox.setTextSize(16);
-            checkbox.setPadding(8, 8, 8, 8);
+            TextView playerCard = createPlayerCard(player);
             
-            checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            playerCard.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    onTeamAPlayerSelectionChanged(player, isChecked);
+                public void onClick(View v) {
+                    onTeamAPlayerCardClicked(player, (TextView) v);
                 }
             });
             
-            teamACheckboxes.add(checkbox);
-            llTeamAPlayers.addView(checkbox);
+            teamAPlayerCards.add(playerCard);
+            gridTeamAPlayers.addView(playerCard);
         }
     }
     
-    private void populateTeamBPlayers() {
+    private void populateTeamBPlayerCards() {
         if (preselectedTeamB == null) {
             Toast.makeText(this, "Error: Team B not found in league data", Toast.LENGTH_LONG).show();
             return;
         }
         
-        llTeamBPlayers.removeAllViews();
-        teamBCheckboxes.clear();
+        gridTeamBPlayers.removeAllViews();
+        teamBPlayerCards.clear();
         
-        // Create checkboxes for all 12 players from pre-selected Team B
+        // Create modern player cards for all 12 players from pre-selected Team B
         for (TeamPlayer player : preselectedTeamB.getPlayers()) {
-            CheckBox checkbox = new CheckBox(this);
-            checkbox.setText(player.toString()); // Shows "#5 Player Name"
-            checkbox.setTextSize(16);
-            checkbox.setPadding(8, 8, 8, 8);
+            TextView playerCard = createPlayerCard(player);
             
-            checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            playerCard.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    onTeamBPlayerSelectionChanged(player, isChecked);
+                public void onClick(View v) {
+                    onTeamBPlayerCardClicked(player, (TextView) v);
                 }
             });
             
-            teamBCheckboxes.add(checkbox);
-            llTeamBPlayers.addView(checkbox);
+            teamBPlayerCards.add(playerCard);
+            gridTeamBPlayers.addView(playerCard);
         }
     }
     
-    private void onTeamAPlayerSelectionChanged(TeamPlayer player, boolean isChecked) {
-        if (isChecked) {
+    private TextView createPlayerCard(TeamPlayer player) {
+        TextView card = new TextView(this);
+        
+        // Set text and styling
+        card.setText(player.toString()); // Shows "#5 Player Name"
+        card.setTextSize(14);
+        card.setTextColor(Color.parseColor("#2C3E50"));
+        card.setBackgroundColor(Color.parseColor("#F5F6FA")); // Unselected state
+        card.setGravity(android.view.Gravity.CENTER);
+        card.setPadding(16, 12, 16, 12);
+        
+        // Set layout parameters for grid
+        GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+        params.width = 0;
+        params.height = GridLayout.LayoutParams.WRAP_CONTENT;
+        params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
+        params.setMargins(4, 4, 4, 4);
+        card.setLayoutParams(params);
+        
+        // Add elevation and rounded corners effect
+        card.setElevation(2);
+        
+        return card;
+    }
+    
+    private void onTeamAPlayerCardClicked(TeamPlayer player, TextView card) {
+        boolean isCurrentlySelected = selectedTeamAPlayers.contains(player);
+        
+        if (isCurrentlySelected) {
+            // Deselect player
+            selectedTeamAPlayers.remove(player);
+            card.setBackgroundColor(Color.parseColor("#F5F6FA")); // Unselected
+            card.setTextColor(Color.parseColor("#2C3E50"));
+        } else {
+            // Try to select player
             if (selectedTeamAPlayers.size() >= 5) {
                 Toast.makeText(this, "Maximum 5 players allowed", Toast.LENGTH_SHORT).show();
-                // Find and uncheck this checkbox
-                for (CheckBox cb : teamACheckboxes) {
-                    if (cb.getText().toString().equals(player.toString())) {
-                        cb.setChecked(false);
-                        return;
-                    }
-                }
                 return;
             }
             selectedTeamAPlayers.add(player);
-        } else {
-            selectedTeamAPlayers.remove(player);
+            card.setBackgroundColor(Color.parseColor("#3498DB")); // Selected (blue)
+            card.setTextColor(Color.parseColor("#FFFFFF"));
         }
-        updateTeamAApproveButton();
+        
+        updateTeamAStatus();
+        updateStartGameButton();
     }
     
-    private void onTeamBPlayerSelectionChanged(TeamPlayer player, boolean isChecked) {
-        if (isChecked) {
+    private void onTeamBPlayerCardClicked(TeamPlayer player, TextView card) {
+        boolean isCurrentlySelected = selectedTeamBPlayers.contains(player);
+        
+        if (isCurrentlySelected) {
+            // Deselect player
+            selectedTeamBPlayers.remove(player);
+            card.setBackgroundColor(Color.parseColor("#F5F6FA")); // Unselected
+            card.setTextColor(Color.parseColor("#2C3E50"));
+        } else {
+            // Try to select player
             if (selectedTeamBPlayers.size() >= 5) {
                 Toast.makeText(this, "Maximum 5 players allowed", Toast.LENGTH_SHORT).show();
-                // Find and uncheck this checkbox
-                for (CheckBox cb : teamBCheckboxes) {
-                    if (cb.getText().toString().equals(player.toString())) {
-                        cb.setChecked(false);
-                        return;
-                    }
-                }
                 return;
             }
             selectedTeamBPlayers.add(player);
+            card.setBackgroundColor(Color.parseColor("#3498DB")); // Selected (blue)
+            card.setTextColor(Color.parseColor("#FFFFFF"));
+        }
+        
+        updateTeamBStatus();
+        updateStartGameButton();
+    }
+    
+    private void updateTeamAStatus() {
+        int selectedCount = selectedTeamAPlayers.size();
+        
+        // Update counter display
+        tvTeamACounter.setText(selectedCount + "/5 selected");
+        
+        // Update team section background based on ready state
+        if (selectedCount == 5) {
+            // Ready state - green background
+            teamASection.setBackgroundColor(Color.parseColor("#2ECC71")); // Green
+            tvTeamATitle.setTextColor(Color.parseColor("#FFFFFF"));
+            tvTeamACounter.setTextColor(Color.parseColor("#FFFFFF"));
+            tvTeamACounter.setText("READY");
         } else {
-            selectedTeamBPlayers.remove(player);
-        }
-        updateTeamBApproveButton();
-    }
-    
-    private void approveTeamA() {
-        if (selectedTeamAPlayers.size() == 5) {
-            teamAApproved = true;
-            setTeamAEnabled(false);
-            btnApproveTeamA.setEnabled(false);
-            btnEditTeamA.setEnabled(true);
-            Toast.makeText(this, "Team A roster approved!", Toast.LENGTH_SHORT).show();
-            updateStartGameButton();
+            // Not ready - white background
+            teamASection.setBackgroundColor(Color.parseColor("#FFFFFF"));
+            tvTeamATitle.setTextColor(Color.parseColor("#2C3E50"));
+            tvTeamACounter.setTextColor(Color.parseColor("#7F8C8D"));
+            tvTeamACounter.setText(selectedCount + "/5 selected");
         }
     }
     
-    private void editTeamA() {
-        teamAApproved = false;
-        setTeamAEnabled(true);
-        btnApproveTeamA.setEnabled(selectedTeamAPlayers.size() == 5);
-        btnEditTeamA.setEnabled(false);
-        updateStartGameButton();
-    }
-    
-    private void approveTeamB() {
-        if (selectedTeamBPlayers.size() == 5) {
-            teamBApproved = true;
-            setTeamBEnabled(false);
-            btnApproveTeamB.setEnabled(false);
-            btnEditTeamB.setEnabled(true);
-            Toast.makeText(this, "Team B roster approved!", Toast.LENGTH_SHORT).show();
-            updateStartGameButton();
-        }
-    }
-    
-    private void editTeamB() {
-        teamBApproved = false;
-        setTeamBEnabled(true);
-        btnApproveTeamB.setEnabled(selectedTeamBPlayers.size() == 5);
-        btnEditTeamB.setEnabled(false);
-        updateStartGameButton();
-    }
-    
-    // Helper methods for the specification-aligned implementation
-    
-    private void clearTeamASelections() {
-        selectedTeamAPlayers.clear();
-        teamAApproved = false;
-        btnApproveTeamA.setEnabled(false);
-        btnEditTeamA.setEnabled(false);
+    private void updateTeamBStatus() {
+        int selectedCount = selectedTeamBPlayers.size();
         
-        // Uncheck all Team A checkboxes
-        for (CheckBox checkbox : teamACheckboxes) {
-            checkbox.setChecked(false);
-        }
-        updateStartGameButton();
-    }
-    
-    private void clearTeamBSelections() {
-        selectedTeamBPlayers.clear();
-        teamBApproved = false;
-        btnApproveTeamB.setEnabled(false);
-        btnEditTeamB.setEnabled(false);
+        // Update counter display
+        tvTeamBCounter.setText(selectedCount + "/5 selected");
         
-        // Uncheck all Team B checkboxes
-        for (CheckBox checkbox : teamBCheckboxes) {
-            checkbox.setChecked(false);
-        }
-        updateStartGameButton();
-    }
-    
-    private void updateTeamAApproveButton() {
-        btnApproveTeamA.setEnabled(selectedTeamAPlayers.size() == 5);
-    }
-    
-    private void updateTeamBApproveButton() {
-        btnApproveTeamB.setEnabled(selectedTeamBPlayers.size() == 5);
-    }
-    
-    private void setTeamAEnabled(boolean enabled) {
-        for (CheckBox checkbox : teamACheckboxes) {
-            checkbox.setEnabled(enabled);
-        }
-    }
-    
-    private void setTeamBEnabled(boolean enabled) {
-        for (CheckBox checkbox : teamBCheckboxes) {
-            checkbox.setEnabled(enabled);
+        // Update team section background based on ready state
+        if (selectedCount == 5) {
+            // Ready state - green background
+            teamBSection.setBackgroundColor(Color.parseColor("#2ECC71")); // Green
+            tvTeamBTitle.setTextColor(Color.parseColor("#FFFFFF"));
+            tvTeamBCounter.setTextColor(Color.parseColor("#FFFFFF"));
+            tvTeamBCounter.setText("READY");
+        } else {
+            // Not ready - white background
+            teamBSection.setBackgroundColor(Color.parseColor("#FFFFFF"));
+            tvTeamBTitle.setTextColor(Color.parseColor("#2C3E50"));
+            tvTeamBCounter.setTextColor(Color.parseColor("#7F8C8D"));
+            tvTeamBCounter.setText(selectedCount + "/5 selected");
         }
     }
     
     private void updateStartGameButton() {
-        btnStartGame.setEnabled(teamAApproved && teamBApproved);
+        boolean bothTeamsReady = (selectedTeamAPlayers.size() == 5 && selectedTeamBPlayers.size() == 5);
+        
+        if (bothTeamsReady) {
+            // Both teams ready - enable button with green background
+            btnStartGame.setEnabled(true);
+            btnStartGame.setBackgroundColor(Color.parseColor("#27AE60")); // Green
+            btnStartGame.setTextColor(Color.parseColor("#FFFFFF"));
+        } else {
+            // Not ready - disable button with grey background
+            btnStartGame.setEnabled(false);
+            btnStartGame.setBackgroundColor(Color.parseColor("#BDC3C7")); // Grey
+            btnStartGame.setTextColor(Color.parseColor("#FFFFFF"));
+        }
     }
     
     private void showStartGameConfirmation() {
