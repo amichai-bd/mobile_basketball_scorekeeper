@@ -76,6 +76,92 @@ public class LeagueDataProvider {
     }
     
     /**
+     * Remove game from available games list
+     */
+    public static boolean removeGame(int gameId) {
+        if (availableGames != null) {
+            for (int i = 0; i < availableGames.size(); i++) {
+                if (availableGames.get(i).getId() == gameId) {
+                    availableGames.remove(i);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Add new game to available games list
+     */
+    public static void addGame(SimpleGame game) {
+        if (availableGames == null) {
+            initializeGames();
+        }
+        availableGames.add(game);
+    }
+    
+    /**
+     * Add new team to teams list
+     */
+    public static void addTeam(Team team) {
+        if (teams == null) {
+            initializeTeams();
+        }
+        teams.add(team);
+    }
+    
+    /**
+     * Get next available game ID
+     */
+    public static int getNextGameId() {
+        int maxId = 0;
+        for (SimpleGame game : getAvailableGames()) {
+            if (game.getId() > maxId) {
+                maxId = game.getId();
+            }
+        }
+        return maxId + 1;
+    }
+    
+    /**
+     * Get next available team ID
+     */
+    public static int getNextTeamId() {
+        int maxId = 0;
+        for (Team team : getTeams()) {
+            if (team.getId() > maxId) {
+                maxId = team.getId();
+            }
+        }
+        return maxId + 1;
+    }
+    
+    /**
+     * Remove team from teams list (only if not used in games)
+     */
+    public static boolean removeTeam(int teamId) {
+        // Check if team is used in any games
+        if (availableGames != null) {
+            for (SimpleGame game : availableGames) {
+                if (game.getHomeTeam().getId() == teamId || game.getAwayTeam().getId() == teamId) {
+                    return false; // Cannot remove - team is in use
+                }
+            }
+        }
+        
+        // Remove team if not in use
+        if (teams != null) {
+            for (int i = 0; i < teams.size(); i++) {
+                if (teams.get(i).getId() == teamId) {
+                    teams.remove(i);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    /**
      * Initialize the 4 predefined teams with their 12-player rosters
      */
     private static void initializeTeams() {

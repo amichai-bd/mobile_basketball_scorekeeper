@@ -2,4 +2,6 @@
 <resources>
     <string name="app_name">Basketball Stats</string>
     <string name="team_selection_prompt">Choose Team</string>
+    <string name="home_team_prompt">Select Home Team</string>
+    <string name="away_team_prompt">Select Away Team</string>
 </resources>

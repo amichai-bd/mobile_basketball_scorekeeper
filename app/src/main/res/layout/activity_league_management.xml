@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    League Management Layout - Complete Games and Teams Management
+    Two-tab interface for managing league data
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F8F9FA">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:background="#FFFFFF"
+        android:elevation="2dp">
+        
+        <!-- Main Title -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="League Management"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#2C3E50" />
+            
+        <!-- Back Button -->
+        <Button
+            android:id="@+id/btnBackToSchedule"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:text="← Back to Schedule"
+            android:textSize="14sp"
+            android:background="@android:color/transparent"
+            android:textColor="#7F8C8D" />
+    </LinearLayout>
+
+    <!-- Tab Host -->
+    <TabHost
+        android:id="@+id/tabhost"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <!-- Tab Widget -->
+            <TabWidget
+                android:id="@android:id/tabs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#FFFFFF"
+                android:elevation="1dp" />
+
+            <!-- Frame Layout for Tab Content -->
+            <FrameLayout
+                android:id="@android:id/tabcontent"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <!-- Games Tab Content -->
+                <ScrollView
+                    android:id="@+id/tab_games"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <!-- Add Game Section -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Add New Game"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="#2C3E50"
+                            android:layout_marginBottom="16dp" />
+
+                        <!-- Team Selection Row -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="12dp">
+
+                            <Spinner
+                                android:id="@+id/spinnerHomeTeam"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginEnd="8dp"
+                                android:prompt="@string/home_team_prompt" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="vs"
+                                android:textSize="16sp"
+                                android:layout_gravity="center"
+                                android:layout_marginHorizontal="8dp" />
+
+                            <Spinner
+                                android:id="@+id/spinnerAwayTeam"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:prompt="@string/away_team_prompt" />
+                        </LinearLayout>
+
+                        <!-- Date and Time Row -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="12dp">
+
+                            <EditText
+                                android:id="@+id/etGameDate"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:hint="DD/MM/YYYY"
+                                android:inputType="date"
+                                android:layout_marginEnd="8dp" />
+
+                            <EditText
+                                android:id="@+id/etGameTime"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:hint="HH:MM"
+                                android:inputType="time"
+                                android:layout_marginStart="8dp" />
+                        </LinearLayout>
+
+                        <!-- Add Game Button -->
+                        <Button
+                            android:id="@+id/btnAddGame"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Add Game"
+                            android:textSize="16sp"
+                            android:layout_marginBottom="32dp"
+                            android:background="#3498DB"
+                            android:textColor="#FFFFFF" />
+
+                        <!-- Games List Section -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Scheduled Games"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="#2C3E50"
+                            android:layout_marginBottom="16dp" />
+
+                        <ListView
+                            android:id="@+id/lvScheduledGames"
+                            android:layout_width="match_parent"
+                            android:layout_height="300dp"
+                            android:background="#FFFFFF"
+                            android:elevation="1dp"
+                            android:divider="#E8E8E8"
+                            android:dividerHeight="1dp" />
+
+                    </LinearLayout>
+                </ScrollView>
+
+                <!-- Teams Tab Content -->
+                <ScrollView
+                    android:id="@+id/tab_teams"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <!-- Add Team Section -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Add New Team"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="#2C3E50"
+                            android:layout_marginBottom="16dp" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="12dp">
+
+                            <EditText
+                                android:id="@+id/etTeamName"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:hint="Team Name"
+                                android:layout_marginEnd="8dp" />
+
+                            <Button
+                                android:id="@+id/btnAddTeam"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Add Team"
+                                android:background="#27AE60"
+                                android:textColor="#FFFFFF" />
+                        </LinearLayout>
+
+                        <!-- Teams List Section -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="League Teams"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="#2C3E50"
+                            android:layout_marginBottom="16dp"
+                            android:layout_marginTop="20dp" />
+
+                        <ListView
+                            android:id="@+id/lvTeams"
+                            android:layout_width="match_parent"
+                            android:layout_height="400dp"
+                            android:background="#FFFFFF"
+                            android:elevation="1dp"
+                            android:divider="#E8E8E8"
+                            android:dividerHeight="1dp" />
+
+                    </LinearLayout>
+                </ScrollView>
+
+            </FrameLayout>
+        </LinearLayout>
+    </TabHost>
+
+</LinearLayout>

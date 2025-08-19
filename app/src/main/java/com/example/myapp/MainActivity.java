@@ -53,14 +53,31 @@ public class MainActivity extends Activity {
     
     private void initializeData() {
         // Load simple games from league database
+        refreshGamesList();
+    }
+    
+    private void refreshGamesList() {
+        // Reload games from data provider (in case they were modified in League Management)
         gamesList = LeagueDataProvider.getAvailableGames();
         
         // Debug output to verify games are loaded
         Toast.makeText(this, "Loaded " + gamesList.size() + " games", Toast.LENGTH_SHORT).show();
         
-        // Create custom adapter for clean game cards
-        gameAdapter = new GameCardAdapter(this, gamesList);
-        lvGames.setAdapter(gameAdapter);
+        // Create or update adapter
+        if (gameAdapter == null) {
+            gameAdapter = new GameCardAdapter(this, gamesList);
+            lvGames.setAdapter(gameAdapter);
+        } else {
+            // Update existing adapter with new data
+            gameAdapter.updateGames(gamesList);
+        }
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh games list when returning from League Management or other activities
+        refreshGamesList();
     }
     
     private void setupEventListeners() {
@@ -83,6 +100,13 @@ public class MainActivity extends Activity {
     }
     
     private void proceedToPlayerSelection(SimpleGame game) {
+        // Verify game still exists (in case it was deleted in League Management)
+        if (game == null || game.getHomeTeam() == null || game.getAwayTeam() == null) {
+            Toast.makeText(this, "Error: Game no longer available", Toast.LENGTH_SHORT).show();
+            refreshGamesList(); // Refresh to show current games
+            return;
+        }
+        
         // Debug output
         Toast.makeText(this, "Game selected: " + game.getMatchupText(), Toast.LENGTH_SHORT).show();
         
@@ -95,12 +119,9 @@ public class MainActivity extends Activity {
     }
     
     private void openLeagueManagement() {
-        // Placeholder for League Management interface
-        Toast.makeText(this, "League Management interface coming soon!", Toast.LENGTH_LONG).show();
-        
-        // TODO: Navigate to League Management Activity
-        // Intent intent = new Intent(this, LeagueManagementActivity.class);
-        // startActivity(intent);
+        // Navigate to League Management Activity
+        Intent intent = new Intent(this, LeagueManagementActivity.class);
+        startActivity(intent);
     }
     
     /**
@@ -147,6 +168,14 @@ public class MainActivity extends Activity {
             tvDate.setText(game.getDateText());
             
             return convertView;
+        }
+        
+        /**
+         * Update games list and refresh adapter
+         */
+        public void updateGames(List<SimpleGame> newGames) {
+            this.games = newGames;
+            notifyDataSetChanged();
         }
     }
 }
