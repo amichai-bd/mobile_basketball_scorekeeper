@@ -185,11 +185,11 @@ public class PlayerSelectionModal extends DialogFragment {
                 }
             });
             
-            // Add to grid
+            // Add to grid with fixed dimensions for consistent sizing
             GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-            params.width = GridLayout.LayoutParams.WRAP_CONTENT;
-            params.height = GridLayout.LayoutParams.WRAP_CONTENT;
-            params.setMargins(8, 8, 8, 8);
+            params.width = dpToPx(108); // Fixed width (100dp card + 8dp margins)
+            params.height = dpToPx(88); // Fixed height (80dp card + 8dp margins)
+            params.setMargins(4, 4, 4, 4); // Smaller margins since we're accounting for them in size
             
             playerCards.add(cardView);
             gridPlayers.addView(cardView, params);
@@ -375,5 +375,11 @@ public class PlayerSelectionModal extends DialogFragment {
     
     public void setPlayerSelectionListener(PlayerSelectionListener listener) {
         this.listener = listener;
+    }
+    
+    // Utility method to convert dp to pixels for consistent sizing
+    private int dpToPx(int dp) {
+        float density = getResources().getDisplayMetrics().density;
+        return Math.round(dp * density);
     }
 }
