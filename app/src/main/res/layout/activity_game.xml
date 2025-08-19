@@ -72,26 +72,15 @@
             android:gravity="center"
             android:layout_marginBottom="8dp">
             
-            <!-- Start Button -->
+            <!-- Game Toggle Button (Single Button) -->
             <Button
-                android:id="@+id/btnStart"
+                android:id="@+id/btnGameToggle"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="Start"
-                android:textSize="14sp"
-                android:background="#27AE60"
-                android:textColor="#FFFFFF"
-                android:layout_marginEnd="8dp"
-                android:paddingHorizontal="16dp" />
-            
-            <!-- Stop Button -->
-            <Button
-                android:id="@+id/btnStop"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="Stop"
-                android:textSize="14sp"
-                android:background="#E74C3C"
+                android:layout_height="45dp"
+                android:text="START GAME"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:background="@android:color/holo_green_light"
                 android:textColor="#FFFFFF"
                 android:layout_marginEnd="16dp"
                 android:paddingHorizontal="16dp" />
@@ -119,7 +108,7 @@
                 android:layout_height="36dp"
                 android:text="Q1"
                 android:textSize="12sp"
-                android:background="#3498DB"
+                android:background="#34495E"
                 android:textColor="#FFFFFF"
                 android:layout_marginEnd="4dp" />
             
@@ -262,9 +251,9 @@
                     <Button android:id="@+id/btn3M" android:text="3M" android:layout_margin="3dp" android:background="#E74C3C" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
                     
                     <!-- Row 3: Rebounds & Assists -->
-                    <Button android:id="@+id/btnOR" android:text="OR" android:layout_margin="3dp" android:background="#3498DB" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                    <Button android:id="@+id/btnDR" android:text="DR" android:layout_margin="3dp" android:background="#3498DB" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                    <Button android:id="@+id/btnAST" android:text="AST" android:layout_margin="3dp" android:background="#3498DB" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btnOR" android:text="OR" android:layout_margin="3dp" android:background="#16A085" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btnDR" android:text="DR" android:layout_margin="3dp" android:background="#16A085" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btnAST" android:text="AST" android:layout_margin="3dp" android:background="#16A085" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
                     
                     <!-- Row 4: Defense & Violations -->
                     <Button android:id="@+id/btnSTL" android:text="STL" android:layout_margin="3dp" android:background="#9B59B6" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />

@@ -359,7 +359,7 @@ ConstraintLayout (main container)
   - **Professional UI**: Three-panel layout matching specification exactly
 
 ### 🚧 In Progress  
-- **READY FOR DEPLOYMENT**: Enhanced Frame 3 with improved UX (0.3s feedback + live event feed) complete
+- **Timer UX Enhancement** - Single toggle button with pleasant colors and fixed multiple-timer bug
 
 ### ⏳ Next Up  
 - **Event Logging System** - Database storage for recorded events and statistics
@@ -403,6 +403,7 @@ ConstraintLayout (main container)
   - **Live Event Feed**: Always-visible last 3 events at bottom of Event Panel for context
   - **View Log Access**: One-tap access to complete event history (Frame 5)
 - ✅ **Complete App Flow**: Game selection → Player selection → Live game recording (FULL BASKETBALL STATS APP!)
+- ✅ **Timer UX Enhanced**: Single toggle button design with pleasant colors and proper timer management
 
 ### ❌ Blocked/Issues
 - None currently
@@ -412,16 +413,27 @@ ConstraintLayout (main container)
 - **Save Functionality Bug**: Fixed games/teams not actually being saved to data provider
 - **Duplicate Game Bug**: Fixed games appearing twice when added, and both disappearing when one deleted
 - **Data Corruption Bug**: Fixed games being deleted when opening League Management settings
+- **Event Log Persistence Bug**: Fixed deleted events reappearing when navigating between screens
+- **Button Color Visibility Bug**: Fixed OR, DR, AST buttons using blue (making blue flash invisible)
+- **Timer Multiple-Start Bug**: Fixed timer running faster when START pressed multiple times
+- **Timer UX Confusion**: Replaced confusing two-button system with single pleasant toggle
 - **Root Causes**: 
   - Home page wasn't refreshing data when returning from League Management
   - addNewGame/addNewTeam methods only showed success messages without saving
   - Games/teams were being added to both local lists AND data provider, causing duplicates
   - onResume() method was corrupting data when League Management first opened
+  - Event log worked with local copies instead of shared data storage
+  - Multiple timers could run simultaneously without stopping previous ones
+  - Red "PAUSE" button during gameplay created aggressive UX
 - **Solutions**: 
   - Added proper data synchronization with onResume() refresh and LeagueDataProvider updates
   - Implemented actual save functionality with proper ID generation and data persistence
   - Fixed duplicate issue by using single source of truth (LeagueDataProvider) with proper refresh logic
   - Fixed data corruption by removing problematic onResume() refresh and adding safe initialization
+  - Created shared static event storage that both GameActivity and LogActivity use
+  - Changed default button colors to teal, reserved blue only for selected/active states
+  - Implemented single timer management with proper cleanup of previous timers
+  - Replaced two-button system with single pleasant toggle (Green→Blue, no red during gameplay)
   - Added error handling for edge cases to prevent future crashes
 
 ### 📋 **Specification Compliance Notes**

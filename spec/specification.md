@@ -242,33 +242,38 @@ This is the main screen where the live updates happen. The user will click butto
 - **Clickable**: No
 - **Updates**: Automatically when scoring events are recorded
 
-#### Start Button
-- **Description**: User clicks the button to start the time
-- **Type**: Button
+#### Game Control Button (Single Toggle)
+- **Description**: Single button that toggles between start and pause game timer
+- **Type**: Toggle Button
 - **Location**: Top middle section
-- **Content**: "Start"
-- **Clickable**: Yes
-- **When clicked**:
-  - Start or continue game clock
-  - Colors button in blue
-  - Colors Stop button in light grey
-
-#### Stop Button
-- **Description**: User clicks the button to stop the time
-- **Type**: Button
-- **Location**: Top middle section
-- **Content**: "Stop"
-- **Clickable**: Yes
-- **When clicked**:
-  - Stop game clock
-  - Colors button in blue
-  - Colors Start button in light grey
+- **Content & Visual States**:
+  - **When Timer Stopped**: 
+    - Content: "START GAME"
+    - Background: 🟢 Green ("Ready to Start")
+    - State: Available/clickable
+  - **When Timer Running**: 
+    - Content: "PAUSE GAME"
+    - Background: 🔵 Blue ("Ready to Pause" - pleasant during gameplay)
+    - State: Available/clickable
+- **When clicked (Timer Stopped)**:
+  - Start or continue game clock (ensure only ONE timer runs)
+  - Button text changes to "PAUSE GAME"
+  - Button background becomes blue
+  - Clock background becomes green (running state)
+- **When clicked (Timer Running)**:
+  - Stop game clock (clear any existing timers)
+  - Button text changes to "START GAME"
+  - Button background becomes green
+  - Clock background becomes yellow (paused state)
 
 #### Game Clock
-- **Description**: Game clock
-- **Type**: Time
+- **Description**: Game clock with visual state indication
+- **Type**: Time Display with Background
 - **Location**: Middle section, next to score display
 - **Content**: Clock (MM:SS format)
+- **Background Color States**:
+  - **🟢 Green**: Timer is running (game active)
+  - **🟡 Yellow**: Timer is paused (game stopped)
 - **Clickable**: Yes – long click to edit time if needed
 - **When clicked**: Only if long-clicked, user may edit the time
 
@@ -363,7 +368,7 @@ This is the main screen where the live updates happen. The user will click butto
 **Description**: The event panel has the buttons of the events and a live event feed. When an event appears in the game, the user will click a player and then an event, and it will be stored in the log and shown in the live feed. An event button can be clicked only if a player button is selected. If there is no player button selected, a pop-up will state "Select player". The panel will be between the team panels and under the time panel.
 
 #### Live Event Feed
-- **Description**: Shows the last 3 recorded events for immediate feedback
+- **Description**: Shows the last 5 recorded events for immediate feedback and context
 - **Location**: Bottom of Event Panel, below event buttons
 - **Content**: List showing "Time - Player - Event" format (e.g., "8:45 - #23 LeBron - 2P")
 - **Updates**: Automatically when events are recorded
@@ -586,15 +591,22 @@ This is the main screen where the live updates happen. The user will click butto
 2. When an event happens the user clicks on the player and then on the event
 3. Event is recorded with quick 0.3-second button flash and appears in live event feed
 4. If there is a follow up event like rebound or steal the user clicks on the player for follow up
-5. The system records the event in the log and live feed shows last 3 events
+5. The system records the event in the log and live feed shows last 5 events
 6. User can tap "View Log" to see complete event history
 7. User will apply substitutions and time outs when they happen
 
 ### Enhanced UX Principles
 - **Quick Visual Feedback**: 0.3-second button flash for immediate confirmation
-- **Live Event Feed**: Always visible last 3 events for context and verification
-- **Complete Log Access**: One-tap access to full event history
+- **Live Event Feed**: Always visible last 5 events for context and verification
+- **Complete Log Access**: One-tap access to full event history with edit/delete functionality
 - **Minimal Disruption**: Fast feedback allows focus to stay on live game action
+- **Clear Timer State**: Clock background color immediately shows running (green) vs paused (yellow)
+- **Pleasant Single Toggle**: Single game control button eliminates UI complexity
+- **Intuitive Button Colors**: 
+  - 🟢 Green = "START GAME" (positive action when stopped)
+  - 🔵 Blue = "PAUSE GAME" (pleasant during gameplay, not aggressive)
+  - Clock background = Primary state indicator (green=running, yellow=paused)
+- **Always Available Events**: All basketball events can be recorded regardless of timer state
 
 ---
 
@@ -677,21 +689,19 @@ Can view and edit the log of events
 - **Clickable**: No
 
 #### Event Log Table
-- **Description**: A log recording all the events
-- **Type**: Table
-- **Clickable**: Partially – Buttons edit and save only
-- **Columns**:
-  - Event ID
-  - Game ID
-  - Team ID
-  - Player ID
-  - Q (Quarter)
-  - Game Time
-  - Event
-  - Edit and save buttons
-  - Add row and delete row buttons
-- **Cell content**: Auto
-- **Details**: Editing is disabled by default. Users can edit data from a row alone and not enable full table for editing. Just one row at a time.
+- **Description**: Complete log of all recorded game events with management actions
+- **Type**: Interactive List
+- **Clickable**: Edit and Delete buttons per event
+- **Display Format**: List items showing:
+  - **Quarter**: Q1, Q2, Q3, Q4
+  - **Game Time**: MM:SS when event occurred
+  - **Player/Team**: "#Number Player Name" or "Team Name" (for team events)
+  - **Event Type**: 1P, 2P, 3P, FOUL, TIMEOUT, etc.
+- **Actions per Event**:
+  - **Edit Button**: Modify event details (placeholder for MVP)
+  - **Delete Button**: Remove event with confirmation dialog
+- **Layout**: Professional list with clear event information and action buttons
+- **Details**: Each event displayed as separate list item with individual edit/delete controls
 
 ---
 

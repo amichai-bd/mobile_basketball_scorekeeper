@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    Event Log Item Layout
+    Professional list item with event details and edit/delete actions
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:background="#FFFFFF">
+    
+    <!-- Event Info -->
+    <TextView
+        android:id="@+id/tvEventInfo"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Q1 8:45 - #23 LeBron James - 2P"
+        android:textSize="13sp"
+        android:textColor="#2C3E50"
+        android:layout_gravity="center_vertical" />
+    
+    <!-- Edit Button -->
+    <Button
+        android:id="@+id/btnEditEvent"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:text="Edit"
+        android:textSize="11sp"
+        android:background="#3498DB"
+        android:textColor="#FFFFFF"
+        android:layout_marginEnd="6dp"
+        android:paddingHorizontal="10dp" />
+    
+    <!-- Delete Button -->
+    <Button
+        android:id="@+id/btnDeleteEvent"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:text="Delete"
+        android:textSize="11sp"
+        android:background="#E74C3C"
+        android:textColor="#FFFFFF"
+        android:paddingHorizontal="10dp" />
+    
+</LinearLayout>

@@ -33,7 +33,7 @@ public class GameActivity extends Activity {
     
     // UI Components - Top Panel
     private TextView tvScore, tvGameClock, tvCurrentQuarter, tvTeamFouls;
-    private Button btnStart, btnStop;
+    private Button btnGameToggle;
     
     // UI Components - Team Panels
     private TextView tvTeamAName, tvTeamBName;
@@ -58,7 +58,8 @@ public class GameActivity extends Activity {
     private int teamAFouls = 0, teamBFouls = 0;
     
     // Event Tracking
-    private List<String> recentEvents;  // Last 3 events for live feed
+    private static List<String> gameEvents = new ArrayList<>(); // Shared event storage for entire game
+    private List<String> recentEvents;  // Last 5 events for live feed (derived from gameEvents)
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,8 +129,7 @@ public class GameActivity extends Activity {
         tvGameClock = findViewById(R.id.tvGameClock);
         tvCurrentQuarter = findViewById(R.id.tvCurrentQuarter);
         tvTeamFouls = findViewById(R.id.tvTeamFouls);
-        btnStart = findViewById(R.id.btnStart);
-        btnStop = findViewById(R.id.btnStop);
+        btnGameToggle = findViewById(R.id.btnGameToggle);
         
         // Team panel components
         tvTeamAName = findViewById(R.id.tvTeamAName);
@@ -179,6 +179,10 @@ public class GameActivity extends Activity {
         
         // Initialize event tracking
         recentEvents = new ArrayList<>();
+        
+        // Clear game events when starting new game (for MVP)
+        // TODO: In full implementation, load from database
+        gameEvents.clear();
     }
     
     private void createPlayerButtons() {
@@ -224,9 +228,8 @@ public class GameActivity extends Activity {
     }
     
     private void setupEventListeners() {
-        // Clock control
-        btnStart.setOnClickListener(v -> startClock());
-        btnStop.setOnClickListener(v -> stopClock());
+        // Game control toggle
+        btnGameToggle.setOnClickListener(v -> toggleGameTimer());
         
         // Quarter management
         btnQ1.setOnClickListener(v -> selectQuarter(1));
@@ -273,16 +276,9 @@ public class GameActivity extends Activity {
     }
     
     private void setupGameClock() {
-        clockRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (isClockRunning && gameTimeSeconds > 0) {
-                    gameTimeSeconds--;
-                    updateGameClockDisplay();
-                    clockHandler.postDelayed(this, 1000); // Update every second
-                }
-            }
-        };
+        // Initialize with timer paused state
+        isClockRunning = false;
+        updateGameToggleButton();
     }
     
     private void selectPlayer(Player player, Button button) {
@@ -343,9 +339,9 @@ public class GameActivity extends Activity {
         Button[] quarterButtons = {btnQ1, btnQ2, btnQ3, btnQ4};
         for (int i = 0; i < 4; i++) {
             if (i + 1 == currentQuarter) {
-                quarterButtons[i].setBackgroundColor(Color.parseColor("#3498DB")); // Active (blue)
+                quarterButtons[i].setBackgroundColor(Color.parseColor("#34495E")); // Active (dark grey)
             } else {
-                quarterButtons[i].setBackgroundColor(Color.parseColor("#BDC3C7")); // Inactive (grey)
+                quarterButtons[i].setBackgroundColor(Color.parseColor("#BDC3C7")); // Inactive (light grey)
             }
         }
     }
@@ -490,20 +486,76 @@ public class GameActivity extends Activity {
         addToLiveEventFeed("TIMEOUT", null, teamName);
     }
     
-    private void startClock() {
-        isClockRunning = true;
-        btnStart.setBackgroundColor(Color.parseColor("#3498DB")); // Blue when active
-        btnStop.setBackgroundColor(Color.parseColor("#BDC3C7")); // Grey when inactive
-        clockHandler.post(clockRunnable);
-        Toast.makeText(this, "Clock started", Toast.LENGTH_SHORT).show();
+        private void toggleGameTimer() {
+        if (isClockRunning) {
+            // Currently running, so pause it
+            pauseClock();
+        } else {
+            // Currently stopped, so start it
+            startClock();
+        }
     }
     
+    private void startClock() {
+        // CRITICAL: Stop any existing timer first to prevent multiple timers
+        stopClock();
+        
+        clockRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (gameTimeSeconds > 0) {
+                    gameTimeSeconds--;
+                    updateGameClockDisplay();
+                    clockHandler.postDelayed(this, 1000); // Update every second
+                } else {
+                    // Time's up - could add buzzer sound or notification
+                    updateGameClockDisplay();
+                    // Auto-pause when time reaches 0
+                    pauseClock();
+                }
+            }
+        };
+        
+        clockHandler.post(clockRunnable);
+        
+        // Update timer state and button
+        isClockRunning = true;
+        updateGameToggleButton();
+        Toast.makeText(this, "⏰ Game clock started", Toast.LENGTH_SHORT).show();
+    }
+
     private void stopClock() {
+        if (clockRunnable != null) {
+            clockHandler.removeCallbacks(clockRunnable);
+            clockRunnable = null; // Clear reference
+        }
+    }
+    
+    private void pauseClock() {
+        stopClock();
+        
+        // Update timer state and button
         isClockRunning = false;
-        btnStop.setBackgroundColor(Color.parseColor("#E74C3C")); // Red when active
-        btnStart.setBackgroundColor(Color.parseColor("#BDC3C7")); // Grey when inactive
-        clockHandler.removeCallbacks(clockRunnable);
-        Toast.makeText(this, "Clock stopped", Toast.LENGTH_SHORT).show();
+        updateGameToggleButton();
+        Toast.makeText(this, "⏸️ Game clock paused", Toast.LENGTH_SHORT).show();
+    }
+    
+    private void updateGameToggleButton() {
+        if (isClockRunning) {
+            // Timer is running - show PAUSE option
+            btnGameToggle.setText("PAUSE GAME");
+            btnGameToggle.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_light)); // Blue (pleasant during gameplay)
+            
+            // Clock background: Green (running)
+            tvGameClock.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
+        } else {
+            // Timer is paused - show START option
+            btnGameToggle.setText("START GAME");
+            btnGameToggle.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light)); // Green (ready to start)
+            
+            // Clock background: Yellow (paused)
+            tvGameClock.setBackgroundColor(getResources().getColor(android.R.color.holo_orange_light));
+        }
     }
     
     private void updateAllDisplays() {
@@ -581,7 +633,7 @@ public class GameActivity extends Activity {
         } else if (button == btn1M || button == btn2M || button == btn3M) {
             return Color.parseColor("#E74C3C"); // Red for misses
         } else if (button == btnOR || button == btnDR || button == btnAST) {
-            return Color.parseColor("#3498DB"); // Blue for rebounds/assists
+            return Color.parseColor("#16A085"); // Teal for rebounds/assists
         } else if (button == btnSTL || button == btnBLK) {
             return Color.parseColor("#9B59B6"); // Purple for defense
         } else if (button == btnTO) {
@@ -614,11 +666,11 @@ public class GameActivity extends Activity {
                 timeStr, teamName, eventType);
         }
         
-        // Add to recent events list (keep only last 3)
-        recentEvents.add(0, eventDescription); // Add at beginning
-        if (recentEvents.size() > 3) {
-            recentEvents.remove(3); // Remove oldest
-        }
+        // Add to complete game events list
+        gameEvents.add(0, eventDescription); // Add at beginning (most recent first)
+        
+        // Update recent events list (last 5 from gameEvents)
+        updateRecentEventsList();
         
         // Update live feed display
         updateLiveEventFeedDisplay();
@@ -649,13 +701,39 @@ public class GameActivity extends Activity {
     
     private void openEventLog() {
         // Navigate to LogActivity (Frame 5) for complete event history
-        // For MVP, show placeholder
-        Toast.makeText(this, "Complete Event Log (Frame 5) coming soon!\nShowing all events: quarter, time, player, event", Toast.LENGTH_LONG).show();
+        android.content.Intent intent = new android.content.Intent(this, LogActivity.class);
+        intent.putExtra("gameId", gameId);
+        intent.putExtra("teamAName", teamAName);
+        intent.putExtra("teamBName", teamBName);
         
-        // TODO: Navigate to LogActivity
-        // Intent intent = new Intent(this, LogActivity.class);
-        // intent.putExtra("gameId", gameId);
-        // startActivity(intent);
+        startActivity(intent);
+    }
+    
+    private void updateRecentEventsList() {
+        // Update recent events from gameEvents (last 5)
+        recentEvents.clear();
+        int count = Math.min(5, gameEvents.size());
+        for (int i = 0; i < count; i++) {
+            recentEvents.add(gameEvents.get(i));
+        }
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh recent events in case they were modified in LogActivity
+        updateRecentEventsList();
+        updateLiveEventFeedDisplay();
+    }
+    
+    // Static method to get all game events (for LogActivity)
+    public static List<String> getAllGameEvents() {
+        return gameEvents;
+    }
+    
+    // Static method to remove event (for LogActivity)
+    public static boolean removeGameEvent(String event) {
+        return gameEvents.remove(event);
     }
     
     // Helper to get event button by type

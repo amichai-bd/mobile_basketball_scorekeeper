@@ -43,8 +43,13 @@
             android:exported="false"
             android:screenOrientation="portrait" />
         
+        <!-- Log Activity (Frame 5) - Event Log Viewer -->
+        <activity android:name=".LogActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        
         <!-- TODO: Register additional activities here
-        <activity android:name=".LogActivity" />
+        <activity android:name=".StatsActivity" />
         -->
         
     </application>
