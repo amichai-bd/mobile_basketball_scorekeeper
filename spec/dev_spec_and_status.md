@@ -359,7 +359,7 @@ ConstraintLayout (main container)
   - **Professional UI**: Three-panel layout matching specification exactly
 
 ### 🚧 In Progress  
-- **READY FOR DEPLOYMENT**: Complete basketball statistics recording app with all core functionality
+- **READY FOR DEPLOYMENT**: Enhanced Frame 3 with improved UX (0.3s feedback + live event feed) complete
 
 ### ⏳ Next Up  
 - **Event Logging System** - Database storage for recorded events and statistics
@@ -398,8 +398,10 @@ ConstraintLayout (main container)
   - **Live Scoring**: Automatic score updates from recorded events
   - **Foul Tracking**: Personal fouls per player, team fouls per quarter with visual warnings
   - **Player Selection Workflow**: Click player → Click event → Record with visual feedback
-  - **Event Visual Feedback**: Buttons flash blue for 3 seconds as specified
+  - **Quick Visual Feedback**: Buttons flash blue for 0.3 seconds (improved from 3s for better UX)
   - **Professional Layout**: Three-panel design (Team A | Events | Team B) matching specification
+  - **Live Event Feed**: Always-visible last 3 events at bottom of Event Panel for context
+  - **View Log Access**: One-tap access to complete event history (Frame 5)
 - ✅ **Complete App Flow**: Game selection → Player selection → Live game recording (FULL BASKETBALL STATS APP!)
 
 ### ❌ Blocked/Issues
@@ -594,5 +596,5 @@ ConstraintLayout (main container)
 - Feedback on event button layout and sizing
 - Testing with actual game scenarios
 
-**Last Updated**: December 2024 - After Frame 3 (Live Game Recording) Core Functionality Implementation  
-**Status**: Active Development - Phase 1 (🏀 COMPLETE BASKETBALL STATISTICS APP - All Core Features Implemented!)
+**Last Updated**: December 2024 - After Frame 3 Enhanced UX (Quick Feedback + Live Event Feed)  
+**Status**: Active Development - Phase 1 (🏀 COMPLETE ENHANCED BASKETBALL STATISTICS APP - Perfect UX Implemented!)

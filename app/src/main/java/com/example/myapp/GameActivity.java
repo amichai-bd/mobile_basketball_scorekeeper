@@ -47,11 +47,18 @@ public class GameActivity extends Activity {
     // UI Components - Quarter Management
     private Button btnQ1, btnQ2, btnQ3, btnQ4;
     
+    // UI Components - Live Event Feed
+    private LinearLayout llLiveEventFeed;
+    private Button btnViewLog;
+    
     // Game Management
     private Handler clockHandler = new Handler();
     private Runnable clockRunnable;
     private List<Button> teamAPlayerButtons, teamBPlayerButtons;
     private int teamAFouls = 0, teamBFouls = 0;
+    
+    // Event Tracking
+    private List<String> recentEvents;  // Last 3 events for live feed
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,6 +162,10 @@ public class GameActivity extends Activity {
         btnQ2 = findViewById(R.id.btnQ2);
         btnQ3 = findViewById(R.id.btnQ3);
         btnQ4 = findViewById(R.id.btnQ4);
+        
+        // Live event feed components
+        llLiveEventFeed = findViewById(R.id.llLiveEventFeed);
+        btnViewLog = findViewById(R.id.btnViewLog);
     }
     
     private void initializeGameState() {
@@ -165,6 +176,9 @@ public class GameActivity extends Activity {
         // Initialize player button lists
         teamAPlayerButtons = new ArrayList<>();
         teamBPlayerButtons = new ArrayList<>();
+        
+        // Initialize event tracking
+        recentEvents = new ArrayList<>();
     }
     
     private void createPlayerButtons() {
@@ -253,6 +267,9 @@ public class GameActivity extends Activity {
         // Substitution (placeholder)
         btnTeamASub.setOnClickListener(v -> Toast.makeText(this, "Substitution for " + teamAName + " (coming soon)", Toast.LENGTH_SHORT).show());
         btnTeamBSub.setOnClickListener(v -> Toast.makeText(this, "Substitution for " + teamBName + " (coming soon)", Toast.LENGTH_SHORT).show());
+        
+        // View Log button
+        btnViewLog.setOnClickListener(v -> openEventLog());
     }
     
     private void setupGameClock() {
@@ -357,6 +374,7 @@ public class GameActivity extends Activity {
         
         // Update displays and deselect
         updateScoreDisplay();
+        addToLiveEventFeed(eventType, selectedPlayer);
         deselectAllPlayers();
         
         // Assist workflow for 2P and 3P
@@ -365,8 +383,6 @@ public class GameActivity extends Activity {
             // TODO: Implement assist pop-up or streamlined assist workflow
             Toast.makeText(this, "Assist available (tap AST button if applicable)", Toast.LENGTH_SHORT).show();
         }
-        
-        // TODO: Add to event log
     }
     
     // Miss Events (with rebound workflow)
@@ -383,13 +399,12 @@ public class GameActivity extends Activity {
         Toast.makeText(this, String.format("%s recorded for %s", 
             eventType, selectedPlayer.getName()), Toast.LENGTH_SHORT).show();
         
+        addToLiveEventFeed(eventType, selectedPlayer);
         deselectAllPlayers();
         
         // Rebound workflow
         // For MVP, we'll skip the rebound pop-up and just show hint
         Toast.makeText(this, "Rebound available (tap OR/DR button for rebounder)", Toast.LENGTH_SHORT).show();
-        
-        // TODO: Add to event log, implement rebound pop-up
     }
     
     // Foul Events (increment personal and team fouls)
@@ -424,9 +439,8 @@ public class GameActivity extends Activity {
         // Update displays
         updatePlayerButtonText();
         updateTeamFoulsDisplay();
+        addToLiveEventFeed(eventType, selectedPlayer);
         deselectAllPlayers();
-        
-        // TODO: Add to event log
     }
     
     // Turnover Events (with steal workflow)
@@ -441,13 +455,12 @@ public class GameActivity extends Activity {
         
         Toast.makeText(this, String.format("Turnover recorded for %s", selectedPlayer.getName()), Toast.LENGTH_SHORT).show();
         
+        addToLiveEventFeed(eventType, selectedPlayer);
         deselectAllPlayers();
         
         // Steal workflow
         // For MVP, we'll skip the steal pop-up and just show hint
         Toast.makeText(this, "Steal available (tap STL button for defensive player)", Toast.LENGTH_SHORT).show();
-        
-        // TODO: Add to event log, implement steal pop-up
     }
     
     // Generic Event Recording
@@ -464,9 +477,8 @@ public class GameActivity extends Activity {
         Toast.makeText(this, String.format("%s recorded for %s", 
             eventType, selectedPlayer.getName()), Toast.LENGTH_SHORT).show();
         
+        addToLiveEventFeed(eventType, selectedPlayer);
         deselectAllPlayers();
-        
-        // TODO: Add to event log
     }
     
     private void recordTeamTimeout(String team) {
@@ -474,7 +486,8 @@ public class GameActivity extends Activity {
         String teamName = "home".equals(team) ? teamAName : teamBName;
         Toast.makeText(this, teamName + " timeout called", Toast.LENGTH_SHORT).show();
         
-        // TODO: Add to event log
+        // Add team event to live feed (no specific player)
+        addToLiveEventFeed("TIMEOUT", null, teamName);
     }
     
     private void startClock() {
@@ -544,21 +557,105 @@ public class GameActivity extends Activity {
         }
     }
     
-    // Visual Feedback - Flash event button blue for 3 seconds (per specification)
+    // Quick Visual Feedback - Flash event button blue for 0.3 seconds (updated specification)
     private void flashEventButton(Button button) {
         if (button == null) return;
         
-        // Store original colors
-        int originalColor = Color.parseColor("#2ECC71"); // Default event button color
+        // Store original color based on button type
+        int originalColor = getOriginalButtonColor(button);
         
         // Flash blue
         button.setBackgroundColor(Color.parseColor("#3498DB")); // Blue
         
-        // Reset after 3 seconds
+        // Reset after 0.3 seconds (much faster, less disruptive)
         Handler handler = new Handler();
         handler.postDelayed(() -> {
             button.setBackgroundColor(originalColor);
-        }, 3000);
+        }, 300); // 0.3 seconds
+    }
+    
+    private int getOriginalButtonColor(Button button) {
+        // Return appropriate color based on button type
+        if (button == btn1P || button == btn2P || button == btn3P) {
+            return Color.parseColor("#2ECC71"); // Green for scoring
+        } else if (button == btn1M || button == btn2M || button == btn3M) {
+            return Color.parseColor("#E74C3C"); // Red for misses
+        } else if (button == btnOR || button == btnDR || button == btnAST) {
+            return Color.parseColor("#3498DB"); // Blue for rebounds/assists
+        } else if (button == btnSTL || button == btnBLK) {
+            return Color.parseColor("#9B59B6"); // Purple for defense
+        } else if (button == btnTO) {
+            return Color.parseColor("#E67E22"); // Orange for turnover
+        } else if (button == btnFOUL) {
+            return Color.parseColor("#8E44AD"); // Purple for foul
+        } else if (button == btnTIMEOUT) {
+            return Color.parseColor("#F39C12"); // Yellow for timeout
+        }
+        return Color.parseColor("#BDC3C7"); // Default grey
+    }
+    
+    // Live Event Feed Management
+    private void addToLiveEventFeed(String eventType, Player player) {
+        addToLiveEventFeed(eventType, player, null);
+    }
+    
+    private void addToLiveEventFeed(String eventType, Player player, String teamName) {
+        // Create event description
+        String timeStr = String.format("%d:%02d", gameTimeSeconds / 60, gameTimeSeconds % 60);
+        String eventDescription;
+        
+        if (player != null) {
+            // Player event
+            eventDescription = String.format("%s - #%d %s - %s", 
+                timeStr, player.getNumber(), player.getName(), eventType);
+        } else {
+            // Team event
+            eventDescription = String.format("%s - %s - %s", 
+                timeStr, teamName, eventType);
+        }
+        
+        // Add to recent events list (keep only last 3)
+        recentEvents.add(0, eventDescription); // Add at beginning
+        if (recentEvents.size() > 3) {
+            recentEvents.remove(3); // Remove oldest
+        }
+        
+        // Update live feed display
+        updateLiveEventFeedDisplay();
+    }
+    
+    private void updateLiveEventFeedDisplay() {
+        // Clear current feed display
+        llLiveEventFeed.removeAllViews();
+        
+        // Add each recent event as a TextView
+        for (String event : recentEvents) {
+            TextView eventView = new TextView(this);
+            eventView.setText(event);
+            eventView.setTextSize(10);
+            eventView.setTextColor(Color.parseColor("#2C3E50"));
+            eventView.setPadding(4, 2, 4, 2);
+            eventView.setBackgroundColor(Color.parseColor("#FFFFFF"));
+            
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+            params.setMargins(0, 1, 0, 1);
+            eventView.setLayoutParams(params);
+            
+            llLiveEventFeed.addView(eventView);
+        }
+    }
+    
+    private void openEventLog() {
+        // Navigate to LogActivity (Frame 5) for complete event history
+        // For MVP, show placeholder
+        Toast.makeText(this, "Complete Event Log (Frame 5) coming soon!\nShowing all events: quarter, time, player, event", Toast.LENGTH_LONG).show();
+        
+        // TODO: Navigate to LogActivity
+        // Intent intent = new Intent(this, LogActivity.class);
+        // intent.putExtra("gameId", gameId);
+        // startActivity(intent);
     }
     
     // Helper to get event button by type

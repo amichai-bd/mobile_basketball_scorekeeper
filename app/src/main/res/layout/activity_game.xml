@@ -235,41 +235,96 @@
             android:layout_margin="8dp"
             android:elevation="2dp">
             
-            <!-- Event Grid - Complete 13+ Basketball Events -->
-            <GridLayout
-                android:id="@+id/gridEventButtons"
+            <!-- Event Buttons and Live Feed Container -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:columnCount="3"
-                android:rowCount="5"
-                android:layout_gravity="center">
+                android:orientation="vertical">
                 
-                <!-- Row 1: Scoring Makes -->
-                <Button android:id="@+id/btn1P" android:text="1P" android:layout_margin="3dp" android:background="#2ECC71" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn2P" android:text="2P" android:layout_margin="3dp" android:background="#2ECC71" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn3P" android:text="3P" android:layout_margin="3dp" android:background="#2ECC71" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                <!-- Event Grid - Complete 13+ Basketball Events -->
+                <GridLayout
+                    android:id="@+id/gridEventButtons"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="3"
+                    android:columnCount="3"
+                    android:rowCount="5"
+                    android:layout_gravity="center">
+                    
+                    <!-- Row 1: Scoring Makes -->
+                    <Button android:id="@+id/btn1P" android:text="1P" android:layout_margin="3dp" android:background="#2ECC71" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btn2P" android:text="2P" android:layout_margin="3dp" android:background="#2ECC71" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btn3P" android:text="3P" android:layout_margin="3dp" android:background="#2ECC71" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    
+                    <!-- Row 2: Scoring Misses -->
+                    <Button android:id="@+id/btn1M" android:text="1M" android:layout_margin="3dp" android:background="#E74C3C" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btn2M" android:text="2M" android:layout_margin="3dp" android:background="#E74C3C" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btn3M" android:text="3M" android:layout_margin="3dp" android:background="#E74C3C" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    
+                    <!-- Row 3: Rebounds & Assists -->
+                    <Button android:id="@+id/btnOR" android:text="OR" android:layout_margin="3dp" android:background="#3498DB" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btnDR" android:text="DR" android:layout_margin="3dp" android:background="#3498DB" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btnAST" android:text="AST" android:layout_margin="3dp" android:background="#3498DB" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    
+                    <!-- Row 4: Defense & Violations -->
+                    <Button android:id="@+id/btnSTL" android:text="STL" android:layout_margin="3dp" android:background="#9B59B6" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btnBLK" android:text="BLK" android:layout_margin="3dp" android:background="#9B59B6" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btnTO" android:text="TO" android:layout_margin="3dp" android:background="#E67E22" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    
+                    <!-- Row 5: Fouls & Team Events -->
+                    <Button android:id="@+id/btnFOUL" android:text="FOUL" android:layout_margin="3dp" android:background="#8E44AD" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btnTIMEOUT" android:text="TIMEOUT" android:layout_margin="3dp" android:background="#F39C12" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" />
+                    <View android:layout_margin="3dp" />
+                    
+                </GridLayout>
                 
-                <!-- Row 2: Scoring Misses -->
-                <Button android:id="@+id/btn1M" android:text="1M" android:layout_margin="3dp" android:background="#E74C3C" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn2M" android:text="2M" android:layout_margin="3dp" android:background="#E74C3C" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn3M" android:text="3M" android:layout_margin="3dp" android:background="#E74C3C" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                <!-- Live Event Feed Section -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:background="#F8F9FA"
+                    android:padding="8dp"
+                    android:layout_marginTop="8dp">
+                    
+                    <!-- Live Feed Header -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+                        
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Recent Events"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="#7F8C8D" />
+                        
+                        <Button
+                            android:id="@+id/btnViewLog"
+                            android:layout_width="wrap_content"
+                            android:layout_height="28dp"
+                            android:text="View Log"
+                            android:textSize="10sp"
+                            android:background="#34495E"
+                            android:textColor="#FFFFFF"
+                            android:paddingHorizontal="12dp" />
+                    </LinearLayout>
+                    
+                    <!-- Live Event Feed (Last 3 Events) -->
+                    <LinearLayout
+                        android:id="@+id/llLiveEventFeed"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+                        
+                </LinearLayout>
                 
-                <!-- Row 3: Rebounds & Assists -->
-                <Button android:id="@+id/btnOR" android:text="OR" android:layout_margin="3dp" android:background="#3498DB" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnDR" android:text="DR" android:layout_margin="3dp" android:background="#3498DB" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnAST" android:text="AST" android:layout_margin="3dp" android:background="#3498DB" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                
-                <!-- Row 4: Defense & Violations -->
-                <Button android:id="@+id/btnSTL" android:text="STL" android:layout_margin="3dp" android:background="#9B59B6" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnBLK" android:text="BLK" android:layout_margin="3dp" android:background="#9B59B6" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnTO" android:text="TO" android:layout_margin="3dp" android:background="#E67E22" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                
-                <!-- Row 5: Fouls & Team Events -->
-                <Button android:id="@+id/btnFOUL" android:text="FOUL" android:layout_margin="3dp" android:background="#8E44AD" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnTIMEOUT" android:text="TIMEOUT" android:layout_margin="3dp" android:background="#F39C12" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" />
-                <View android:layout_margin="3dp" />
-                
-            </GridLayout>
+            </LinearLayout>
         </LinearLayout>
         
         <!-- Team B Panel (Right) -->

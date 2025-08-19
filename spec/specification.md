@@ -360,7 +360,22 @@ This is the main screen where the live updates happen. The user will click butto
 
 
 ### Event Panel
-**Description**: The event panel has the buttons of the events. When an event appears in the game, the user will click a player and then an event, and it will be stored in the log. An event button can be clicked only if a player button is selected. If there is no player button selected, a pop-up will state "Select player". The panel will be between the team panels and under the time panel.
+**Description**: The event panel has the buttons of the events and a live event feed. When an event appears in the game, the user will click a player and then an event, and it will be stored in the log and shown in the live feed. An event button can be clicked only if a player button is selected. If there is no player button selected, a pop-up will state "Select player". The panel will be between the team panels and under the time panel.
+
+#### Live Event Feed
+- **Description**: Shows the last 3 recorded events for immediate feedback
+- **Location**: Bottom of Event Panel, below event buttons
+- **Content**: List showing "Time - Player - Event" format (e.g., "8:45 - #23 LeBron - 2P")
+- **Updates**: Automatically when events are recorded
+- **Format**: Most recent event at top, scrolls down
+- **Team Events**: Shows team name instead of player (e.g., "8:30 - Lakers - TIMEOUT")
+
+#### View Full Log Button
+- **Description**: Button to access complete game event log
+- **Location**: Bottom right of Event Panel
+- **Content**: "View Log"
+- **Clickable**: Yes
+- **When clicked**: Navigate to Event Log screen (Frame 5) showing all recorded events
 
 #### Scoring Events
 
@@ -371,9 +386,9 @@ This is the main screen where the live updates happen. The user will click butto
 - **Content**: "1P"
 - **Clickable**: Yes
 - **When clicked**:
-  - All other event buttons turn grey
-  - Button turns Blue and goes back to grey after 3 seconds
-  - Tooltip: "1P recorded in log for player [name and number]" (disappears after 3 seconds)
+  - Button flashes Blue for 0.3 seconds (quick feedback)
+  - Event added to live event feed at bottom of Event Panel
+  - Tooltip: "1P recorded in log for player [name and number]" (disappears after 2 seconds)
   - All players unclicked and turn grey
 
 ##### 2P Button
@@ -383,9 +398,9 @@ This is the main screen where the live updates happen. The user will click butto
 - **Content**: "2P"
 - **Clickable**: Yes
 - **When clicked**:
-  - All other event buttons turn grey
-  - Button turns Blue and goes back to grey after 3 seconds
-  - Tooltip: "2P recorded in log for player [name and number]" (disappears after 3 seconds)
+  - Button flashes Blue for 0.3 seconds (quick feedback)
+  - Event added to live event feed at bottom of Event Panel
+  - Tooltip: "2P recorded in log for player [name and number]" (disappears after 2 seconds)
   - All players unclicked and turn grey
   - Assist pop-up enabled
 
@@ -396,9 +411,9 @@ This is the main screen where the live updates happen. The user will click butto
 - **Content**: "3P"
 - **Clickable**: Yes
 - **When clicked**:
-  - All other event buttons turn grey
-  - Button turns Blue and goes back to grey after 3 seconds
-  - Tooltip: "3P recorded in log for player [name and number]" (disappears after 3 seconds)
+  - Button flashes Blue for 0.3 seconds (quick feedback)
+  - Event added to live event feed at bottom of Event Panel
+  - Tooltip: "3P recorded in log for player [name and number]" (disappears after 2 seconds)
   - All players unclicked and turn grey
   - Assist pop-up enabled
 
@@ -408,9 +423,9 @@ This is the main screen where the live updates happen. The user will click butto
 - **Content**: "Assist"
 - **Clickable**: Yes
 - **When clicked**:
-  - All other event buttons turn grey
-  - Button turns Blue and goes back to grey after 3 seconds
-  - Tooltip: "Assist recorded in log for player [name and number]" (disappears after 3 seconds)
+  - Button flashes Blue for 0.3 seconds (quick feedback)
+  - Event added to live event feed at bottom of Event Panel
+  - Tooltip: "Assist recorded in log for player [name and number]" (disappears after 2 seconds)
   - All players unclicked and turn grey
 
 ##### Assist Pop-up (Consider removing to avoid pop-ups)
@@ -435,9 +450,9 @@ This is the main screen where the live updates happen. The user will click butto
 - **Content**: "1M"
 - **Clickable**: Yes
 - **When clicked**:
-  - All other event buttons turn grey
-  - Button turns Blue and goes back to grey after 3 seconds
-  - Tooltip: "1M recorded in log for player [name and number]" (disappears after 3 seconds)
+  - Button flashes Blue for 0.3 seconds (quick feedback)
+  - Event added to live event feed at bottom of Event Panel
+  - Tooltip: "1M recorded in log for player [name and number]" (disappears after 2 seconds)
   - All players unclicked and turn grey
   - Enable Rebound pop-up
 
@@ -561,16 +576,25 @@ This is the main screen where the live updates happen. The user will click butto
 - **Clickable**: Yes
 - **When clicked**:
   - All other event buttons turn grey
-  - Button turns Blue and goes back to grey after 3 seconds
-  - Tooltip: "Foul recorded in log for player [name and number]" (disappears after 3 seconds)
+  - Button flashes Blue for 0.3 seconds (quick feedback)
+  - Event added to live event feed at bottom of Event Panel
+  - Tooltip: "Foul recorded in log for player [name and number]" (disappears after 2 seconds)
   - All players unclicked and turn grey
 
 ### Flow
 1. The game begins and user clicks Q1, the time will show 10 minutes and start
 2. When an event happens the user clicks on the player and then on the event
-3. If there is a follow up event like rebound or steal the user clicks on the player for follow up
-4. The system records the event in the log
-5. User will apply substitutions and time outs when they happen
+3. Event is recorded with quick 0.3-second button flash and appears in live event feed
+4. If there is a follow up event like rebound or steal the user clicks on the player for follow up
+5. The system records the event in the log and live feed shows last 3 events
+6. User can tap "View Log" to see complete event history
+7. User will apply substitutions and time outs when they happen
+
+### Enhanced UX Principles
+- **Quick Visual Feedback**: 0.3-second button flash for immediate confirmation
+- **Live Event Feed**: Always visible last 3 events for context and verification
+- **Complete Log Access**: One-tap access to full event history
+- **Minimal Disruption**: Fast feedback allows focus to stay on live game action
 
 ---
 
