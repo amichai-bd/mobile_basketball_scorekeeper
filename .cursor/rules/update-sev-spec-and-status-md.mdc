@@ -1,0 +1,59 @@
+---
+alwaysApply: true
+---
+
+# Development Specification Update Rule
+
+## Purpose
+This rule ensures that the development specification and status document remains current and accurate after any code changes, feature additions, or functional updates in the basketball statistics app.
+
+## When to Apply
+This rule should be automatically applied after:
+- ✅ **Code changes** - Any modifications to Java files, XML layouts, or configuration files
+- ✅ **Feature implementation** - Addition of new functionality or UI components
+- ✅ **Bug fixes** - Resolution of issues that affect documented behavior
+- ✅ **Database changes** - Schema modifications or data model updates
+- ✅ **UI/UX updates** - Changes to layouts, navigation, or user interactions
+- ✅ **Architecture changes** - Modifications to app structure or design patterns
+
+## Required Actions
+When this rule is triggered, the AI assistant must:
+
+1. **Review Current State**
+   - Examine the changes made to the codebase
+   - Identify which features or components were affected
+   - Assess impact on overall app functionality
+
+2. **Update Development Status**
+   - Open and review `spec/dev_spec_and_status.md`
+   - Update completion status for affected components
+   - Modify progress indicators (✅ Completed, 🚧 In Progress, ⏳ Next Up)
+   - Add new tasks or components if introduced
+
+3. **Maintain Documentation Accuracy**
+   - Ensure technical specifications match current implementation
+   - Update database schema documentation if models changed
+   - Revise component descriptions to reflect actual behavior
+   - Add notes about implementation decisions or technical debt
+
+4. **Update Status Sections**
+   - **Completed Tasks**: Mark finished features as completed
+   - **In Progress**: Update current development status
+   - **Next Steps**: Adjust priorities based on new changes
+   - **Known Issues**: Add any new bugs or limitations discovered
+
+## Quality Standards
+The updated documentation must:
+- ✅ Accurately reflect the current state of the codebase
+- ✅ Use consistent formatting and terminology
+- ✅ Maintain clear progress tracking with appropriate emojis
+- ✅ Include relevant technical details for developers
+- ✅ Update timestamps or version information where applicable
+
+## Example Update Scenarios
+- **New Activity Created**: Update component status and add to completed features
+- **Database Model Added**: Update schema documentation and mark data layer progress
+- **UI Layout Changed**: Revise interface descriptions and component details
+- **Bug Fixed**: Move from "Known Issues" to resolved, update component status
+
+This rule ensures the development specification remains a reliable source of truth for project status and technical implementation details.
