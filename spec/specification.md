@@ -12,7 +12,7 @@ This app is designed for recording basketball statistics in minor and amateur le
 ## Frame 1 – Game Schedule
 
 ### Description
-User will input the game schedule details for the whole season
+User selects a scheduled game from the league schedule to start recording statistics. Games are pre-configured in the league database and displayed for selection.
 
 ### Components
 
@@ -23,6 +23,14 @@ User will input the game schedule details for the whole season
 - **Content**: Summer league name
 - **Clickable**: No
 
+#### Edit League Button
+- **Description**: Button to access league management (games, teams, players)
+- **Type**: Button
+- **Location**: Top right corner
+- **Content**: "Edit League"
+- **Clickable**: Yes
+- **When clicked**: Navigate to League Management interface
+
 #### Table Title
 - **Description**: Table title
 - **Type**: Text
@@ -30,38 +38,36 @@ User will input the game schedule details for the whole season
 - **Content**: "Game schedule"
 - **Clickable**: No
 
-#### Game List Table
-- **Description**: A list of games for the season with details for each game. A row for each game
-- **Type**: Table
+#### Game List Display
+- **Description**: A display of pre-scheduled games from the league database. Shows upcoming, in-progress, and completed games.
+- **Type**: List/Table (Read-only display)
 - **Location**: Under game schedule title starting from left to right
-- **Clickable**: Partially – Buttons edit and save only
+- **Clickable**: Yes – Only scheduled games can be selected
 - **Columns**:
-  - Game ID
-  - Game Date
+  - Game Date (DD/MM/YYYY format)
   - Home team name
-  - Away team name
-  - W/L
-  - Score
-  - Edit and save buttons
-  - Add row and delete row buttons
-- **Cell content**: User input
+  - Away team name  
+  - Status (Scheduled/In Progress/Completed)
+  - Score (if completed)
+- **Content**: Pre-configured games from league database
+- **Selection**: User can select scheduled games only
 - **Details**:
-  - User clicks edit to enable editing
-  - User clicks save to save data and disable editing
-  - User cannot edit a row after game starts
-
+  - Games are managed separately via "Edit League" function
+  - **Completed games**: Cannot be selected (greyed out)
+  - **In Progress games**: Cannot be selected (different user must complete)
+  - **Scheduled games**: Can be selected and highlighted
+  - Only games with "Scheduled" status are clickable
 
 #### Start Game Button
-- **Description**: Button that when clicked will start the process of a new game
+- **Description**: Button that starts the selected scheduled game
 - **Type**: Button
-- **Location**: Right of the game list table. Top of button in line with top of table
-- **Content**: "Start game"
-- **Clickable**: Yes
+- **Location**: Bottom right of the game list display
+- **Content**: "Start Game"
+- **Clickable**: Yes (only when a scheduled game is selected)
 - **When clicked**:
-  - Game row on game list turns grey
   - Enable mode pop-up
-  - Create new game log table
-  - Create new game roster tables
+  - Proceed to game roster selection with pre-selected teams
+  - **Note**: Game status remains "Scheduled" until actual game recording begins
 
 #### Mode Pop-up (MVP: Solo Mode Only)
 - **Description**: For MVP/POC, only Solo mode is supported. Team mode is a future feature.
@@ -76,18 +82,26 @@ User will input the game schedule details for the whole season
   - Go to game roster frame
 
 ### Flow
-1. User fills in the cells with data
-2. User marks a row to start game
-3. Click start game button
+1. User views the list of scheduled games from league database
+2. User selects a scheduled game from the list (game becomes highlighted)
+3. User clicks "Start Game" button
 4. Solo mode is automatically selected (MVP)
-5. Click OK to go to game roster
+5. Click OK to proceed to game roster selection
+
+### League Management Flow (via "Edit League" button)
+1. User clicks "Edit League" to access league management
+2. User can add/edit games (team matchups and dates)
+3. User can add/edit league teams
+4. User can edit player rosters for each team
+5. Changes are saved to league database
+6. Return to Game Schedule to start games from updated schedule
 
 ---
 
 ## Frame 2 – Game Roster
 
 ### Description
-In this frame the user selects teams from the league and chooses 5 players from each team's roster for the game. For MVP/POC, each team roster has up to 12 players, and exactly 5 are selected to play.
+In this frame the teams are automatically pre-selected from the chosen scheduled game, and the user chooses 5 players from each team's roster for the game. For MVP/POC, each team roster has up to 12 players, and exactly 5 are selected to play.
 
 ### League Teams Data (MVP)
 **4 Placeholder Teams with Player Rosters:**
@@ -107,22 +121,22 @@ In this frame the user selects teams from the league and chooses 5 players from 
 
 #### Team A Section
 
-##### Team A Selection
-- **Description**: Dropdown to select Team A from league teams
-- **Type**: Dropdown/Spinner
+##### Team A Display
+- **Description**: Shows the pre-selected home team from the chosen scheduled game
+- **Type**: Text Label
 - **Location**: Top left under main title
-- **Content**: List of available teams (Lakers, Warriors, Bulls, Heat)
-- **Clickable**: Yes
-- **When selected**: Populate Team A player selection list
+- **Content**: "[Team Name] (Home)" - automatically filled from scheduled game
+- **Clickable**: No
+- **Details**: Team is pre-determined from the selected scheduled game
 
 ##### Team A Player Selection
-- **Description**: List of available players from selected Team A, with checkboxes to select exactly 5 players
+- **Description**: List of available players from Team A, with checkboxes to select exactly 5 players
 - **Type**: Checkbox List
-- **Location**: Left side under team selection
+- **Location**: Left side under team display
 - **Clickable**: Yes  
 - **Content**: Team A's roster (up to 12 players with numbers and names)
 - **Validation**: Must select exactly 5 players
-- **Details**: Only players from the selected team are shown
+- **Details**: Players are automatically loaded from the pre-selected team
 
 ##### Approve Roster Button (Team A)
 - **Description**: When user selects exactly 5 players, button enables to lock the selection
@@ -146,22 +160,22 @@ In this frame the user selects teams from the league and chooses 5 players from 
 
 #### Team B Section
 
-##### Team B Selection
-- **Description**: Dropdown to select Team B from league teams
-- **Type**: Dropdown/Spinner
-- **Location**: Right side, parallel to Team A selection
-- **Content**: List of available teams (Lakers, Warriors, Bulls, Heat)
-- **Clickable**: Yes
-- **When selected**: Populate Team B player selection list
+##### Team B Display
+- **Description**: Shows the pre-selected away team from the chosen scheduled game
+- **Type**: Text Label
+- **Location**: Right side, parallel to Team A display
+- **Content**: "[Team Name] (Away)" - automatically filled from scheduled game
+- **Clickable**: No
+- **Details**: Team is pre-determined from the selected scheduled game
 
 ##### Team B Player Selection
-- **Description**: List of available players from selected Team B, with checkboxes to select exactly 5 players
+- **Description**: List of available players from Team B, with checkboxes to select exactly 5 players
 - **Type**: Checkbox List
-- **Location**: Right side under team selection
+- **Location**: Right side under team display
 - **Clickable**: Yes  
 - **Content**: Team B's roster (up to 12 players with numbers and names)
-- **Validation**: Must select exactly 5 players, cannot select same team as Team A
-- **Details**: Only players from the selected team are shown
+- **Validation**: Must select exactly 5 players
+- **Details**: Players are automatically loaded from the pre-selected team
 
 ##### Approve/Edit Buttons (Team B)
 *[Team B buttons mirror Team A functionality]*
@@ -184,19 +198,21 @@ In this frame the user selects teams from the league and chooses 5 players from 
 - **Clickable**: Yes
 - **When clicking Yes button**:
   - Pop-up shows "Game Time!!!"
-  - Go to Game frame
+  - Game status changes to "In Progress"
+  - Go to Game frame (live recording interface)
 - **When clicking No button**:
-  - Go back to Game frame. No action
+  - Return to Game Roster frame
+  - Game status remains "Scheduled" (user can return later to complete setup)
 
 ### Flow
-1. User selects Team A from league dropdown (Lakers, Warriors, Bulls, Heat)
-2. User selects exactly 5 players from Team A's roster using checkboxes
-3. User clicks "Approve roster" to lock Team A selection
-4. User selects Team B from league dropdown (must be different from Team A)
+1. Frame automatically displays pre-selected teams from chosen scheduled game
+2. User sees Team A (Home) and Team B (Away) team names (non-editable)
+3. User selects exactly 5 players from Team A's roster using checkboxes
+4. User clicks "Approve roster" to lock Team A selection
 5. User selects exactly 5 players from Team B's roster using checkboxes  
 6. User clicks "Approve roster" to lock Team B selection
 7. When both team rosters are approved, "Start game" button becomes enabled
-8. User clicks "Start game" to proceed to game interface
+8. User clicks "Start game" to proceed to live game recording interface
 
 ### Future Feature: Team/Player Management
 - **Separate screen** for editing league teams and player rosters
@@ -758,6 +774,94 @@ Can view the game statistics with sorting, grouping and filter options by game, 
 1. User clicks on one of the 3 modes
 2. User scrolls through the stat report
 3. User filters and sorts for desired view
+
+---
+
+## League Management Interface
+
+### Description
+Separate interface for managing league data (games, teams, players). Accessed via "Edit League" button from Frame 1. This is where league administrators set up and maintain the season structure.
+
+### Components
+
+#### Main Title
+- **Description**: Main title of interface
+- **Type**: Text
+- **Location**: Top center
+- **Content**: "League Management"
+- **Clickable**: No
+
+#### Management Tabs
+- **Description**: Tab interface to switch between different management sections
+- **Type**: Tab Layout
+- **Location**: Under main title
+- **Content**: Three tabs - "Games", "Teams", "Players"
+- **Clickable**: Yes
+
+### Games Management Tab
+
+#### Add Game Section
+- **Description**: Form to add new scheduled games
+- **Components**:
+  - Team A Dropdown (select from league teams)
+  - Team B Dropdown (select from league teams, different from Team A)
+  - Date Picker (DD/MM/YYYY format)
+  - Add Game Button
+- **Validation**: Cannot select same team twice, date must be future
+
+#### Scheduled Games List
+- **Description**: List of all scheduled games with edit/delete options
+- **Columns**: Date, Team A, Team B, Status, Actions (Edit/Delete)
+- **Functionality**: Edit game details, delete games (only if not started)
+
+### Teams Management Tab
+
+#### Add Team Section
+- **Description**: Form to add new teams to the league
+- **Components**:
+  - Team Name Input Field
+  - Add Team Button
+- **Validation**: Team name must be unique
+
+#### Teams List
+- **Description**: List of all league teams with edit/delete options
+- **Columns**: Team Name, Player Count, Actions (Edit/Delete/Manage Players)
+- **Functionality**: Edit team names, delete teams (only if not in scheduled games)
+
+### Players Management Tab
+
+#### Team Selection
+- **Description**: Dropdown to select team for player management
+- **Type**: Dropdown/Spinner
+- **Content**: List of all league teams
+
+#### Add Player Section  
+- **Description**: Form to add players to selected team
+- **Components**:
+  - Player Number Input (1-99)
+  - Player Name Input
+  - Add Player Button
+- **Validation**: Number must be unique within team, name required
+
+#### Team Roster List
+- **Description**: List of players for selected team
+- **Columns**: Number, Name, Actions (Edit/Delete)
+- **Functionality**: Edit player details, delete players
+- **Limit**: Maximum 12 players per team (for MVP)
+
+#### Back to Schedule Button
+- **Description**: Return to main game schedule
+- **Type**: Button
+- **Location**: Bottom of interface
+- **Content**: "Back to Schedule"
+- **When clicked**: Save all changes and return to Frame 1
+
+### League Management Flow
+1. User accesses via "Edit League" button from Frame 1
+2. User selects appropriate tab (Games/Teams/Players)
+3. User adds/edits/deletes items as needed
+4. Changes are automatically saved to league database
+5. User returns to Frame 1 with updated schedule/teams/players
 
 ---
 
