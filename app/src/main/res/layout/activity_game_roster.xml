@@ -37,7 +37,7 @@
         <LinearLayout
             android:id="@+id/teamASection"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
             android:background="#FFFFFF"
@@ -68,13 +68,21 @@
                 android:textColor="#7F8C8D"
                 android:layout_marginBottom="16dp" />
             
-            <!-- Team A Player Grid -->
-            <GridLayout
-                android:id="@+id/gridTeamAPlayers"
+            <!-- Team A Player Grid (Scrollable) -->
+            <ScrollView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:columnCount="2"
-                android:layout_gravity="center" />
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:fillViewport="true">
+                
+                <GridLayout
+                    android:id="@+id/gridTeamAPlayers"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="1"
+                    android:layout_gravity="center" />
+                    
+            </ScrollView>
                 
         </LinearLayout>
         
@@ -82,7 +90,7 @@
         <LinearLayout
             android:id="@+id/teamBSection"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
             android:background="#FFFFFF"
@@ -113,13 +121,21 @@
                 android:textColor="#7F8C8D"
                 android:layout_marginBottom="16dp" />
             
-            <!-- Team B Player Grid -->
-            <GridLayout
-                android:id="@+id/gridTeamBPlayers"
+            <!-- Team B Player Grid (Scrollable) -->
+            <ScrollView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:columnCount="2"
-                android:layout_gravity="center" />
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:fillViewport="true">
+                
+                <GridLayout
+                    android:id="@+id/gridTeamBPlayers"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="1"
+                    android:layout_gravity="center" />
+                    
+            </ScrollView>
                 
         </LinearLayout>
         

@@ -104,15 +104,17 @@ Modern, sleek interface for selecting players from pre-determined team rosters. 
 - **Background**: Dynamic - changes to green when 5 players selected ("Ready" state)
 
 ##### Team A Player Grid
-- **Description**: Modern grid of player cards for instant selection
-- **Type**: Card Grid
+- **Description**: Scrollable grid of player cards for instant selection
+- **Type**: Scrollable Card Grid
 - **Location**: Left side under team display
 - **Clickable**: Yes - Instant select/deselect
-- **Content**: 12 player cards showing "#Number Name"
+- **Content**: 12 player cards showing jersey number and name (vertical layout)
+- **Scrolling**: Independent scroll for Team A players
 - **Design**: 
   - **Unselected**: Light grey background, dark text
   - **Selected**: Blue background, white text (highlighted)
-  - **Card Style**: Rounded corners, clean typography, touch-friendly
+  - **Card Style**: Jersey-style with number on top, name below
+  - **Layout**: Single column with consistent height cards
 - **Validation**: Maximum 5 players can be selected
 - **Feedback**: 
   - Player cards highlight immediately on tap
@@ -131,11 +133,12 @@ Modern, sleek interface for selecting players from pre-determined team rosters. 
 - **Background**: Dynamic - changes to green when 5 players selected ("Ready" state)
 
 ##### Team B Player Grid
-- **Description**: Modern grid of player cards for instant selection
-- **Type**: Card Grid
+- **Description**: Scrollable grid of player cards for instant selection
+- **Type**: Scrollable Card Grid
 - **Location**: Right side under team display
 - **Clickable**: Yes - Instant select/deselect
-- **Content**: 12 player cards showing "#Number Name"
+- **Content**: 12 player cards showing jersey number and name (vertical layout)
+- **Scrolling**: Independent scroll for Team B players
 - **Design**: Same styling as Team A player grid
 - **Validation**: Maximum 5 players can be selected
 - **Feedback**: Same instant feedback as Team A

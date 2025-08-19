@@ -335,7 +335,7 @@ ConstraintLayout (main container)
 - Specification documentation and cursor rule updates
 
 ### 🚧 In Progress  
-- **READY FOR DEPLOYMENT**: Modern, sleek Frame 1 → Frame 2 flow with instant player selection completed
+- **READY FOR DEPLOYMENT**: Complete modern UI with jersey-style player cards and independent scrolling
 
 ### ⏳ Next Up
 - **Frame 3 Implementation** - Live game recording interface (GameActivity)
@@ -354,8 +354,13 @@ ConstraintLayout (main container)
   - **No Approve/Edit Buttons**: Instant selection workflow
   - **Auto-Enable Start Game**: Button turns green when both teams ready
   - **Selection Counters**: Live "X/5 selected" feedback
+  - **Consistent Layout**: Single-column layout per team for better UX
+  - **Fixed Height Cards**: 58dp consistent height with jersey-style number and name
+  - **Jersey-Style Design**: Player number prominently displayed on top, name below
+  - **Independent Scrolling**: Each team's player list scrolls independently
+  - **Perfect Text Layout**: Numbers always in same position, names clearly readable
 - ✅ **One-tap Flow**: Tap game → instant player selection → auto-ready detection
-- ✅ **Sleek UI**: Modern colors, elevation, grid layout, visual feedback
+- ✅ **Perfect UX**: Consistent height, centered text, clean single-column layout
 
 ### ❌ Blocked/Issues
 - None currently
@@ -519,5 +524,5 @@ ConstraintLayout (main container)
 - Feedback on event button layout and sizing
 - Testing with actual game scenarios
 
-**Last Updated**: December 2024 - After Modern UI Implementation Complete  
-**Status**: Active Development - Phase 1 (Frame 1 & 2 Modern UI Complete, Ready for Testing & Frame 3)
+**Last Updated**: December 2024 - After Jersey-Style Player Cards and Scrolling Implementation  
+**Status**: Active Development - Phase 1 (Frame 1 & 2 Perfect Modern UI Complete, Ready for Testing & Frame 3)

@@ -1,20 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 
-    Player Card Layout for modern player selection
-    Touch-friendly card with instant visual feedback
+    Player Card Layout - Jersey Style with Number and Name
+    Consistent height, number on top, name below
 -->
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="0dp"
-    android:layout_height="48dp"
-    android:layout_columnWeight="1"
-    android:layout_margin="4dp"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="58dp"
+    android:layout_margin="3dp"
     android:background="#F5F6FA"
-    android:text="#5 Player"
-    android:textSize="14sp"
-    android:textStyle="bold"
-    android:textColor="#2C3E50"
+    android:orientation="vertical"
     android:gravity="center"
     android:clickable="true"
     android:focusable="true"
-    android:elevation="1dp"
-    android:padding="8dp" />
+    android:elevation="2dp"
+    android:padding="6dp">
+    
+    <!-- Player Number (Jersey Style) -->
+    <TextView
+        android:id="@+id/tvPlayerNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="5"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#2C3E50"
+        android:layout_marginBottom="2dp" />
+    
+    <!-- Player Name -->
+    <TextView
+        android:id="@+id/tvPlayerName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Player Name"
+        android:textSize="11sp"
+        android:textColor="#2C3E50"
+        android:gravity="center"
+        android:maxLines="1"
+        android:ellipsize="end" />
+        
+</LinearLayout>

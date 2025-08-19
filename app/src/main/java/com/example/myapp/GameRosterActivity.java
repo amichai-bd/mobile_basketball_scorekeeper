@@ -37,7 +37,7 @@ public class GameRosterActivity extends Activity {
     private String homeTeamName, awayTeamName;
     private Team preselectedTeamA, preselectedTeamB;
     private List<TeamPlayer> selectedTeamAPlayers, selectedTeamBPlayers;
-    private List<TextView> teamAPlayerCards, teamBPlayerCards;
+    private List<View> teamAPlayerCards, teamBPlayerCards;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,12 +139,12 @@ public class GameRosterActivity extends Activity {
         
         // Create modern player cards for all 12 players from pre-selected Team A
         for (TeamPlayer player : preselectedTeamA.getPlayers()) {
-            TextView playerCard = createPlayerCard(player);
+            View playerCard = createPlayerCard(player);
             
             playerCard.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    onTeamAPlayerCardClicked(player, (TextView) v);
+                    onTeamAPlayerCardClicked(player, v);
                 }
             });
             
@@ -164,12 +164,12 @@ public class GameRosterActivity extends Activity {
         
         // Create modern player cards for all 12 players from pre-selected Team B
         for (TeamPlayer player : preselectedTeamB.getPlayers()) {
-            TextView playerCard = createPlayerCard(player);
+            View playerCard = createPlayerCard(player);
             
             playerCard.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    onTeamBPlayerCardClicked(player, (TextView) v);
+                    onTeamBPlayerCardClicked(player, v);
                 }
             });
             
@@ -178,39 +178,49 @@ public class GameRosterActivity extends Activity {
         }
     }
     
-    private TextView createPlayerCard(TeamPlayer player) {
-        TextView card = new TextView(this);
+    private View createPlayerCard(TeamPlayer player) {
+        // Inflate the modern player card layout
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View card = inflater.inflate(R.layout.item_player_card, null);
         
-        // Set text and styling
-        card.setText(player.toString()); // Shows "#5 Player Name"
-        card.setTextSize(14);
-        card.setTextColor(Color.parseColor("#2C3E50"));
-        card.setBackgroundColor(Color.parseColor("#F5F6FA")); // Unselected state
-        card.setGravity(android.view.Gravity.CENTER);
-        card.setPadding(16, 12, 16, 12);
+        // Get the number and name TextViews
+        TextView tvNumber = card.findViewById(R.id.tvPlayerNumber);
+        TextView tvName = card.findViewById(R.id.tvPlayerName);
         
-        // Set layout parameters for grid
+        // Set player data
+        tvNumber.setText(String.valueOf(player.getNumber()));
+        tvName.setText(player.getName());
+        
+        // Set layout parameters for single column grid
         GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-        params.width = 0;
-        params.height = GridLayout.LayoutParams.WRAP_CONTENT;
-        params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
-        params.setMargins(4, 4, 4, 4);
+        params.width = GridLayout.LayoutParams.MATCH_PARENT;
+        params.height = dpToPx(58); // Fixed height for consistency (slightly taller for number+name)
+        params.columnSpec = GridLayout.spec(0); // Single column
+        params.setMargins(6, 3, 6, 3);
         card.setLayoutParams(params);
-        
-        // Add elevation and rounded corners effect
-        card.setElevation(2);
         
         return card;
     }
     
-    private void onTeamAPlayerCardClicked(TeamPlayer player, TextView card) {
+    // Helper method to convert dp to pixels
+    private int dpToPx(int dp) {
+        float density = getResources().getDisplayMetrics().density;
+        return Math.round(dp * density);
+    }
+    
+    private void onTeamAPlayerCardClicked(TeamPlayer player, View card) {
         boolean isCurrentlySelected = selectedTeamAPlayers.contains(player);
+        
+        // Get the TextViews within the card
+        TextView tvNumber = card.findViewById(R.id.tvPlayerNumber);
+        TextView tvName = card.findViewById(R.id.tvPlayerName);
         
         if (isCurrentlySelected) {
             // Deselect player
             selectedTeamAPlayers.remove(player);
             card.setBackgroundColor(Color.parseColor("#F5F6FA")); // Unselected
-            card.setTextColor(Color.parseColor("#2C3E50"));
+            tvNumber.setTextColor(Color.parseColor("#2C3E50"));
+            tvName.setTextColor(Color.parseColor("#2C3E50"));
         } else {
             // Try to select player
             if (selectedTeamAPlayers.size() >= 5) {
@@ -219,21 +229,27 @@ public class GameRosterActivity extends Activity {
             }
             selectedTeamAPlayers.add(player);
             card.setBackgroundColor(Color.parseColor("#3498DB")); // Selected (blue)
-            card.setTextColor(Color.parseColor("#FFFFFF"));
+            tvNumber.setTextColor(Color.parseColor("#FFFFFF"));
+            tvName.setTextColor(Color.parseColor("#FFFFFF"));
         }
         
         updateTeamAStatus();
         updateStartGameButton();
     }
     
-    private void onTeamBPlayerCardClicked(TeamPlayer player, TextView card) {
+    private void onTeamBPlayerCardClicked(TeamPlayer player, View card) {
         boolean isCurrentlySelected = selectedTeamBPlayers.contains(player);
+        
+        // Get the TextViews within the card
+        TextView tvNumber = card.findViewById(R.id.tvPlayerNumber);
+        TextView tvName = card.findViewById(R.id.tvPlayerName);
         
         if (isCurrentlySelected) {
             // Deselect player
             selectedTeamBPlayers.remove(player);
             card.setBackgroundColor(Color.parseColor("#F5F6FA")); // Unselected
-            card.setTextColor(Color.parseColor("#2C3E50"));
+            tvNumber.setTextColor(Color.parseColor("#2C3E50"));
+            tvName.setTextColor(Color.parseColor("#2C3E50"));
         } else {
             // Try to select player
             if (selectedTeamBPlayers.size() >= 5) {
@@ -242,7 +258,8 @@ public class GameRosterActivity extends Activity {
             }
             selectedTeamBPlayers.add(player);
             card.setBackgroundColor(Color.parseColor("#3498DB")); // Selected (blue)
-            card.setTextColor(Color.parseColor("#FFFFFF"));
+            tvNumber.setTextColor(Color.parseColor("#FFFFFF"));
+            tvName.setTextColor(Color.parseColor("#FFFFFF"));
         }
         
         updateTeamBStatus();
