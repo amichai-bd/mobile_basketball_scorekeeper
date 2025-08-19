@@ -5,7 +5,7 @@ alwaysApply: true
 # Development Specification Update Rule
 
 ## Purpose
-This rule ensures that the development specification and status document remains current and accurate after any code changes, feature additions, or functional updates in the basketball statistics app.
+This rule ensures that the development specification and status document remains current and accurate after any code changes, feature additions, or functional updates in the basketball statistics app. It also ensures alignment with the functional specification.
 
 ## When to Apply
 This rule should be automatically applied after:
@@ -15,6 +15,7 @@ This rule should be automatically applied after:
 - ✅ **Database changes** - Schema modifications or data model updates
 - ✅ **UI/UX updates** - Changes to layouts, navigation, or user interactions
 - ✅ **Architecture changes** - Modifications to app structure or design patterns
+- ✅ **Specification changes** - Updates to functional requirements or user interface specifications
 
 ## Required Actions
 When this rule is triggered, the AI assistant must:
@@ -29,12 +30,15 @@ When this rule is triggered, the AI assistant must:
    - Update completion status for affected components
    - Modify progress indicators (✅ Completed, 🚧 In Progress, ⏳ Next Up)
    - Add new tasks or components if introduced
+   - Cross-reference with `spec/specification.md` for functional requirements alignment
 
 3. **Maintain Documentation Accuracy**
    - Ensure technical specifications match current implementation
    - Update database schema documentation if models changed
    - Revise component descriptions to reflect actual behavior
    - Add notes about implementation decisions or technical debt
+   - **Specification Compliance**: Check if implementation aligns with `spec/specification.md`
+   - **Specification Updates**: If functional requirements need changes, propose updates to user for approval
 
 4. **Update Status Sections**
    - **Completed Tasks**: Mark finished features as completed
@@ -49,11 +53,14 @@ The updated documentation must:
 - ✅ Maintain clear progress tracking with appropriate emojis
 - ✅ Include relevant technical details for developers
 - ✅ Update timestamps or version information where applicable
+- ✅ Ensure functional specifications remain aligned with implementation
 
 ## Example Update Scenarios
 - **New Activity Created**: Update component status and add to completed features
 - **Database Model Added**: Update schema documentation and mark data layer progress
 - **UI Layout Changed**: Revise interface descriptions and component details
 - **Bug Fixed**: Move from "Known Issues" to resolved, update component status
+- **Specification Mismatch**: Propose functional specification updates when implementation differs from requirements
+- **Feature Enhancement**: Update both technical and functional specifications when capabilities are expanded
 
-This rule ensures the development specification remains a reliable source of truth for project status and technical implementation details.
+This rule ensures the development specification remains a reliable source of truth for project status and technical implementation details, while maintaining alignment with functional requirements.
