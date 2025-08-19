@@ -323,23 +323,23 @@ ConstraintLayout (main container)
   - **Game Selection Logic** - User selects specific scheduled games from list
   - **Status Validation** - Only scheduled games can be started
   - **League Management Placeholder** - Future implementation framework ready
-- **Frame 2 Complete Refactor** - ✅ **SPECIFICATION ALIGNED**
+- **Frame 1 User Feedback Fixes** - ✅ **ALL FIXES COMPLETED**
+  - **Game Selection Logic** - Fixed: Completed/in-progress games are no longer selectable
+  - **State Management** - Fixed: Game status only changes when actual recording begins
+  - **onResume Handling** - Fixed: Proper state reset when returning via back button
+- **Frame 2 User Feedback Fixes** - ✅ **ALL FIXES COMPLETED**
+  - **Team Pre-selection** - Fixed: Teams automatically selected from scheduled game
+  - **UI Redesign** - Fixed: Removed team dropdowns, show pre-selected team names
+  - **Player Selection** - Fixed: Immediate display of relevant team rosters
+  - **Workflow Improvement** - Fixed: Streamlined from team selection to player selection only
+- **Complete Data Models** - ✅ **SPECIFICATION ALIGNED**
+  - **ScheduledGame Model** - League games with status tracking and team linking
   - **Team Models** - Team, TeamPlayer, LeagueDataProvider with 4 predefined teams
-  - **UI Redesign** - Replaced text inputs with Spinner dropdowns and CheckBox lists
-  - **Game Logic** - Team selection from league (Lakers, Warriors, Bulls, Heat) 
-  - **Player Selection** - Checkbox selection of exactly 5 players from 12-player rosters
-  - **Validation** - Different teams required, exactly 5 players per team
-  - **Approve/Edit Workflow** - Lock/unlock selections per team
+  - **Sample Data** - 9 scheduled games with various statuses for testing
 - Specification documentation and cursor rule updates
 
 ### 🚧 In Progress  
-- **Specification Update**: Frame 1 & 2 workflow improvements based on user feedback
-- Testing complete Frame 1 → Frame 2 flow on device to verify specification compliance
-
-### ❌ **WRONG IMPLEMENTATION IDENTIFIED (User Feedback)**
-- **Frame 1 Game Selection** - ❌ MEDIUM PRIORITY: Completed/In-Progress games should not be selectable
-- **Frame 1 State Management** - ❌ HIGH PRIORITY: Game status changes too early (on navigation vs actual game start)
-- **Frame 2 Team Selection** - ❌ HIGH PRIORITY: Teams should be pre-selected from scheduled game, not user-selectable
+- Testing complete Frame 1 → Frame 2 flow on device to verify all fixes work correctly
 
 ### ⏳ Next Up
 - **Frame 3 Implementation** - Live game recording interface (GameActivity)

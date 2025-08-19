@@ -2,17 +2,20 @@ package com.example.myapp.data;
 
 import com.example.myapp.models.Team;
 import com.example.myapp.models.TeamPlayer;
+import com.example.myapp.models.ScheduledGame;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * LeagueDataProvider - Provides predefined team and player data
- * Contains the 4 placeholder teams with 12 players each as specified
+ * LeagueDataProvider - Provides predefined team, player, and scheduled game data
+ * Contains the 4 placeholder teams with 12 players each and sample scheduled games
  */
 public class LeagueDataProvider {
     
     private static List<Team> teams = null;
+    private static List<ScheduledGame> scheduledGames = null;
     private static int nextPlayerId = 1;
+    private static int nextGameId = 1;
     
     /**
      * Get all league teams (Lakers, Warriors, Bulls, Heat)
@@ -47,6 +50,52 @@ public class LeagueDataProvider {
             }
         }
         return null;
+    }
+    
+    /**
+     * Get all scheduled games
+     * @return List of scheduled games with various statuses
+     */
+    public static List<ScheduledGame> getScheduledGames() {
+        if (scheduledGames == null) {
+            initializeScheduledGames();
+        }
+        return scheduledGames;
+    }
+    
+    /**
+     * Get scheduled game by ID
+     */
+    public static ScheduledGame getScheduledGameById(int gameId) {
+        for (ScheduledGame game : getScheduledGames()) {
+            if (game.getId() == gameId) {
+                return game;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Get only scheduled (not started) games
+     */
+    public static List<ScheduledGame> getAvailableGames() {
+        List<ScheduledGame> availableGames = new ArrayList<>();
+        for (ScheduledGame game : getScheduledGames()) {
+            if (game.isScheduled()) {
+                availableGames.add(game);
+            }
+        }
+        return availableGames;
+    }
+    
+    /**
+     * Update game status (for when game starts)
+     */
+    public static void updateGameStatus(int gameId, String newStatus) {
+        ScheduledGame game = getScheduledGameById(gameId);
+        if (game != null) {
+            game.setStatus(newStatus);
+        }
     }
     
     /**
@@ -134,5 +183,46 @@ public class LeagueDataProvider {
         heat.addPlayer(new TeamPlayer(nextPlayerId++, heat.getId(), 4, "Josh Richardson"));
         heat.addPlayer(new TeamPlayer(nextPlayerId++, heat.getId(), 3, "Dru Smith"));
         heat.addPlayer(new TeamPlayer(nextPlayerId++, heat.getId(), 12, "Kel'el Ware"));
+    }
+    
+    /**
+     * Initialize scheduled games with sample data
+     * Creates games with different statuses for testing
+     */
+    private static void initializeScheduledGames() {
+        scheduledGames = new ArrayList<>();
+        
+        // Ensure teams are initialized
+        if (teams == null) {
+            initializeTeams();
+        }
+        
+        // Get team references
+        Team lakers = getTeamByName("Lakers");
+        Team warriors = getTeamByName("Warriors");
+        Team bulls = getTeamByName("Bulls");
+        Team heat = getTeamByName("Heat");
+        
+        // Create sample scheduled games (upcoming)
+        scheduledGames.add(new ScheduledGame(nextGameId++, "15/12/2024", lakers, warriors));
+        scheduledGames.add(new ScheduledGame(nextGameId++, "16/12/2024", bulls, heat));
+        scheduledGames.add(new ScheduledGame(nextGameId++, "18/12/2024", lakers, bulls));
+        scheduledGames.add(new ScheduledGame(nextGameId++, "20/12/2024", warriors, heat));
+        scheduledGames.add(new ScheduledGame(nextGameId++, "22/12/2024", lakers, heat));
+        scheduledGames.add(new ScheduledGame(nextGameId++, "24/12/2024", warriors, bulls));
+        
+        // Create sample completed games for demonstration
+        ScheduledGame completedGame1 = new ScheduledGame(nextGameId++, "10/12/2024", lakers, bulls, 
+            ScheduledGame.STATUS_COMPLETED, 112, 98);
+        scheduledGames.add(completedGame1);
+        
+        ScheduledGame completedGame2 = new ScheduledGame(nextGameId++, "12/12/2024", warriors, heat, 
+            ScheduledGame.STATUS_COMPLETED, 105, 110);
+        scheduledGames.add(completedGame2);
+        
+        // Create one in-progress game for demonstration
+        ScheduledGame inProgressGame = new ScheduledGame(nextGameId++, "14/12/2024", bulls, warriors);
+        inProgressGame.setStatus(ScheduledGame.STATUS_IN_PROGRESS);
+        scheduledGames.add(inProgressGame);
     }
 }

@@ -22,21 +22,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Game Roster Activity - Team/Player selection interface (Frame 2) - SPECIFICATION ALIGNED
- * Select teams from league and choose 5 players from each team's roster
+ * Game Roster Activity - Player selection interface (Frame 2) - SPECIFICATION ALIGNED
+ * Teams are pre-selected from scheduled game, user chooses 5 players from each team's roster
  */
 public class GameRosterActivity extends Activity {
     
     // UI Components
-    private Spinner spinnerTeamA, spinnerTeamB;
+    private TextView tvTeamATitle, tvTeamBTitle;
     private TextView tvTeamAPlayersTitle, tvTeamBPlayersTitle;
     private LinearLayout llTeamAPlayers, llTeamBPlayers;
     private Button btnApproveTeamA, btnEditTeamA, btnApproveTeamB, btnEditTeamB, btnStartGame;
     
     // Data
     private int gameId;
-    private List<Team> availableTeams;
-    private Team selectedTeamA, selectedTeamB;
+    private String homeTeamName, awayTeamName;
+    private Team preselectedTeamA, preselectedTeamB; // Pre-selected from scheduled game
     private List<TeamPlayer> selectedTeamAPlayers, selectedTeamBPlayers;
     private List<CheckBox> teamACheckboxes, teamBCheckboxes;
     private boolean teamAApproved = false, teamBApproved = false;
@@ -55,8 +55,8 @@ public class GameRosterActivity extends Activity {
         // Initialize data
         initializeData();
         
-        // Set up team selection spinners
-        setupTeamSpinners();
+        // Set up team displays and player lists
+        setupPreselectedTeams();
         
         // Set up event listeners
         setupEventListeners();
@@ -64,13 +64,18 @@ public class GameRosterActivity extends Activity {
     
     private void getGameDataFromIntent() {
         gameId = getIntent().getIntExtra("gameId", 1);
-        // Note: Team names will be selected by user from league teams
+        homeTeamName = getIntent().getStringExtra("homeTeam");
+        awayTeamName = getIntent().getStringExtra("awayTeam");
+        
+        // Default values if not provided
+        if (homeTeamName == null) homeTeamName = "Home Team";
+        if (awayTeamName == null) awayTeamName = "Away Team";
     }
     
     private void initializeViews() {
-        // Spinners for team selection
-        spinnerTeamA = findViewById(R.id.spinnerTeamA);
-        spinnerTeamB = findViewById(R.id.spinnerTeamB);
+        // Team title displays (pre-selected teams)
+        tvTeamATitle = findViewById(R.id.tvTeamATitle);
+        tvTeamBTitle = findViewById(R.id.tvTeamBTitle);
         
         // Player selection containers
         tvTeamAPlayersTitle = findViewById(R.id.tvTeamAPlayersTitle);
@@ -87,8 +92,9 @@ public class GameRosterActivity extends Activity {
     }
     
     private void initializeData() {
-        // Load league teams and players from data provider
-        availableTeams = LeagueDataProvider.getTeams();
+        // Get pre-selected teams from league data based on team names
+        preselectedTeamA = LeagueDataProvider.getTeamByName(homeTeamName);
+        preselectedTeamB = LeagueDataProvider.getTeamByName(awayTeamName);
         
         // Initialize selected player lists
         selectedTeamAPlayers = new ArrayList<>();
@@ -99,35 +105,17 @@ public class GameRosterActivity extends Activity {
         teamBCheckboxes = new ArrayList<>();
     }
     
-    private void setupTeamSpinners() {
-        // Create adapter for team spinners (Lakers, Warriors, Bulls, Heat)
-        ArrayAdapter<Team> teamAdapter = new ArrayAdapter<>(this, 
-            android.R.layout.simple_spinner_item, availableTeams);
-        teamAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+    private void setupPreselectedTeams() {
+        // Update team title displays with actual team names
+        tvTeamATitle.setText(homeTeamName + " (Home)");
+        tvTeamBTitle.setText(awayTeamName + " (Away)");
         
-        // Set adapters
-        spinnerTeamA.setAdapter(teamAdapter);
-        spinnerTeamB.setAdapter(teamAdapter);
-        
-        // Set up selection listeners
-        spinnerTeamA.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                onTeamASelected((Team) parent.getItemAtPosition(position));
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        });
-        
-        spinnerTeamB.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                onTeamBSelected((Team) parent.getItemAtPosition(position));
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        });
+        // Automatically populate player lists for both teams
+        populateTeamAPlayers();
+        populateTeamBPlayers();
     }
+    
+
     
     private void setupEventListeners() {
         btnApproveTeamA.setOnClickListener(new View.OnClickListener() {
@@ -166,31 +154,17 @@ public class GameRosterActivity extends Activity {
         });
     }
     
-    private void onTeamASelected(Team team) {
-        selectedTeamA = team;
-        clearTeamASelections();
-        populateTeamAPlayers();
-        validateTeamSelection();
-    }
-    
-    private void onTeamBSelected(Team team) {
-        selectedTeamB = team;
-        clearTeamBSelections();
-        populateTeamBPlayers();
-        validateTeamSelection();
-    }
-    
     private void populateTeamAPlayers() {
-        if (selectedTeamA == null) return;
+        if (preselectedTeamA == null) {
+            Toast.makeText(this, "Error: Team A not found in league data", Toast.LENGTH_LONG).show();
+            return;
+        }
         
         llTeamAPlayers.removeAllViews();
         teamACheckboxes.clear();
         
-        tvTeamAPlayersTitle.setVisibility(View.VISIBLE);
-        llTeamAPlayers.setVisibility(View.VISIBLE);
-        
-        // Create checkboxes for all 12 players
-        for (TeamPlayer player : selectedTeamA.getPlayers()) {
+        // Create checkboxes for all 12 players from pre-selected Team A
+        for (TeamPlayer player : preselectedTeamA.getPlayers()) {
             CheckBox checkbox = new CheckBox(this);
             checkbox.setText(player.toString()); // Shows "#5 Player Name"
             checkbox.setTextSize(16);
@@ -209,16 +183,16 @@ public class GameRosterActivity extends Activity {
     }
     
     private void populateTeamBPlayers() {
-        if (selectedTeamB == null) return;
+        if (preselectedTeamB == null) {
+            Toast.makeText(this, "Error: Team B not found in league data", Toast.LENGTH_LONG).show();
+            return;
+        }
         
         llTeamBPlayers.removeAllViews();
         teamBCheckboxes.clear();
         
-        tvTeamBPlayersTitle.setVisibility(View.VISIBLE);
-        llTeamBPlayers.setVisibility(View.VISIBLE);
-        
-        // Create checkboxes for all 12 players
-        for (TeamPlayer player : selectedTeamB.getPlayers()) {
+        // Create checkboxes for all 12 players from pre-selected Team B
+        for (TeamPlayer player : preselectedTeamB.getPlayers()) {
             CheckBox checkbox = new CheckBox(this);
             checkbox.setText(player.toString()); // Shows "#5 Player Name"
             checkbox.setTextSize(16);
@@ -314,13 +288,18 @@ public class GameRosterActivity extends Activity {
         updateStartGameButton();
     }
     
-    // Helper methods for the new specification-aligned implementation
+    // Helper methods for the specification-aligned implementation
     
     private void clearTeamASelections() {
         selectedTeamAPlayers.clear();
         teamAApproved = false;
         btnApproveTeamA.setEnabled(false);
         btnEditTeamA.setEnabled(false);
+        
+        // Uncheck all Team A checkboxes
+        for (CheckBox checkbox : teamACheckboxes) {
+            checkbox.setChecked(false);
+        }
         updateStartGameButton();
     }
     
@@ -329,23 +308,12 @@ public class GameRosterActivity extends Activity {
         teamBApproved = false;
         btnApproveTeamB.setEnabled(false);
         btnEditTeamB.setEnabled(false);
-        updateStartGameButton();
-    }
-    
-    private void validateTeamSelection() {
-        // Ensure different teams are selected
-        if (selectedTeamA != null && selectedTeamB != null && 
-            selectedTeamA.getId() == selectedTeamB.getId()) {
-            Toast.makeText(this, "Please select different teams for Team A and Team B", 
-                Toast.LENGTH_SHORT).show();
-            
-            // Reset Team B selection
-            spinnerTeamB.setSelection(0);
-            selectedTeamB = null;
-            clearTeamBSelections();
-            tvTeamBPlayersTitle.setVisibility(View.GONE);
-            llTeamBPlayers.setVisibility(View.GONE);
+        
+        // Uncheck all Team B checkboxes
+        for (CheckBox checkbox : teamBCheckboxes) {
+            checkbox.setChecked(false);
         }
+        updateStartGameButton();
     }
     
     private void updateTeamAApproveButton() {
@@ -357,14 +325,12 @@ public class GameRosterActivity extends Activity {
     }
     
     private void setTeamAEnabled(boolean enabled) {
-        spinnerTeamA.setEnabled(enabled);
         for (CheckBox checkbox : teamACheckboxes) {
             checkbox.setEnabled(enabled);
         }
     }
     
     private void setTeamBEnabled(boolean enabled) {
-        spinnerTeamB.setEnabled(enabled);
         for (CheckBox checkbox : teamBCheckboxes) {
             checkbox.setEnabled(enabled);
         }
@@ -407,16 +373,17 @@ public class GameRosterActivity extends Activity {
             teamBGamePlayers.add(tp.toGamePlayer(gameId, "away"));
         }
         
-        // For MVP, show confirmation message
+        // For MVP, show confirmation message with pre-selected team names
         String message = String.format("Game Time!!!\n%s vs %s\n(Game interface coming soon)", 
-            selectedTeamA.getName(), selectedTeamB.getName());
+            homeTeamName, awayTeamName);
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         
+        // TODO: Update game status to "In Progress" here when actual game recording begins
         // TODO: Navigate to GameActivity with roster data
         // Intent intent = new Intent(this, GameActivity.class);
         // intent.putExtra("gameId", gameId);
-        // intent.putExtra("teamAName", selectedTeamA.getName());
-        // intent.putExtra("teamBName", selectedTeamB.getName());
+        // intent.putExtra("teamAName", homeTeamName);
+        // intent.putExtra("teamBName", awayTeamName);
         // intent.putExtra("teamAPlayers", (Serializable) teamAGamePlayers);  
         // intent.putExtra("teamBPlayers", (Serializable) teamBGamePlayers);
         // startActivity(intent);

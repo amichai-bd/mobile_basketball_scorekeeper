@@ -30,21 +30,15 @@
             android:orientation="vertical"
             android:layout_marginBottom="32dp">
             
-            <!-- Team A Selection -->
+            <!-- Team A Display (Pre-selected from scheduled game) -->
             <TextView
+                android:id="@+id/tvTeamATitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Team A (Home)"
+                android:text="[Team Name] (Home)"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
-                
-            <Spinner
-                android:id="@+id/spinnerTeamA"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:prompt="@string/team_selection_prompt" />
+                android:layout_marginBottom="16dp" />
             
             <!-- Team A Player Selection -->
             <TextView
@@ -54,16 +48,14 @@
                 android:text="Select 5 Players:"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="8dp"
-                android:visibility="gone" />
+                android:layout_marginBottom="8dp" />
                 
             <LinearLayout
                 android:id="@+id/llTeamAPlayers"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginBottom="16dp"
-                android:visibility="gone" />
+                android:layout_marginBottom="16dp" />
             
             <!-- Team A Buttons -->
             <LinearLayout
@@ -95,21 +87,15 @@
             android:orientation="vertical"
             android:layout_marginBottom="32dp">
             
-            <!-- Team B Selection -->
+            <!-- Team B Display (Pre-selected from scheduled game) -->
             <TextView
+                android:id="@+id/tvTeamBTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Team B (Away)"
+                android:text="[Team Name] (Away)"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
-                
-            <Spinner
-                android:id="@+id/spinnerTeamB"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:prompt="@string/team_selection_prompt" />
+                android:layout_marginBottom="16dp" />
             
             <!-- Team B Player Selection -->
             <TextView
@@ -119,16 +105,14 @@
                 android:text="Select 5 Players:"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="8dp"
-                android:visibility="gone" />
+                android:layout_marginBottom="8dp" />
                 
             <LinearLayout
                 android:id="@+id/llTeamBPlayers"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginBottom="16dp"
-                android:visibility="gone" />
+                android:layout_marginBottom="16dp" />
 
             
             <!-- Team B Buttons -->
