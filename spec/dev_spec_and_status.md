@@ -18,20 +18,16 @@
 
 ### Database Schema (SQLite)
 
-#### Games Table
+#### Games Table (Simplified)
 ```sql
 CREATE TABLE games (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    league_name TEXT NOT NULL,
-    date TEXT NOT NULL,
-    home_team TEXT NOT NULL,
-    away_team TEXT NOT NULL,
-    home_score INTEGER DEFAULT 0,
-    away_score INTEGER DEFAULT 0,
-    status TEXT DEFAULT 'scheduled', -- scheduled, in_progress, completed
-    current_quarter INTEGER DEFAULT 1,
-    game_time INTEGER DEFAULT 600, -- seconds (10 minutes)
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    date TEXT NOT NULL, -- DD/MM/YYYY format
+    home_team_id INTEGER NOT NULL, -- Reference to teams table
+    away_team_id INTEGER NOT NULL, -- Reference to teams table
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (home_team_id) REFERENCES teams (id),
+    FOREIGN KEY (away_team_id) REFERENCES teams (id)
 );
 ```
 
@@ -339,7 +335,7 @@ ConstraintLayout (main container)
 - Specification documentation and cursor rule updates
 
 ### 🚧 In Progress  
-- Testing complete Frame 1 → Frame 2 flow on device to verify all fixes work correctly
+- Ready for Frame 3 (Live Game Recording) implementation planning and development
 
 ### ⏳ Next Up
 - **Frame 3 Implementation** - Live game recording interface (GameActivity)
@@ -364,15 +360,17 @@ ConstraintLayout (main container)
 - ✅ **Status Validation**: Only scheduled games can be started (completed/in-progress blocked)
 - ✅ **Workflow**: Select scheduled game → Start Game → Proceed to roster selection
 - ✅ **League Management**: Placeholder implementation ready for future tabs interface
+- ✅ **USER FEEDBACK FIXES**: Completed/in-progress games non-selectable, proper state management, back button handling
 
 **Frame 2 (Game Roster) Specification Alignment:**
 - ✅ **FIXED WRONG IMPLEMENTATION**: Completely refactored from manual input to team/player selection
 - ✅ **Specification Compliant**: Now matches specification exactly
-- ✅ **Team Selection**: Dropdown selection from 4 league teams (Lakers, Warriors, Bulls, Heat)
+- ✅ **Team Pre-selection**: Teams automatically displayed from scheduled game selection
 - ✅ **Player Selection**: Checkbox selection of exactly 5 players from 12-player rosters
-- ✅ **Validation**: Enforces different teams and exactly 5 players per team
-- ✅ **UI Components**: Spinner dropdowns and CheckBox lists as specified
-- ✅ **Workflow**: Select team → Select 5 players → Approve → Repeat for opponent
+- ✅ **Validation**: Exactly 5 players per team required
+- ✅ **UI Components**: Text labels for teams, CheckBox lists for players as specified
+- ✅ **Workflow**: View pre-selected teams → Select 5 players each → Approve → Start game
+- ✅ **USER FEEDBACK FIXES**: Teams pre-selected from scheduled game, no team dropdown selection needed
 
 ---
 
@@ -412,14 +410,15 @@ ConstraintLayout (main container)
 
 ### Business Logic Decisions  
 1. **League Teams**: 4 predefined teams (Lakers, Warriors, Bulls, Heat) with 12 players each
-2. **Game Roster**: Select exactly 5 players from each team's 12-player roster
-3. **Team Selection**: Must select different teams for home/away sides
-4. **10-Minute Quarters**: Standard amateur league timing
-5. **Solo Operation**: Single device/user per game
-6. **Simple Fouls**: Personal fouls only, no technical/flagrant
-7. **Basic Timeouts**: Record timeout event, no duration tracking
-8. **Statistics Approach**: Count events in real-time, calculate percentages in reports
-9. **Team Fouls**: Track per-quarter, visual warning at 5+ fouls
+2. **Simple Game Selection**: Tap game card to proceed - no status complexity
+3. **Game Roster**: Select exactly 5 players from each team's 12-player roster  
+4. **Team Pre-selection**: Teams automatically selected from chosen game matchup
+5. **10-Minute Quarters**: Standard amateur league timing
+6. **Solo Operation**: Single device/user per game
+7. **Simple Fouls**: Personal fouls only, no technical/flagrant
+8. **Basic Timeouts**: Record timeout event, no duration tracking
+9. **Statistics Approach**: Count events in real-time, calculate percentages in reports
+10. **Team Fouls**: Track per-quarter, visual warning at 5+ fouls
 
 ### UI/UX Decisions
 1. **Portrait Orientation**: Mobile-first design
@@ -490,8 +489,9 @@ ConstraintLayout (main container)
 2. ✅ **COMPLETED**: Frame 2 (Game Roster) specification-aligned implementation  
 3. ✅ **COMPLETED**: ScheduledGame model and league database structure
 4. ✅ **COMPLETED**: Edit League button and LeagueManagement placeholder
-5. **IN PROGRESS**: Mobile device testing and deployment verification
-6. **NEXT**: Frame 3 (Live Game Recording) implementation
+5. ✅ **COMPLETED**: All user feedback fixes (game selection logic, state management, team pre-selection)
+6. **READY**: Mobile device testing and deployment verification
+7. **NEXT**: Frame 3 (Live Game Recording) implementation
 
 ### Upcoming Tasks
 1. Complete League Management interface implementation (Games/Teams/Players tabs)
@@ -509,5 +509,5 @@ ConstraintLayout (main container)
 - Feedback on event button layout and sizing
 - Testing with actual game scenarios
 
-**Last Updated**: December 2024 - After Frame 1 Wrong Implementation Fixed  
-**Status**: Active Development - Phase 1 (Frame 1 & 2 Complete and Specification Aligned)
+**Last Updated**: December 2024 - After All User Feedback Fixes Applied  
+**Status**: Active Development - Phase 1 (Frame 1 & 2 Complete, All Wrong Implementations Fixed, Ready for Frame 3)

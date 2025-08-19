@@ -9,92 +9,65 @@ This app is designed for recording basketball statistics in minor and amateur le
 
 ---
 
-## Frame 1 – Game Schedule
+## Frame 1 – Game Selection
 
 ### Description
-User selects a scheduled game from the league schedule to start recording statistics. Games are pre-configured in the league database and displayed for selection.
+Simple, clean interface for selecting a game to start recording statistics. User chooses from pre-configured matchups and proceeds directly to player selection.
 
 ### Components
 
 #### Main Title
-- **Description**: Main title of frame
+- **Description**: Main title of app
 - **Type**: Text
-- **Location**: Top left corner
-- **Content**: Summer league name
+- **Location**: Top center
+- **Content**: "Basketball Stats"
 - **Clickable**: No
 
 #### Edit League Button
-- **Description**: Button to access league management (games, teams, players)
-- **Type**: Button
+- **Description**: Small button to access league management (games, teams, players)
+- **Type**: Button  
 - **Location**: Top right corner
-- **Content**: "Edit League"
+- **Content**: "⚙️" (gear icon) or "Edit"
 - **Clickable**: Yes
 - **When clicked**: Navigate to League Management interface
 
-#### Table Title
-- **Description**: Table title
+#### Game Selection Title
+- **Description**: Section title
 - **Type**: Text
-- **Location**: Top left corner under main title
-- **Content**: "Game schedule"
+- **Location**: Center under main title
+- **Content**: "Select Game"
 - **Clickable**: No
 
-#### Game List Display
-- **Description**: A display of pre-scheduled games from the league database. Shows upcoming, in-progress, and completed games.
-- **Type**: List/Table (Read-only display)
-- **Location**: Under game schedule title starting from left to right
-- **Clickable**: Yes – Only scheduled games can be selected
-- **Columns**:
-  - Game Date (DD/MM/YYYY format)
-  - Home team name
-  - Away team name  
-  - Status (Scheduled/In Progress/Completed)
-  - Score (if completed)
-- **Content**: Pre-configured games from league database
-- **Selection**: User can select scheduled games only
-- **Details**:
-  - Games are managed separately via "Edit League" function
-  - **Completed games**: Cannot be selected (greyed out)
-  - **In Progress games**: Cannot be selected (different user must complete)
-  - **Scheduled games**: Can be selected and highlighted
-  - Only games with "Scheduled" status are clickable
+#### Game List
+- **Description**: Clean list of available games to start
+- **Type**: Simple List
+- **Location**: Center of screen
+- **Format**: Large, touch-friendly cards showing:
+  - **Team A vs Team B**
+  - **Date**
+- **Clickable**: Yes – Tap any game to proceed
+- **Selection**: Single tap immediately proceeds to roster selection
+- **Design**: Card-based layout with clear typography, generous spacing
 
-#### Start Game Button
-- **Description**: Button that starts the selected scheduled game
-- **Type**: Button
-- **Location**: Bottom right of the game list display
-- **Content**: "Start Game"
-- **Clickable**: Yes (only when a scheduled game is selected)
-- **When clicked**:
-  - Enable mode pop-up
-  - Proceed to game roster selection with pre-selected teams
-  - **Note**: Game status remains "Scheduled" until actual game recording begins
-
-#### Mode Pop-up (MVP: Solo Mode Only)
-- **Description**: For MVP/POC, only Solo mode is supported. Team mode is a future feature.
-- **Type**: Pop-up
-- **Location**: Center
-- **Content**:
-  - Solo button – automatically selected
-  - OK button
-- **Clickable**: Yes
-- **When clicking OK button**:
-  - Pop-up disappears
-  - Go to game roster frame
+#### Quick Info
+- **Description**: Brief instruction text
+- **Type**: Text (small, subtle)
+- **Location**: Bottom of screen
+- **Content**: "Tap a game to select players and start recording"
+- **Clickable**: No
 
 ### Flow
-1. User views the list of scheduled games from league database
-2. User selects a scheduled game from the list (game becomes highlighted)
-3. User clicks "Start Game" button
-4. Solo mode is automatically selected (MVP)
-5. Click OK to proceed to game roster selection
+1. User sees clean list of available games
+2. User taps any game card
+3. Automatically proceeds to game roster selection (Frame 2)
+4. **No status tracking, no mode selection, no confirmation dialogs**
 
-### League Management Flow (via "Edit League" button)
-1. User clicks "Edit League" to access league management
-2. User can add/edit games (team matchups and dates)
-3. User can add/edit league teams
-4. User can edit player rosters for each team
-5. Changes are saved to league database
-6. Return to Game Schedule to start games from updated schedule
+### Simplified Design Principles
+- **One-tap selection**: No separate "Start Game" button needed
+- **Clean cards**: Each game displayed as a clear, touch-friendly card
+- **Minimal text**: Only essential information (teams, date)
+- **No status complexity**: All games are simply available for selection
+- **Instant navigation**: Tap game → go to player selection
 
 ---
 
