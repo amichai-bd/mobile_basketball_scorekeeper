@@ -359,10 +359,11 @@ ConstraintLayout (main container)
   - **Professional UI**: Three-panel layout matching specification exactly
 
 ### 🚧 In Progress  
-- **Unified Modal Architecture** - Specifications completed, implementation pending
-  - **Player Selection Modal** - Design and integrate three modes (Setup/Quarter/Substitution)
-  - **GameActivity Refactor** - Add dual modes (Setup Mode and Game Mode)
-  - **Navigation Update** - Direct game selection → GameActivity flow
+- **Context-Aware Button Enhancement** - Timer-based button context switching
+  - **Quarter Lineup vs Sub Logic** - Buttons change based on quarter timing (10:00 = "Quarter Lineup", <10:00 = "Sub")
+  - **Independent Team Control** - Both teams can modify lineups simultaneously
+  - **Mistake Recovery** - Allow fixing Q1 setup errors before quarter starts
+  - **Dialog Elimination** - Remove quarter change dialog for cleaner UX
 
 ### ⏳ Next Up  
 - **Event Logging System** - Database storage for recorded events and statistics
@@ -370,20 +371,24 @@ ConstraintLayout (main container)
 - **Statistics Reporting** - Frame 5 & 6 implementation
 - Database implementation to replace in-memory storage
 
-### 📋 **Latest Changes - Unified Modal Specifications**
-- 📋 **SPECIFICATIONS UPDATED**: Complete redesign for unified player selection approach
-- 📋 **Frame 1 Specified**: Direct navigation to GameActivity (no intermediate player selection screen)
-- 📋 **Frame 2 Redesigned**: Player selection specified as Setup Mode within GameActivity
-- 📋 **Frame 4 Redesigned**: Substitutions specified to use unified modal interface
-- 📋 **Unified Player Selection Modal Specified**: Single modal handles all scenarios:
-  - **Setup Mode**: Select starting 5 players (0/5 → 5/5)
-  - **Quarter Change Mode**: Modify current lineup between quarters
-  - **Substitution Mode**: Replace players during game with flexible patterns
-- 📋 **Game Screen Dual Modes Specified**: 
+### 📋 **Latest Changes - Unified Modal Implementation & Context-Aware Enhancements**
+- ✅ **UNIFIED MODAL IMPLEMENTED**: Complete working implementation with three modes
+- ✅ **Frame 1 Navigation**: Direct navigation to GameActivity implemented
+- ✅ **Frame 2 Integration**: Player selection now works as Setup Mode within GameActivity
+- ✅ **Frame 4 Integration**: Substitutions use unified modal interface
+- ✅ **Unified Player Selection Modal Working**: Single modal handles all scenarios:
+  - **Setup Mode**: Select starting 5 players (0/5 → 5/5) ✅
+  - **Quarter Change Mode**: Modify current lineup between quarters ✅
+  - **Substitution Mode**: Replace players during game with flexible patterns ✅
+- ✅ **Game Screen Dual Modes Implemented**: 
   - **Setup Mode**: Shows "Select 5 Players" buttons when no players selected
   - **Game Mode**: Full game functionality when both teams have 5 players
-- 📋 **Architecture Planned**: Same interaction pattern for all player management scenarios
-- 📋 **Flexible Substitutions Specified**: Support for 1-for-1, 2-for-2, or any valid substitution pattern
+- ✅ **Independent Team UI**: Each team shows players immediately after selection
+- 📋 **ENHANCED SPECIFICATION**: Context-aware buttons for better quarter management
+  - **Timer-Based Context**: "Quarter Lineup" (10:00) vs "Sub" (<10:00) buttons
+  - **Independent Control**: Both teams modify lineups simultaneously
+  - **Mistake Recovery**: Fix setup errors before quarter starts
+  - **Dialog Elimination**: Removed quarter change dialog for cleaner UX
 - ✅ **Frame 1 Simplified**: Removed status complexity, clean card-based game selection
 - ✅ **Frame 2 Modernized**: Complete UI overhaul with instant player selection
   - **Modern Player Cards**: Touch-friendly cards with instant highlighting
@@ -505,8 +510,11 @@ ConstraintLayout (main container)
 - **Solo Mode**: Single user operation
 - **5-Player Teams**: Fixed roster size with flexible substitutions
 - **Unified Player Management**: Single modal interface for all player selection scenarios
+- **Context-Aware Buttons**: Timer-based "Quarter Lineup" vs "Sub" button context
+- **Independent Team Control**: Both teams can modify lineups simultaneously
+- **Mistake Recovery**: Fix initial setup errors before quarter starts
 - **Flexible Substitutions**: Support for any valid substitution pattern (1-for-1, 2-for-2, 3-for-3, etc.)
-- **Quarter Lineup Changes**: Modify entire lineups between quarters
+- **Quarter Lineup Changes**: Modify entire lineups between quarters without dialogs
 - **Core Events**: All 13 basketball events (1P, 2P, 3P, misses, rebounds, etc.)
 - **Live Scoring**: Real-time score updates
 - **Team Foul Tracking**: Per-quarter team foul counts with visual indicators
@@ -541,14 +549,16 @@ ConstraintLayout (main container)
 4. **Unified Player Management**: Single modal interface for all player selection scenarios
 5. **Game Roster**: Select exactly 5 players from each team's 12-player roster
 6. **Independent Team Selection**: Each team's 5 players selected separately via modal
-7. **Flexible Substitutions**: Support for any valid substitution pattern (1-for-1, 2-for-2, etc.)
-8. **Quarter Lineup Changes**: Support for changing lineups between quarters using same interface
-9. **10-Minute Quarters**: Standard amateur league timing
-10. **Solo Operation**: Single device/user per game
-11. **Simple Fouls**: Personal fouls only, no technical/flagrant
-12. **Basic Timeouts**: Record timeout event, no duration tracking
-13. **Statistics Approach**: Count events in real-time, calculate percentages in reports
-14. **Team Fouls**: Track per-quarter, visual warning at 5+ fouls
+7. **Context-Aware Buttons**: Timer-based button context (10:00 = "Quarter Lineup", <10:00 = "Sub")
+8. **Flexible Substitutions**: Support for any valid substitution pattern (1-for-1, 2-for-2, etc.)
+9. **Quarter Lineup Changes**: Independent team control before quarter starts (timer = 10:00)
+10. **Mistake Recovery**: Allow fixing initial setup errors before quarter begins
+11. **10-Minute Quarters**: Standard amateur league timing
+12. **Solo Operation**: Single device/user per game
+13. **Simple Fouls**: Personal fouls only, no technical/flagrant
+14. **Basic Timeouts**: Record timeout event, no duration tracking
+15. **Statistics Approach**: Count events in real-time, calculate percentages in reports
+16. **Team Fouls**: Track per-quarter, visual warning at 5+ fouls
 
 ### UI/UX Decisions
 1. **Portrait Orientation**: Mobile-first design

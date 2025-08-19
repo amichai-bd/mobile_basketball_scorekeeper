@@ -387,13 +387,24 @@ This is the main screen where the live updates happen. The screen now has two di
   - Game control toggle shows "START" (green)
   - Clock background turns yellow (paused state)
 
-#### Sub Button
-- **Description**: When a player is substituted, the user will click on the Sub button to substitute the player on the system
-- **Type**: Button
+#### Quarter Lineup / Sub Button (Context-Aware)
+- **Description**: Smart button that changes context based on quarter timing
+- **Type**: Context-Aware Button
 - **Location**: Side panel, bottom of team section
-- **Content**: "Sub"
+- **Content & Behavior**:
+  - **When Timer = 10:00** (Quarter not started):
+    - Content: "Quarter Lineup"
+    - Purpose: Strategic lineup planning before quarter begins
+    - Opens: Quarter Change Mode modal with current 5 pre-selected
+  - **When Timer < 10:00** (Quarter in progress):
+    - Content: "Sub" 
+    - Purpose: Tactical substitutions during live gameplay
+    - Opens: Substitution Mode modal with green/red/blue states
 - **Clickable**: Yes
-- **When clicked**: Go to Substitution frame (Frame 4)
+- **Benefits**: 
+  - Both teams can modify lineups independently before quarters start
+  - Clear visual distinction between pre-quarter planning vs mid-game substitutions
+  - Allows fixing initial setup mistakes before quarter begins
 
 #### Personal Foul Title
 - **Description**: Title
@@ -660,10 +671,18 @@ This is the main screen where the live updates happen. The screen now has two di
 
 #### Quarter Transition Flow
 1. When transitioning between quarters (Q1→Q2, Q2→Q3, Q3→Q4)
-2. Optional prompt: "Starting Quarter X - Change lineup?"
-3. Options:
-   - **"Keep Same"** - Continue with current 5 players
-   - **"Change Lineup"** - Opens Unified Modal in Quarter Change Mode with current 5 pre-selected
+2. Clock automatically resets to 10:00 and stops
+3. **Context-Aware Buttons**: Team action buttons automatically change from "Sub" to "Quarter Lineup"
+4. **Independent Team Control**: Each team can modify their lineup independently by clicking "Quarter Lineup"
+5. **No Dialog Needed**: Teams modify lineups as desired without sequential dialog workflow
+6. **Quarter Begins**: When timer starts (< 10:00), buttons change back to "Sub" for mid-game substitutions
+
+#### Enhanced Quarter Management Benefits
+- **Both Teams Can Change**: No more "Team A or Team B" limitation
+- **Fix Setup Mistakes**: Correct Q1 errors before game starts
+- **Clear Context**: "Quarter Lineup" (strategic) vs "Sub" (tactical) buttons
+- **Independent Control**: Teams don't interfere with each other's lineup decisions
+- **Simplified Workflow**: No dialogs, just click team button to modify lineup
 
 ### Enhanced UX Principles
 - **Quick Visual Feedback**: 0.3-second button flash for immediate confirmation

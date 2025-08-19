@@ -338,9 +338,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         btnTeamATimeout.setOnClickListener(v -> recordTeamTimeout("home"));
         btnTeamBTimeout.setOnClickListener(v -> recordTeamTimeout("away"));
         
-        // Substitution (placeholder)
-        btnTeamASub.setOnClickListener(v -> Toast.makeText(this, "Substitution for " + teamAName + " (coming soon)", Toast.LENGTH_SHORT).show());
-        btnTeamBSub.setOnClickListener(v -> Toast.makeText(this, "Substitution for " + teamBName + " (coming soon)", Toast.LENGTH_SHORT).show());
+        // Context-aware lineup management (Quarter Lineup vs Substitution)
+        btnTeamASub.setOnClickListener(v -> openContextAwareLineupModal(teamA, "home", teamAPlayers));
+        btnTeamBSub.setOnClickListener(v -> openContextAwareLineupModal(teamB, "away", teamBPlayers));
         
         // View Log button
         btnViewLog.setOnClickListener(v -> openEventLog());
@@ -368,14 +368,99 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         modal.show(getFragmentManager(), "PlayerSelection");
     }
     
-    // PlayerSelectionModal.PlayerSelectionListener interface implementation
-    @Override
-    public void onPlayersSelected(List<TeamPlayer> selectedPlayers, List<TeamPlayer> playersOut) {
-        if (selectedPlayers.size() != 5) {
-            Toast.makeText(this, "Must select exactly 5 players", Toast.LENGTH_SHORT).show();
+    // Context-Aware Lineup Modal Method (Timer-based decision)
+    private void openContextAwareLineupModal(Team team, String teamSide, List<Player> currentPlayers) {
+        // Check if we're in game mode (can't modify lineups in setup mode)
+        if (isInSetupMode) {
+            Toast.makeText(this, "Complete team setup first", Toast.LENGTH_SHORT).show();
             return;
         }
         
+        if (team == null || team.getPlayers() == null || team.getPlayers().isEmpty()) {
+            Toast.makeText(this, "No players available for " + team.getName(), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        if (currentPlayers == null || currentPlayers.size() != 5) {
+            Toast.makeText(this, "Must have 5 players to modify lineup", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Decide mode based on timer state
+        boolean isQuarterFresh = (gameTimeSeconds == 600); // 10:00 = quarter hasn't started
+        
+        if (isQuarterFresh) {
+            // Quarter Lineup Mode - strategic planning before quarter starts
+            openQuarterChangeModal(team, teamSide, currentPlayers);
+        } else {
+            // Substitution Mode - tactical changes during live game
+            openSubstitutionModal(team, teamSide, currentPlayers);
+        }
+    }
+    
+    // Substitution Modal Method
+    private void openSubstitutionModal(Team team, String teamSide, List<Player> currentPlayers) {
+        // Track which team's modal is open
+        currentModalTeamSide = teamSide;
+        
+        // Convert current Players to TeamPlayers for the modal
+        List<TeamPlayer> currentTeamPlayers = new ArrayList<>();
+        for (Player player : currentPlayers) {
+            // Find the corresponding TeamPlayer in the team roster
+            for (TeamPlayer teamPlayer : team.getPlayers()) {
+                if (teamPlayer.getNumber() == player.getNumber()) {
+                    currentTeamPlayers.add(teamPlayer);
+                    break;
+                }
+            }
+        }
+        
+        // Create modal with Substitution mode
+        PlayerSelectionModal modal = PlayerSelectionModal.newInstance(
+            PlayerSelectionModal.SelectionMode.SUBSTITUTION,
+            team.getName(),
+            team.getPlayers(),
+            currentTeamPlayers // Current lineup for substitution mode
+        );
+        
+        modal.setPlayerSelectionListener(this);
+        modal.show(getFragmentManager(), "PlayerSubstitution");
+    }
+    
+    // PlayerSelectionModal.PlayerSelectionListener interface implementation
+    @Override
+    public void onPlayersSelected(List<TeamPlayer> selectedPlayers, List<TeamPlayer> playersOut) {
+        
+        // Check if this is a substitution operation
+        boolean isSubstitution = playersOut.size() > 0;
+        
+        if (isSubstitution) {
+            // Handle substitution - validate equal numbers in/out
+            if (selectedPlayers.size() != playersOut.size()) {
+                Toast.makeText(this, "Must have equal players in and out", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            // Process substitution
+            handleSubstitution(selectedPlayers, playersOut);
+            
+        } else {
+            // Handle setup mode or quarter change mode - must have exactly 5 players
+            if (selectedPlayers.size() != 5) {
+                Toast.makeText(this, "Must select exactly 5 players", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            // Check if this is initial setup or quarter change based on current game state
+            if (isInSetupMode) {
+                handleInitialLineupSelection(selectedPlayers);
+            } else {
+                handleQuarterLineupChange(selectedPlayers);
+            }
+        }
+    }
+    
+    private void handleInitialLineupSelection(List<TeamPlayer> selectedPlayers) {
         // Convert TeamPlayer to Player (game players)
         List<Player> gamePlayers = new ArrayList<>();
         for (TeamPlayer teamPlayer : selectedPlayers) {
@@ -398,9 +483,157 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         checkIfGameReady();
     }
     
+    private void handleQuarterLineupChange(List<TeamPlayer> selectedPlayers) {
+        // Convert TeamPlayer to Player (game players) - reset fouls for quarter change
+        List<Player> gamePlayers = new ArrayList<>();
+        for (TeamPlayer teamPlayer : selectedPlayers) {
+            Player gamePlayer = teamPlayer.toGamePlayer(gameId, currentModalTeamSide);
+            // Keep existing personal fouls (they carry over between quarters)
+            // Find existing player to preserve foul count
+            List<Player> existingPlayers = "home".equals(currentModalTeamSide) ? teamAPlayers : teamBPlayers;
+            for (Player existingPlayer : existingPlayers) {
+                if (existingPlayer.getNumber() == gamePlayer.getNumber()) {
+                    gamePlayer.setPersonalFouls(existingPlayer.getPersonalFouls());
+                    break;
+                }
+            }
+            gamePlayers.add(gamePlayer);
+        }
+        
+        // Store old lineup for logging
+        List<Player> oldLineup = "home".equals(currentModalTeamSide) ? 
+                                new ArrayList<>(teamAPlayers) : new ArrayList<>(teamBPlayers);
+        
+        // Assign new lineup to appropriate team
+        String teamName;
+        if ("home".equals(currentModalTeamSide)) {
+            teamAPlayers = gamePlayers;
+            teamName = teamAName;
+        } else {
+            teamBPlayers = gamePlayers;
+            teamName = teamBName;
+        }
+        
+        // Log lineup change
+        logQuarterLineupChange(oldLineup, gamePlayers, teamName);
+        
+        // Update UI
+        createPlayerButtons();
+        updatePlayerButtonText(); // Refresh foul counts etc.
+        
+        // Show confirmation
+        Toast.makeText(this, String.format("🏀 Q%d %s lineup updated!", currentQuarter, teamName), 
+                      Toast.LENGTH_SHORT).show();
+    }
+    
+    private void logQuarterLineupChange(List<Player> oldLineup, List<Player> newLineup, String teamName) {
+        // Log lineup change to game events
+        String eventLogEntry = String.format("Q%d %s - %s - LINEUP CHANGE", 
+                                            currentQuarter, formatGameTime(gameTimeSeconds), teamName);
+        gameEvents.add(eventLogEntry);
+        
+        // Log individual changes (players coming in/out)
+        List<Integer> oldNumbers = new ArrayList<>();
+        List<Integer> newNumbers = new ArrayList<>();
+        
+        for (Player player : oldLineup) oldNumbers.add(player.getNumber());
+        for (Player player : newLineup) newNumbers.add(player.getNumber());
+        
+        // Find players going out
+        for (Player oldPlayer : oldLineup) {
+            if (!newNumbers.contains(oldPlayer.getNumber())) {
+                String outEvent = String.format("Q%d %s - %s - OUT: #%d %s", 
+                                               currentQuarter, formatGameTime(gameTimeSeconds), 
+                                               teamName, oldPlayer.getNumber(), oldPlayer.getName());
+                gameEvents.add(outEvent);
+            }
+        }
+        
+        // Find players coming in  
+        for (Player newPlayer : newLineup) {
+            if (!oldNumbers.contains(newPlayer.getNumber())) {
+                String inEvent = String.format("Q%d %s - %s - IN: #%d %s", 
+                                              currentQuarter, formatGameTime(gameTimeSeconds), 
+                                              teamName, newPlayer.getNumber(), newPlayer.getName());
+                gameEvents.add(inEvent);
+            }
+        }
+        
+        // Add to live event feed
+        addToLiveEventFeed("LINEUP", null, teamName + ": Q" + currentQuarter + " lineup change");
+    }
+    
+    private void handleSubstitution(List<TeamPlayer> playersIn, List<TeamPlayer> playersOut) {
+        // Get the current team players list to modify
+        List<Player> currentPlayers = "home".equals(currentModalTeamSide) ? teamAPlayers : teamBPlayers;
+        
+        // Create new lineup by replacing outgoing players with incoming players
+        List<Player> newLineup = new ArrayList<>(currentPlayers);
+        
+        // Remove outgoing players
+        for (TeamPlayer playerOut : playersOut) {
+            newLineup.removeIf(player -> player.getNumber() == playerOut.getNumber());
+        }
+        
+        // Add incoming players
+        for (TeamPlayer playerIn : playersIn) {
+            newLineup.add(playerIn.toGamePlayer(gameId, currentModalTeamSide));
+        }
+        
+        // Update team lineup
+        if ("home".equals(currentModalTeamSide)) {
+            teamAPlayers = newLineup;
+        } else {
+            teamBPlayers = newLineup;
+        }
+        
+        // Log substitution events
+        logSubstitutionEvents(playersIn, playersOut);
+        
+        // Update UI
+        createPlayerButtons();
+        updatePlayerButtonText(); // Refresh foul counts etc.
+        
+        // Show confirmation
+        String teamName = "home".equals(currentModalTeamSide) ? teamAName : teamBName;
+        Toast.makeText(this, String.format("🔄 %s: %d player%s substituted", 
+                     teamName, playersIn.size(), playersIn.size() == 1 ? "" : "s"), 
+                     Toast.LENGTH_SHORT).show();
+    }
+    
+    private void logSubstitutionEvents(List<TeamPlayer> playersIn, List<TeamPlayer> playersOut) {
+        String teamName = "home".equals(currentModalTeamSide) ? teamAName : teamBName;
+        
+        // Log each substitution
+        for (int i = 0; i < playersIn.size(); i++) {
+            TeamPlayer playerIn = playersIn.get(i);
+            TeamPlayer playerOut = playersOut.get(i);
+            
+            String substitutionEvent = String.format("SUB: #%d %s → #%d %s", 
+                                                   playerOut.getNumber(), playerOut.getName(),
+                                                   playerIn.getNumber(), playerIn.getName());
+            
+            // Add to game events log
+            String eventLogEntry = String.format("Q%d %s - %s - %s", 
+                                                currentQuarter, formatGameTime(gameTimeSeconds), 
+                                                teamName, substitutionEvent);
+            gameEvents.add(eventLogEntry);
+            
+            // Add to live event feed
+            addToLiveEventFeed("SUB", null, teamName + ": " + substitutionEvent);
+        }
+    }
+    
     @Override
     public void onSelectionCancelled() {
         Toast.makeText(this, "Player selection cancelled", Toast.LENGTH_SHORT).show();
+    }
+    
+    // Utility method to format game time for logging
+    private String formatGameTime(int totalSeconds) {
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        return String.format("%d:%02d", minutes, seconds);
     }
     
     private void checkIfGameReady() {
@@ -557,10 +790,70 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             pauseClock();
         }
         
-        // Update displays
+        // Update displays (including context-aware button text)
         updateAllDisplays();
         
-        Toast.makeText(this, "Quarter " + quarter + " selected - Clock reset to 10:00", Toast.LENGTH_SHORT).show();
+        // Show helpful message about quarter lineup changes
+        if (!isInSetupMode && (teamAPlayers.size() == 5 && teamBPlayers.size() == 5)) {
+            Toast.makeText(this, "Quarter " + quarter + " ready - Use 'Quarter Lineup' to modify teams", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this, "Quarter " + quarter + " selected - Clock reset to 10:00", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    // Context-Aware Button Text Updates
+    private void updateContextAwareButtons() {
+        // Update button text based on timer state
+        boolean isQuarterFresh = (gameTimeSeconds == 600); // 10:00 = quarter hasn't started
+        
+        if (isQuarterFresh) {
+            // Quarter hasn't started - show "Quarter Lineup" for strategic planning
+            btnTeamASub.setText("Quarter Lineup");
+            btnTeamBSub.setText("Quarter Lineup");
+        } else {
+            // Quarter in progress - show "Sub" for tactical substitutions
+            btnTeamASub.setText("Sub");
+            btnTeamBSub.setText("Sub");
+        }
+    }
+    
+    // Quarter Change Modal Method
+    private void openQuarterChangeModal(Team team, String teamSide, List<Player> currentPlayers) {
+        if (team == null || team.getPlayers() == null || team.getPlayers().isEmpty()) {
+            Toast.makeText(this, "No players available for " + team.getName(), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        if (currentPlayers == null || currentPlayers.size() != 5) {
+            Toast.makeText(this, "Current lineup must have 5 players", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Track which team's modal is open
+        currentModalTeamSide = teamSide;
+        
+        // Convert current Players to TeamPlayers for the modal
+        List<TeamPlayer> currentTeamPlayers = new ArrayList<>();
+        for (Player player : currentPlayers) {
+            // Find the corresponding TeamPlayer in the team roster
+            for (TeamPlayer teamPlayer : team.getPlayers()) {
+                if (teamPlayer.getNumber() == player.getNumber()) {
+                    currentTeamPlayers.add(teamPlayer);
+                    break;
+                }
+            }
+        }
+        
+        // Create modal with Quarter Change mode
+        PlayerSelectionModal modal = PlayerSelectionModal.newInstance(
+            PlayerSelectionModal.SelectionMode.QUARTER_CHANGE,
+            team.getName(),
+            team.getPlayers(),
+            currentTeamPlayers // Current lineup pre-selected
+        );
+        
+        modal.setPlayerSelectionListener(this);
+        modal.show(getFragmentManager(), "QuarterChange");
     }
     
     // Event Recording Methods
@@ -726,6 +1019,12 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
                 if (gameTimeSeconds > 0) {
                     gameTimeSeconds--;
                     updateGameClockDisplay();
+                    
+                    // Update context-aware buttons when timer changes from 10:00 to 9:59
+                    if (gameTimeSeconds == 599) { // Just crossed from 10:00 to 9:59
+                        updateContextAwareButtons();
+                    }
+                    
                     clockHandler.postDelayed(this, 1000); // Update every second
                 } else {
                     // Quarter complete handling
@@ -807,6 +1106,7 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         updateScoreDisplay();
         updateGameClockDisplay();
         updateTeamFoulsDisplay();
+        updateContextAwareButtons(); // Update button text based on timer state
         // Quarter display is now handled by spinner
     }
     

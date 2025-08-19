@@ -30,9 +30,7 @@
             </intent-filter>
         </activity>
         
-        <!-- Game Roster Activity (Frame 2) -->
-        <activity android:name=".GameRosterActivity"
-            android:exported="false" />
+        <!-- Game Roster Activity (Frame 2) - DEPRECATED: Now handled by unified modal in GameActivity -->
         
         <!-- League Management Activity -->
         <activity android:name=".LeagueManagementActivity"
