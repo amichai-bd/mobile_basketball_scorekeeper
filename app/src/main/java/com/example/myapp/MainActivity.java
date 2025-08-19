@@ -1,6 +1,7 @@
 package com.example.myapp;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -112,7 +113,17 @@ public class MainActivity extends Activity {
             return;
         }
         
-        // For now, just show a message (placeholder for future game roster screen)
-        Toast.makeText(this, "Start Game clicked! (Game Roster coming soon)", Toast.LENGTH_LONG).show();
+        // For MVP, use the first game in the list
+        // TODO: In full version, allow user to select which game to start
+        Game selectedGame = gameList.get(0);
+        
+        // Navigate to Game Roster Activity (Frame 2)
+        Intent intent = new Intent(this, GameRosterActivity.class);
+        intent.putExtra("gameId", selectedGame.getId());
+        intent.putExtra("homeTeam", selectedGame.getHomeTeam());
+        intent.putExtra("awayTeam", selectedGame.getAwayTeam());
+        startActivity(intent);
+        
+        Toast.makeText(this, "Starting game: " + selectedGame.toString(), Toast.LENGTH_SHORT).show();
     }
 }

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    Game Roster Layout (Frame 2) - SPECIFICATION ALIGNED
+    Team selection from league teams with player checkbox selection
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+        
+        <!-- Main Title -->
+        <TextView
+            android:id="@+id/tvMainTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Game roster"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp" />
+        
+        <!-- Team A Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="32dp">
+            
+            <!-- Team A Selection -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Team A (Home)"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+                
+            <Spinner
+                android:id="@+id/spinnerTeamA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:prompt="@string/team_selection_prompt" />
+            
+            <!-- Team A Player Selection -->
+            <TextView
+                android:id="@+id/tvTeamAPlayersTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Select 5 Players:"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"
+                android:visibility="gone" />
+                
+            <LinearLayout
+                android:id="@+id/llTeamAPlayers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone" />
+            
+            <!-- Team A Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <Button
+                    android:id="@+id/btnApproveTeamA"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Approve roster"
+                    android:layout_marginEnd="8dp"
+                    android:enabled="false" />
+                <Button
+                    android:id="@+id/btnEditTeamA"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Edit roster"
+                    android:enabled="false" />
+            </LinearLayout>
+        </LinearLayout>
+        
+        <!-- Team B Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="32dp">
+            
+            <!-- Team B Selection -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Team B (Away)"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+                
+            <Spinner
+                android:id="@+id/spinnerTeamB"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:prompt="@string/team_selection_prompt" />
+            
+            <!-- Team B Player Selection -->
+            <TextView
+                android:id="@+id/tvTeamBPlayersTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Select 5 Players:"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"
+                android:visibility="gone" />
+                
+            <LinearLayout
+                android:id="@+id/llTeamBPlayers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone" />
+
+            
+            <!-- Team B Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <Button
+                    android:id="@+id/btnApproveTeamB"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Approve roster"
+                    android:layout_marginEnd="8dp"
+                    android:enabled="false" />
+                <Button
+                    android:id="@+id/btnEditTeamB"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Edit roster"
+                    android:enabled="false" />
+            </LinearLayout>
+        </LinearLayout>
+        
+        <!-- Start Game Button -->
+        <Button
+            android:id="@+id/btnStartGame"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start game"
+            android:textSize="18sp"
+            android:padding="12dp"
+            android:enabled="false" />
+            
+    </LinearLayout>
+</ScrollView>
