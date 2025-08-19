@@ -24,10 +24,11 @@ Simple, clean interface for selecting a game to start recording statistics. User
 - **Clickable**: No
 
 #### Edit League Button
-- **Description**: Small button to access league management (games, teams, players)
-- **Type**: Button  
+- **Description**: Professional settings button to access league management
+- **Type**: Modern Icon Button  
 - **Location**: Top right corner
-- **Content**: "⚙️" (gear icon) or "Edit"
+- **Content**: Settings icon with subtle styling
+- **Design**: Round background, proper elevation, professional appearance
 - **Clickable**: Yes
 - **When clicked**: Navigate to League Management interface
 
@@ -770,24 +771,35 @@ Separate interface for managing league data (games, teams, players). Accessed vi
 - **Description**: Tab interface to switch between different management sections
 - **Type**: Tab Layout
 - **Location**: Under main title
-- **Content**: Three tabs - "Games", "Teams", "Players"
+- **Content**: Two tabs - "Games", "Teams" (Players integrated into Teams tab)
 - **Clickable**: Yes
 
 ### Games Management Tab
 
 #### Add Game Section
-- **Description**: Form to add new scheduled games
+- **Description**: Form to add new scheduled games with enhanced UX
 - **Components**:
   - Team A Dropdown (select from league teams)
   - Team B Dropdown (select from league teams, different from Team A)
-  - Date Picker (DD/MM/YYYY format)
+  - Smart Date Input (auto-formatting: DD/MM/YYYY with auto-slashes)
+  - Smart Time Input (auto-formatting: HH:MM with auto-colon)
   - Add Game Button
-- **Validation**: Cannot select same team twice, date must be future
+- **Input UX**:
+  - **Date**: Auto-adds slashes after day/month (e.g., typing "151224" becomes "15/12/24")
+  - **Time**: Auto-adds colon after hour (e.g., typing "1430" becomes "14:30")
+  - **Validation**: Real-time format validation, future date checking
+- **Validation**: Cannot select same team twice, valid date/time format required
 
 #### Scheduled Games List
-- **Description**: List of all scheduled games with edit/delete options
-- **Columns**: Date, Team A, Team B, Status, Actions (Edit/Delete)
-- **Functionality**: Edit game details, delete games (only if not started)
+- **Description**: Interactive list of all scheduled games with full management
+- **Format**: Custom list items showing "DD/MM/YYYY HH:MM - Team A vs Team B"
+- **Actions per Game**:
+  - **Edit Button**: Modify game details (teams, date, time)
+  - **Delete Button**: Remove game with confirmation
+- **Functionality**: 
+  - Tap Edit → Populate form fields with game data for editing
+  - Tap Delete → Confirmation dialog → Remove from list
+  - Clear, professional list appearance
 
 ### Teams Management Tab
 
@@ -797,32 +809,19 @@ Separate interface for managing league data (games, teams, players). Accessed vi
   - Team Name Input Field
   - Add Team Button
 - **Validation**: Team name must be unique
+- **Behavior**: After adding team, automatically switch to player management for that team
 
-#### Teams List
-- **Description**: List of all league teams with edit/delete options
-- **Columns**: Team Name, Player Count, Actions (Edit/Delete/Manage Players)
-- **Functionality**: Edit team names, delete teams (only if not in scheduled games)
-
-### Players Management Tab
-
-#### Team Selection
-- **Description**: Dropdown to select team for player management
-- **Type**: Dropdown/Spinner
-- **Content**: List of all league teams
-
-#### Add Player Section  
-- **Description**: Form to add players to selected team
-- **Components**:
-  - Player Number Input (1-99)
-  - Player Name Input
-  - Add Player Button
-- **Validation**: Number must be unique within team, name required
-
-#### Team Roster List
-- **Description**: List of players for selected team
-- **Columns**: Number, Name, Actions (Edit/Delete)
-- **Functionality**: Edit player details, delete players
-- **Limit**: Maximum 12 players per team (for MVP)
+#### Teams List with Management
+- **Description**: Interactive list of all league teams with management actions
+- **Format**: Team list items showing "Team Name (X players)"
+- **Actions per Team**:
+  - **Edit Button**: Rename team with validation
+  - **Delete Button**: Remove team (only if not used in scheduled games)
+  - **Manage Players Button**: Access player roster management (future feature)
+- **Functionality**:
+  - Tap Edit → Inline editing of team name
+  - Tap Delete → Confirmation dialog → Remove if not in use
+  - Professional list appearance with clear action buttons
 
 #### Back to Schedule Button
 - **Description**: Return to main game schedule
@@ -832,11 +831,17 @@ Separate interface for managing league data (games, teams, players). Accessed vi
 - **When clicked**: Save all changes and return to Frame 1
 
 ### League Management Flow
-1. User accesses via "Edit League" button from Frame 1
-2. User selects appropriate tab (Games/Teams/Players)
-3. User adds/edits/deletes items as needed
-4. Changes are automatically saved to league database
-5. User returns to Frame 1 with updated schedule/teams/players
+1. User accesses via gear icon "⚙️" button from Frame 1
+2. User selects appropriate tab (Games or Teams)
+3. **Games Tab**: Add/edit scheduled games with teams, dates, and times
+4. **Teams Tab**: Add/edit teams and manage each team's player roster
+5. Changes are automatically saved to league database
+6. User returns to Frame 1 with updated schedule/teams/players
+
+### Navigation Flow
+- **From Frame 1**: Tap gear icon "⚙️" → League Management interface
+- **Within Management**: Switch between Games and Teams tabs
+- **Return**: Back button or "Back to Schedule" → Frame 1
 
 ---
 
