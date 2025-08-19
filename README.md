@@ -1,159 +1,128 @@
-# My First Android App
+# Basketball Statistics App
 
-A simple Android application for testing development setup between WSL and Android devices using WiFi debugging.
+A mobile application designed for recording comprehensive basketball statistics in minor and amateur leagues using smartphones and simple, intuitive interfaces.
 
-## Prerequisites
+## Problem Statement
 
-- Android Studio or Android SDK installed
-- Java Development Kit (JDK)
-- An Android device for testing
+Most amateur and minor league basketball games currently track only the final score due to budget, manpower, and infrastructure limitations. This app enables 1-2 people to capture complete game statistics using their smartphones, bringing professional-level stat tracking to grassroots basketball.
 
-## Setting Up Your Phone for Development
+## Project Overview
 
-### 1. Enable Developer Options
-1. Go to **Settings** → **About phone**
-2. Find **Build number** and tap it 7 times
-3. You'll see a message saying "You are now a developer!"
+**Status**: 🚧 Active Development - Phase 1 (MVP/POC)  
+**Platform**: Android (Native Java)  
+**Target Users**: Basketball scorekeepers, league organizers, amateur teams  
+**Mode**: Solo operation (Team mode planned for future releases)
 
-### 2. Enable USB Debugging
-1. Go to **Settings** → **Developer options**
-2. Enable **USB debugging**
-3. Enable **Install via USB** (if available)
+## MVP Features (v1.0)
 
-### 3. Connect Your Phone via WiFi (Recommended)
+### ✅ Core Functionality
+- **Game Schedule Management**: Create and manage full season schedules
+- **Team Roster Setup**: Configure 5-player teams with basic player information
+- **Live Game Recording**: Track all 13+ basketball events in real-time
+  - Scoring: 1P, 2P, 3P makes and misses
+  - Rebounds: Offensive and defensive rebounds  
+  - Playmaking: Assists, steals, blocks
+  - Violations: Turnovers, personal fouls
+  - Team Events: Timeouts, substitutions
+- **Real-time Scoring**: Live score updates with team foul tracking
+- **Event Logging**: Complete game event history with editing capabilities
+- **Basic Statistics**: Per-player and team statistics with simple reporting
 
-#### WiFi Connection (Wireless Debugging)
-This is the easiest method for development, especially when working from WSL!
+### 📱 User Experience
+- **Large Touch Targets**: Optimized for quick tapping during live games
+- **Clear Visual Feedback**: Color-coded buttons and status indicators
+- **Minimal Disruption**: Streamlined workflows to avoid missing game action
+- **Error Recovery**: Undo functionality and event editing capabilities
 
-1. **Ensure your phone and computer are on the same WiFi network**
+### 🗄️ Technical Highlights
+- **Local-First**: SQLite database, no internet required during games
+- **Offline Capable**: Full functionality without network connectivity
+- **Data Persistence**: Automatic saving with crash recovery
+- **Portrait Optimized**: Mobile-first design for single-handed operation
 
-2. **Enable Wireless Debugging on your phone:**
-   - Go to **Settings** → **Developer options**
-   - Find **Wireless debugging** and enable it
-   - Tap on **Wireless debugging** to enter the menu
-   - You'll see your device's IP address and port
+## Architecture
 
-3. **Connect from your computer:**
-   ```bash
-   # Connect using the IP and port shown in Wireless debugging
-   adb connect [YOUR_PHONE_IP]:[PORT]
-   # Example: adb connect 192.168.1.100:37521
-   ```
+- **Frontend**: Native Android (Java) with XML layouts
+- **Database**: SQLite with optimized schema for basketball events
+- **Pattern**: MVC architecture with clear separation of concerns
+- **Dependencies**: Minimal external dependencies for reliability
 
-4. **Verify connection:**
-   ```bash
-   adb devices
-   ```
-   You should see your device listed as connected
+## Documentation
 
-**Note:** The port number changes each time you enable wireless debugging, so check it in your phone's settings.
+- **📋 Functional Specification**: [`spec/specification.md`](spec/specification.md) - Complete feature requirements and UI specifications
+- **🔧 Technical Documentation**: [`spec/dev_spec_and_status.md`](spec/dev_spec_and_status.md) - Architecture, database design, and development progress
+- **💻 Development Guide**: [`GUIDE.md`](GUIDE.md) - Android development workflow and WiFi debugging setup
 
-#### Alternative: USB Connection (Optional)
-If WiFi connection doesn't work, you can use USB:
-1. Connect your phone to your computer via USB cable
-2. Accept the "Allow USB debugging?" prompt on your phone
-3. Verify with `adb devices`
+## Quick Start
 
-## Building and Running the App
+### For Developers
+1. **Setup**: Follow [`GUIDE.md`](GUIDE.md) for Android development environment
+2. **Build**: `./gradlew installDebug` to install on connected device
+3. **Develop**: Use the 3-step cycle (edit → build → test) outlined in the guide
 
-### First Time Setup
-```bash
-# Make gradlew executable
-chmod +x gradlew
+### For Contributors
+1. Review the [functional specification](spec/specification.md) to understand requirements
+2. Check the [development status](spec/dev_spec_and_status.md) for current progress and next tasks
+3. Follow the development guide for technical setup
 
-# Build the app
-./gradlew build
-```
+## Project Status
 
-### Install and Run
-```bash
-# Build and install the debug version on your connected device
-./gradlew installDebug
-```
+### ✅ Completed
+- Project architecture and specifications
+- Database schema design
+- Technical documentation
+- Development workflow setup
 
-The app will be installed on your phone. Open it manually from your app drawer.
+### 🚧 In Progress (Phase 1)
+- Database implementation and model classes
+- Core UI layouts and navigation
+- Foundation components
 
-## Making and Testing Changes
+### ⏳ Next Up
+- Game schedule management (MainActivity)
+- Live game recording interface (GameActivity)
+- Event logging and basic statistics
 
-### 1. Edit Your Code
-For example, to change the displayed text:
-- Open `app/src/main/java/com/example/myapp/MainActivity.java`
-- Modify the text in `tv.setText("Your new text here");`
-- Save the file
+### 🎯 Future Phases
+- **Phase 2**: Advanced statistics, data export, UI polish
+- **Phase 3**: Team mode, cloud sync, advanced analytics
 
-### 2. Rebuild and Deploy
-After making changes to Java code, you need to rebuild and reinstall:
-```bash
-./gradlew installDebug
-```
+## Target Users
 
-### 3. View the Changes
-- The app will be updated on your phone
-- Open the app to see your changes
-- Note: Native Android apps don't have hot reload - you must rebuild after Java/Kotlin changes
+### Primary Users
+- **Basketball Scorekeepers**: Volunteers or staff recording games
+- **League Organizers**: Managing multiple teams and game schedules
+- **Coaches**: Tracking player performance and team statistics
 
-## Quick Development Commands
+### Use Cases
+- **Amateur Leagues**: Community and recreational basketball leagues
+- **Youth Sports**: School and club team statistics
+- **Tournament Play**: Multi-game events requiring detailed tracking
+- **Training Games**: Practice and scrimmage stat recording
 
-```bash
-# Check connected devices
-adb devices
+## Contributing
 
-# Build and install debug version
-./gradlew installDebug
+This project follows a specification-driven development approach:
 
-# Clean build (if you encounter issues)
-./gradlew clean
-./gradlew build
+1. **Read the specs**: Start with [`spec/specification.md`](spec/specification.md) for functional requirements
+2. **Check progress**: Review current status in [`spec/dev_spec_and_status.md`](spec/dev_spec_and_status.md)
+3. **Development setup**: Follow [`GUIDE.md`](GUIDE.md) for technical environment
+4. **Pick a task**: Choose from Foundation, Game Management, or Event Recording tasks
+5. **Test thoroughly**: Use real basketball scenarios for validation
 
-# View device logs (helpful for debugging)
-adb logcat | grep "com.example.myapp"
+## License
 
-# Uninstall the app
-adb uninstall com.example.myapp
-```
+[License to be determined]
 
-## Troubleshooting
+---
 
-### WiFi Connection Issues
-- **Ensure both devices are on the same network**
-- Check that **Wireless debugging** is enabled in Developer options
-- The port number changes each time - always check current port in phone settings
-- Try disabling and re-enabling Wireless debugging
-- Check firewall settings on your computer
-- Run `adb kill-server` then `adb start-server` to restart ADB
+## Why This App?
 
-### Device Not Found
-- Ensure **USB debugging** and **Wireless debugging** are enabled
-- For WiFi: Check you're using the correct IP and port from your phone
-- Try `adb disconnect` then reconnect
-- Restart ADB: `adb kill-server` then `adb start-server`
+Traditional basketball statistics require expensive equipment, dedicated software, or multiple trained operators. This app democratizes comprehensive stat tracking by:
 
-### App Not Installing
-- Check available storage on your device
-- Ensure "Install from unknown sources" is enabled
-- Try uninstalling the previous version first:
-  ```bash
-  adb uninstall com.example.myapp
-  ```
+- **Reducing Complexity**: Simple touch interface anyone can learn
+- **Minimizing Cost**: Uses existing smartphones, no additional hardware
+- **Maximizing Accessibility**: Works offline, no internet or cloud dependency required
+- **Optimizing Workflow**: Designed specifically for fast-paced basketball action
 
-## Project Structure
-```
-my_first_app/
-├── app/
-│   ├── src/
-│   │   └── main/
-│   │       ├── java/com/example/myapp/
-│   │       │   └── MainActivity.java    # Main activity file
-│   │       ├── res/                     # Resources (layouts, values, etc.)
-│   │       └── AndroidManifest.xml      # App configuration
-│   └── build.gradle                      # App-level build configuration
-├── build.gradle                          # Project-level build configuration
-└── README.md                             # This file
-```
-
-## Notes
-- This is a native Android app (Java)
-- Changes require rebuilding - no hot reload like web apps
-- Development is done over WiFi - no USB cable needed!
-- Always test on a real device when possible for accurate performance
-- WiFi debugging is perfect for WSL development since it avoids USB driver issues
+The result is professional-quality statistics accessible to any basketball program, regardless of budget or technical expertise.
