@@ -1,80 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 
-    Game Schedule Layout (Frame 1) - SPECIFICATION ALIGNED
-    Game selection from league database with Edit League management
+    Game Selection Layout (Frame 1) - CLEAN & SIMPLE
+    Sleek game selection interface with card-based design
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#F8F9FA"
+    android:padding="20dp">
     
     <!-- Header Section -->
-    <RelativeLayout
+    <LinearLayout
+        android:id="@+id/headerSection"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp">
+        android:layout_alignParentTop="true"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_marginBottom="40dp">
         
         <!-- Main Title -->
         <TextView
             android:id="@+id/tvMainTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:text="Summer League"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:text="Basketball Stats"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:textColor="#2C3E50"
+            android:layout_marginBottom="8dp" />
         
-        <!-- Edit League Button -->
-        <Button
-            android:id="@+id/btnEditLeague"
+        <!-- Section Title -->
+        <TextView
+            android:id="@+id/tvSectionTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:text="Edit League"
-            android:textSize="14sp"
-            android:background="@android:color/transparent"
-            android:textColor="@android:color/holo_blue_dark"
-            android:padding="8dp" />
-    </RelativeLayout>
+            android:text="Select Game"
+            android:textSize="18sp"
+            android:textColor="#7F8C8D" />
+    </LinearLayout>
     
-    <!-- Table Title -->
+    <!-- Edit League Button (Small, top-right) -->
+    <Button
+        android:id="@+id/btnEditLeague"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:text="⚙"
+        android:textSize="16sp"
+        android:background="@android:color/transparent"
+        android:textColor="#7F8C8D" />
+    
+    <!-- Games List (Card-based) -->
+    <ListView
+        android:id="@+id/lvGames"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/headerSection"
+        android:layout_above="@id/footerText"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="12dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp" />
+    
+    <!-- Footer Instructions -->
     <TextView
-        android:id="@+id/tvTableTitle"
+        android:id="@+id/footerText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Game schedule"
-        android:textSize="18sp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="Tap a game to select players and start recording"
+        android:textSize="14sp"
+        android:textColor="#95A5A6"
+        android:textStyle="italic"
         android:layout_marginBottom="16dp" />
     
-    <!-- Game Selection Instructions -->
-    <TextView
-        android:id="@+id/tvInstructions"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Select a scheduled game to start recording statistics:"
-        android:textSize="14sp"
-        android:textStyle="italic"
-        android:layout_marginBottom="12dp" />
-    
-    <!-- Scheduled Games List -->
-    <ListView
-        android:id="@+id/lvScheduledGames"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginBottom="16dp"
-        android:choiceMode="singleChoice"
-        android:listSelector="@android:color/holo_blue_light" />
-    
-    <!-- Start Game Button -->
-    <Button
-        android:id="@+id/btnStartGame"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Start Game"
-        android:textSize="18sp"
-        android:padding="12dp"
-        android:enabled="false" />
-    
-</LinearLayout>
+</RelativeLayout>

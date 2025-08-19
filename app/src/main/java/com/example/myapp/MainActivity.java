@@ -1,32 +1,35 @@
 package com.example.myapp;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
-import com.example.myapp.models.ScheduledGame;
+import com.example.myapp.models.SimpleGame;
 import com.example.myapp.data.LeagueDataProvider;
 import java.util.List;
 
 /**
- * Main activity - Game Schedule Selection (Frame 1) - SPECIFICATION ALIGNED
- * Game selection from pre-configured league database with Edit League management
+ * Main activity - Clean Game Selection (Frame 1) - SIMPLE & SLEEK
+ * One-tap game selection with clean card-based interface
  */
 public class MainActivity extends Activity {
     
     // UI Components
-    private Button btnEditLeague, btnStartGame;
-    private ListView lvScheduledGames;
+    private Button btnEditLeague;
+    private ListView lvGames;
     
     // Data
-    private List<ScheduledGame> scheduledGamesList;
-    private ArrayAdapter<ScheduledGame> scheduledGamesAdapter;
-    private ScheduledGame selectedGame = null;
+    private List<SimpleGame> gamesList;
+    private GameCardAdapter gameAdapter;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,18 +48,19 @@ public class MainActivity extends Activity {
     
     private void initializeViews() {
         btnEditLeague = findViewById(R.id.btnEditLeague);
-        btnStartGame = findViewById(R.id.btnStartGame);
-        lvScheduledGames = findViewById(R.id.lvScheduledGames);
+        lvGames = findViewById(R.id.lvGames);
     }
     
     private void initializeData() {
-        // Load scheduled games from league database
-        scheduledGamesList = LeagueDataProvider.getScheduledGames();
+        // Load simple games from league database
+        gamesList = LeagueDataProvider.getAvailableGames();
         
-        // Create adapter for scheduled games list
-        scheduledGamesAdapter = new ArrayAdapter<>(this, 
-            android.R.layout.simple_list_item_single_choice, scheduledGamesList);
-        lvScheduledGames.setAdapter(scheduledGamesAdapter);
+        // Debug output to verify games are loaded
+        Toast.makeText(this, "Loaded " + gamesList.size() + " games", Toast.LENGTH_SHORT).show();
+        
+        // Create custom adapter for clean game cards
+        gameAdapter = new GameCardAdapter(this, gamesList);
+        lvGames.setAdapter(gameAdapter);
     }
     
     private void setupEventListeners() {
@@ -68,75 +72,26 @@ public class MainActivity extends Activity {
             }
         });
         
-        // Start Game button - start selected scheduled game
-        btnStartGame.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startSelectedGame();
-            }
-        });
-        
-        // Game selection listener - only allow selection of scheduled games
-        lvScheduledGames.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        // Game selection - one tap to proceed to player selection
+        lvGames.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                ScheduledGame game = scheduledGamesList.get(position);
-                // Only allow selection of scheduled games
-                if (game.isScheduled()) {
-                    onGameSelected(position);
-                } else {
-                    String status = game.isCompleted() ? "completed" : "in progress";
-                    Toast.makeText(MainActivity.this, 
-                        "Cannot select " + status + " games", Toast.LENGTH_SHORT).show();
-                }
+                SimpleGame selectedGame = gamesList.get(position);
+                proceedToPlayerSelection(selectedGame);
             }
         });
     }
     
-    private void onGameSelected(int position) {
-        selectedGame = scheduledGamesList.get(position);
+    private void proceedToPlayerSelection(SimpleGame game) {
+        // Debug output
+        Toast.makeText(this, "Game selected: " + game.getMatchupText(), Toast.LENGTH_SHORT).show();
         
-        // Enable Start Game button only for scheduled games
-        if (selectedGame.isScheduled()) {
-            btnStartGame.setEnabled(true);
-            Toast.makeText(this, "Game selected: " + selectedGame.toString(), Toast.LENGTH_SHORT).show();
-        } else {
-            btnStartGame.setEnabled(false);
-            String status = selectedGame.isCompleted() ? "already completed" : "in progress";
-            Toast.makeText(this, "Cannot start game - " + status, Toast.LENGTH_SHORT).show();
-        }
-    }
-    
-    private void startSelectedGame() {
-        if (selectedGame == null || !selectedGame.isScheduled()) {
-            Toast.makeText(this, "Please select a scheduled game", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        
-        // Navigate to Game Roster Activity (Frame 2) - Don't change status yet
-        // Game status will change to "In Progress" only when actual game recording starts
+        // Navigate directly to Game Roster Activity (Frame 2)
         Intent intent = new Intent(this, GameRosterActivity.class);
-        intent.putExtra("gameId", selectedGame.getId());
-        intent.putExtra("homeTeam", selectedGame.getHomeTeam().getName());
-        intent.putExtra("awayTeam", selectedGame.getAwayTeam().getName());
+        intent.putExtra("gameId", game.getId());
+        intent.putExtra("homeTeam", game.getHomeTeam().getName());
+        intent.putExtra("awayTeam", game.getAwayTeam().getName());
         startActivity(intent);
-        
-        Toast.makeText(this, "Proceeding to roster selection: " + selectedGame.toString(), Toast.LENGTH_SHORT).show();
-        
-        // Note: Don't change game status here - user can still back out
-        // Status will change in Frame 3 when actual game recording begins
-    }
-    
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // Refresh the game list when returning from other activities
-        if (scheduledGamesAdapter != null) {
-            scheduledGamesAdapter.notifyDataSetChanged();
-        }
-        // Reset selection state
-        btnStartGame.setEnabled(false);
-        selectedGame = null;
     }
     
     private void openLeagueManagement() {
@@ -146,5 +101,52 @@ public class MainActivity extends Activity {
         // TODO: Navigate to League Management Activity
         // Intent intent = new Intent(this, LeagueManagementActivity.class);
         // startActivity(intent);
+    }
+    
+    /**
+     * Custom adapter for clean game card display
+     */
+    private class GameCardAdapter extends BaseAdapter {
+        private Context context;
+        private List<SimpleGame> games;
+        private LayoutInflater inflater;
+        
+        public GameCardAdapter(Context context, List<SimpleGame> games) {
+            this.context = context;
+            this.games = games;
+            this.inflater = LayoutInflater.from(context);
+        }
+        
+        @Override
+        public int getCount() {
+            return games.size();
+        }
+        
+        @Override
+        public Object getItem(int position) {
+            return games.get(position);
+        }
+        
+        @Override
+        public long getItemId(int position) {
+            return games.get(position).getId();
+        }
+        
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = inflater.inflate(R.layout.item_game_card, parent, false);
+            }
+            
+            SimpleGame game = games.get(position);
+            
+            TextView tvMatchup = convertView.findViewById(R.id.tvMatchup);
+            TextView tvDate = convertView.findViewById(R.id.tvDate);
+            
+            tvMatchup.setText(game.getMatchupText());
+            tvDate.setText(game.getDateText());
+            
+            return convertView;
+        }
     }
 }

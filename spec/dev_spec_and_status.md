@@ -335,7 +335,7 @@ ConstraintLayout (main container)
 - Specification documentation and cursor rule updates
 
 ### 🚧 In Progress  
-- Testing simplified, clean Frame 1 → Frame 2 flow on device
+- **DEPLOYED**: Simplified, clean Frame 1 → Frame 2 flow ready for testing on device
 
 ### ⏳ Next Up
 - **Frame 3 Implementation** - Live game recording interface (GameActivity)
