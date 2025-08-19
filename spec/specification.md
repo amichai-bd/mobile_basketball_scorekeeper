@@ -87,7 +87,14 @@ User will input the game schedule details for the whole season
 ## Frame 2 – Game Roster
 
 ### Description
-In this frame the user inserts the rosters of each team into the system. For MVP/POC, each team has exactly 5 players (no bench management).
+In this frame the user selects teams from the league and chooses 5 players from each team's roster for the game. For MVP/POC, each team roster has up to 12 players, and exactly 5 are selected to play.
+
+### League Teams Data (MVP)
+**4 Placeholder Teams with Player Rosters:**
+- **Lakers**: 12 players with numbers and names
+- **Warriors**: 12 players with numbers and names  
+- **Bulls**: 12 players with numbers and names
+- **Heat**: 12 players with numbers and names
 
 ### Components
 
@@ -100,47 +107,64 @@ In this frame the user inserts the rosters of each team into the system. For MVP
 
 #### Team A Section
 
-##### Team A Table Title
-- **Description**: Team A table title
-- **Type**: Text
+##### Team A Selection
+- **Description**: Dropdown to select Team A from league teams
+- **Type**: Dropdown/Spinner
 - **Location**: Top left under main title
-- **Content**: Team listed as home in the game schedule table
-- **Clickable**: No
+- **Content**: List of available teams (Lakers, Warriors, Bulls, Heat)
+- **Clickable**: Yes
+- **When selected**: Populate Team A player selection list
 
-##### Team A Table
-- **Description**: A list of players on the game roster. To fill in by user before game
-- **Type**: Table
-- **Location**: Left side under team A table title
-- **Clickable**: No
-- **Columns**:
-  - Player number
-  - Player name
-- **Cell content**: User input
-- **Details**: Game roster cannot change once game starts
+##### Team A Player Selection
+- **Description**: List of available players from selected Team A, with checkboxes to select exactly 5 players
+- **Type**: Checkbox List
+- **Location**: Left side under team selection
+- **Clickable**: Yes  
+- **Content**: Team A's roster (up to 12 players with numbers and names)
+- **Validation**: Must select exactly 5 players
+- **Details**: Only players from the selected team are shown
 
 ##### Approve Roster Button (Team A)
-- **Description**: When user completes filling in roster it will be saved after clicking button
+- **Description**: When user selects exactly 5 players, button enables to lock the selection
 - **Type**: Button
-- **Location**: Under team A table
+- **Location**: Under team A player selection
 - **Content**: "Approve roster"
-- **Clickable**: Yes
+- **Clickable**: Yes (only when exactly 5 players selected)
 - **When clicked**:
-  - Table turns light grey
-  - User cannot edit
+  - Player selection becomes read-only (light grey)
+  - Edit button becomes enabled
 
 ##### Edit Roster Button (Team A)
-- **Description**: User clicks the button to enable editing the roster table
+- **Description**: User clicks to modify Team A player selection
 - **Type**: Button
-- **Location**: Under team A table
+- **Location**: Under team A player selection
 - **Content**: "Edit roster"
-- **Clickable**: Yes
+- **Clickable**: Yes (only after roster approved)
 - **When clicked**:
-  - Enables editing roster table content
-  - Colors cells in white
-
+  - Re-enables player selection checkboxes
+  - Approve button becomes enabled again
 
 #### Team B Section
-*[Team B components mirror Team A structure with same functionality]*
+
+##### Team B Selection
+- **Description**: Dropdown to select Team B from league teams
+- **Type**: Dropdown/Spinner
+- **Location**: Right side, parallel to Team A selection
+- **Content**: List of available teams (Lakers, Warriors, Bulls, Heat)
+- **Clickable**: Yes
+- **When selected**: Populate Team B player selection list
+
+##### Team B Player Selection
+- **Description**: List of available players from selected Team B, with checkboxes to select exactly 5 players
+- **Type**: Checkbox List
+- **Location**: Right side under team selection
+- **Clickable**: Yes  
+- **Content**: Team B's roster (up to 12 players with numbers and names)
+- **Validation**: Must select exactly 5 players, cannot select same team as Team A
+- **Details**: Only players from the selected team are shown
+
+##### Approve/Edit Buttons (Team B)
+*[Team B buttons mirror Team A functionality]*
 
 #### Start Game Button
 - **Description**: User clicks the button when rosters are complete and ready to start game
@@ -165,10 +189,21 @@ In this frame the user inserts the rosters of each team into the system. For MVP
   - Go back to Game frame. No action
 
 ### Flow
-1. User inserts the players on each team that will be participating in today's game
-2. After roster is complete, user clicks approve
-3. User can edit roster after clicking edit button
-4. When user has completed both teams rosters, user clicks start game
+1. User selects Team A from league dropdown (Lakers, Warriors, Bulls, Heat)
+2. User selects exactly 5 players from Team A's roster using checkboxes
+3. User clicks "Approve roster" to lock Team A selection
+4. User selects Team B from league dropdown (must be different from Team A)
+5. User selects exactly 5 players from Team B's roster using checkboxes  
+6. User clicks "Approve roster" to lock Team B selection
+7. When both team rosters are approved, "Start game" button becomes enabled
+8. User clicks "Start game" to proceed to game interface
+
+### Future Feature: Team/Player Management
+- **Separate screen** for editing league teams and player rosters
+- **Add/remove teams** from league
+- **Edit player details** (numbers, names) for each team
+- **Roster management** (add/remove players from teams)
+- **NOT implemented during game setup** - teams/players managed separately
 
 ---
 

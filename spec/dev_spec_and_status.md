@@ -35,17 +35,38 @@ CREATE TABLE games (
 );
 ```
 
-#### Players Table
+#### Teams Table (League Teams)
 ```sql
-CREATE TABLE players (
+CREATE TABLE teams (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    game_id INTEGER NOT NULL,
-    team TEXT NOT NULL, -- 'home' or 'away'
+    name TEXT NOT NULL UNIQUE, -- 'Lakers', 'Warriors', etc.
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### Team Players Table (Team Rosters)
+```sql
+CREATE TABLE team_players (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    team_id INTEGER NOT NULL,
     number INTEGER NOT NULL,
     name TEXT NOT NULL,
+    UNIQUE(team_id, number), -- No duplicate numbers per team
+    FOREIGN KEY (team_id) REFERENCES teams (id)
+);
+```
+
+#### Game Players Table (Selected for specific game)
+```sql
+CREATE TABLE game_players (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id INTEGER NOT NULL,
+    team_player_id INTEGER NOT NULL,
+    team_side TEXT NOT NULL, -- 'home' or 'away'
     is_on_court BOOLEAN DEFAULT TRUE, -- MVP: always true (5 players each)
     personal_fouls INTEGER DEFAULT 0,
-    FOREIGN KEY (game_id) REFERENCES games (id)
+    FOREIGN KEY (game_id) REFERENCES games (id),
+    FOREIGN KEY (team_player_id) REFERENCES team_players (id)
 );
 ```
 
@@ -92,11 +113,13 @@ CREATE TABLE team_fouls (
 
 #### Models
 1. **Game.java** - Game data model
-2. **Player.java** - Player data model  
-3. **Event.java** - Game event data model
-4. **DatabaseHelper.java** - SQLite operations
-5. **StatsCalculator.java** - Statistics calculation utilities (basic counts only for MVP)
-6. **TeamFoulTracker.java** - Team foul management
+2. **Team.java** - League team data model (Lakers, Warriors, etc.)
+3. **TeamPlayer.java** - Team roster player data model (12 players per team)
+4. **GamePlayer.java** - Selected players for specific game (5 per side)
+5. **Event.java** - Game event data model
+6. **DatabaseHelper.java** - SQLite operations
+7. **StatsCalculator.java** - Statistics calculation utilities (basic counts only for MVP)
+8. **TeamFoulTracker.java** - Team foul management
 
 #### Controllers
 1. **GameController.java** - Game state management
@@ -299,14 +322,15 @@ ConstraintLayout (main container)
 - Specification documentation and cursor rule updates
 
 ### 🚧 In Progress  
-- Testing and deployment verification on mobile device
-- Documentation updates to reflect current implementation status
+- **Specification Update**: Changed Frame 2 from manual roster input to league team/player selection system
+- Testing and deployment verification of current Frame 1 → Frame 2 flow
 
 ### ⏳ Next Up
-- Game roster management (Frame 2) - GameRosterActivity
-- Navigation between MainActivity and GameRosterActivity
-- Database implementation to replace in-memory storage
-- Player model and roster input functionality
+- **PRIORITY**: Refactor Frame 2 implementation to use league teams/player selection approach
+- Create Team and TeamPlayer models with 4 placeholder teams (Lakers, Warriors, Bulls, Heat)  
+- Update GameRosterActivity UI to use dropdowns and checkboxes instead of text inputs
+- Implement team/player selection validation (exactly 5 players, different teams)
+- Database implementation to replace in-memory storage (future iteration)
 
 ### ❌ Blocked/Issues
 - None currently
@@ -323,6 +347,12 @@ ConstraintLayout (main container)
   - Game roster transition → Placeholder toast message until Frame 2 is implemented
 
 **Rationale**: These simplifications maintain core functionality while enabling immediate testing and iteration. Full specification features will be added in subsequent iterations.
+
+**Frame 2 (Game Roster) Specification Update:**
+- 🔄 **CHANGED APPROACH**: Updated from manual roster input to league team/player selection system
+- ✅ **Improvement**: More realistic workflow using predefined teams and rosters
+- 📋 **New Requirements**: 4 placeholder teams (Lakers, Warriors, Bulls, Heat) with 12 players each
+- 🎯 **Implementation Status**: Current manual input implementation needs refactoring to match updated spec
 
 ---
 
@@ -342,7 +372,8 @@ ConstraintLayout (main container)
 
 ### ❌ Excluded from MVP (Future Features)  
 - **Team Mode**: Multi-device synchronization
-- **Advanced Roster**: Bench players beyond 5, fouling out management
+- **Team/Player Management Screen**: Separate interface for editing league teams and player rosters
+- **Advanced Roster**: Bench players beyond 12, fouling out management
 - **Shot Clock**: 24-second timer
 - **Advanced Fouls**: Technical, flagrant fouls
 - **Overtime**: Extended game periods
@@ -360,13 +391,15 @@ ConstraintLayout (main container)
 3. **Native Development**: Android Java/XML (not cross-platform)
 
 ### Business Logic Decisions  
-1. **Simple Roster**: 5 active players per team with basic substitution support
-2. **10-Minute Quarters**: Standard amateur league timing
-3. **Solo Operation**: Single device/user per game
-4. **Simple Fouls**: Personal fouls only, no technical/flagrant
-5. **Basic Timeouts**: Record timeout event, no duration tracking
-6. **Statistics Approach**: Count events in real-time, calculate percentages in reports
-7. **Team Fouls**: Track per-quarter, visual warning at 5+ fouls
+1. **League Teams**: 4 predefined teams (Lakers, Warriors, Bulls, Heat) with 12 players each
+2. **Game Roster**: Select exactly 5 players from each team's 12-player roster
+3. **Team Selection**: Must select different teams for home/away sides
+4. **10-Minute Quarters**: Standard amateur league timing
+5. **Solo Operation**: Single device/user per game
+6. **Simple Fouls**: Personal fouls only, no technical/flagrant
+7. **Basic Timeouts**: Record timeout event, no duration tracking
+8. **Statistics Approach**: Count events in real-time, calculate percentages in reports
+9. **Team Fouls**: Track per-quarter, visual warning at 5+ fouls
 
 ### UI/UX Decisions
 1. **Portrait Orientation**: Mobile-first design
@@ -452,5 +485,5 @@ ConstraintLayout (main container)
 - Feedback on event button layout and sizing
 - Testing with actual game scenarios
 
-**Last Updated**: December 2024 - After Frame 1 (Game Schedule) Implementation  
-**Status**: Active Development - Phase 1 (Game Schedule Complete, Game Roster Next)
+**Last Updated**: December 2024 - After Frame 2 Specification Update (League Teams/Player Selection)  
+**Status**: Active Development - Phase 1 (Game Schedule Complete, Game Roster Spec Updated)
