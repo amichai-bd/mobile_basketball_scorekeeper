@@ -12,16 +12,37 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0"
+        
+        // TODO: Add build configuration options as needed
+        // testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
             minifyEnabled false
+            // TODO: Configure ProGuard if needed for release builds
+            // proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    
+    // TODO: Add additional build features as needed
+    // buildFeatures {
+    //     viewBinding true
+    //     dataBinding true
+    // }
 }
 
 dependencies {
+    // Core Android dependencies
     implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'com.google.android.material:material:1.11.0'
+    
+    // TODO: Add your dependencies here
+    // Examples:
+    // implementation 'com.google.android.material:material:1.11.0'
+    // implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    // implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    
+    // Testing dependencies
+    // testImplementation 'junit:junit:4.13.2'
+    // androidTestImplementation 'androidx.test.ext:junit:1.1.5'
 }

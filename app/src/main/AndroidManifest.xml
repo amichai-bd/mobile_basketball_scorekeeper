@@ -1,18 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    Android Manifest - App configuration and permissions
+    
+    TODO: Configure your app here
+    - Add required permissions
+    - Register activities
+    - Set app theme and properties
+    - Configure intent filters
+-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- TODO: Add permissions here if needed
+    Examples:
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    -->
+    
     <application
-        android:label="Basketball Stats Tracker"
-        android:theme="@android:style/Theme.Material.NoActionBar">
-        <activity android:name=".MainActivity"
-            android:exported="true"
-            android:screenOrientation="landscape"
-            android:configChanges="orientation|keyboardHidden|screenSize">
+        android:label="My App"
+        android:theme="@style/Theme.AppCompat.Light">
+        
+        <!-- Main Activity - App entry point -->
+        <activity 
+            android:name=".MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".LogActivity"
-            android:screenOrientation="landscape"
-            android:configChanges="orientation|keyboardHidden|screenSize"/>
+        
+        <!-- TODO: Register additional activities here
+        <activity android:name=".LogActivity" />
+        -->
+        
     </application>
 </manifest>

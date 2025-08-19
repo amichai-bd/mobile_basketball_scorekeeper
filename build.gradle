@@ -1,1 +1,13 @@
-/* Root build is intentionally minimal; plugin versions are resolved via settings.gradle/pluginManagement */
+// Root build.gradle
+// Project-wide Gradle settings.
+
+// TODO: Add project-wide configurations here if needed
+// For example:
+// - Version variables for dependencies
+// - Common configurations for all modules
+// - Build script dependencies
+
+/* 
+ * The actual plugin and repository management is handled in settings.gradle
+ * via pluginManagement and dependencyResolutionManagement blocks
+ */
