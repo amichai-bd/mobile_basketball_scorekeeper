@@ -254,11 +254,11 @@ This is the main screen where the live updates happen. The user will click butto
 - **Location**: Top middle section
 - **Content & Visual States**:
   - **When Timer Stopped**: 
-    - Content: "START GAME"
+    - Content: "START"
     - Background: 🟢 Green ("Ready to Start")
     - State: Available/clickable
   - **When Timer Running**: 
-    - Content: "PAUSE GAME"
+    - Content: "PAUSE"
     - Background: 🔵 Blue ("Ready to Pause" - pleasant during gameplay)
     - State: Available/clickable
 - **When clicked (Timer Stopped)**:
@@ -337,11 +337,10 @@ This is the main screen where the live updates happen. The user will click butto
 - **Content**: "Time Out"
 - **Clickable**: Yes
 - **When clicked**:
-  - Colors button turns blue
   - Event recorded in log
-  - If clock is still running, stops clock
-  - Start button turns light grey
-  - Stop button turns blue
+  - If clock is running, pause the clock
+  - Game control toggle shows "START" (green)
+  - Clock background turns yellow (paused state)
 
 #### Sub Button
 - **Description**: When a player is substituted, the user will click on the Sub button to substitute the player on the system
@@ -606,8 +605,8 @@ This is the main screen where the live updates happen. The user will click butto
 - **Clear Timer State**: Clock background color immediately shows running (green) vs paused (yellow)
 - **Pleasant Single Toggle**: Single game control button eliminates UI complexity
 - **Intuitive Button Colors**: 
-  - 🟢 Green = "START GAME" (positive action when stopped)
-  - 🔵 Blue = "PAUSE GAME" (pleasant during gameplay, not aggressive)
+  - 🟢 Green = "START" (positive action when stopped)
+  - 🔵 Blue = "PAUSE" (pleasant during gameplay, not aggressive)
   - Clock background = Primary state indicator (green=running, yellow=paused)
 - **Always Available Events**: All basketball events can be recorded regardless of timer state
 

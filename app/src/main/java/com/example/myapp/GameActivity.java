@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -482,7 +485,8 @@ public class GameActivity extends Activity {
     }
     
     private void recordTeamTimeout(String team) {
-        stopClock(); // Timeout stops the clock
+        // Timeout pauses the clock and updates UI state
+        pauseClock();
         String teamName = "home".equals(team) ? teamAName : teamBName;
         Toast.makeText(this, teamName + " timeout called", Toast.LENGTH_SHORT).show();
         
@@ -512,10 +516,35 @@ public class GameActivity extends Activity {
                     updateGameClockDisplay();
                     clockHandler.postDelayed(this, 1000); // Update every second
                 } else {
-                    // Time's up - could add buzzer sound or notification
+                    // Quarter complete handling
                     updateGameClockDisplay();
-                    // Auto-pause when time reaches 0
+
+                    int completedQuarter = currentQuarter;
+
+                    // Pause to update UI state
                     pauseClock();
+
+                    if (completedQuarter < 4) {
+                        // Advance to next quarter and reset clock
+                        currentQuarter = completedQuarter + 1;
+                        gameTimeSeconds = 600; // 10:00
+                        updateAllDisplays();
+                        if (spinnerQuarter != null) {
+                            spinnerQuarter.setSelection(currentQuarter - 1);
+                        }
+                        Toast.makeText(
+                            GameActivity.this,
+                            "Quarter " + completedQuarter + " complete! Starting Quarter " + currentQuarter,
+                            Toast.LENGTH_LONG
+                        ).show();
+                    } else {
+                        // Q4 complete – game over
+                        Toast.makeText(
+                            GameActivity.this,
+                            "Quarter 4 complete! Game over.",
+                            Toast.LENGTH_LONG
+                        ).show();
+                    }
                 }
             }
         };
@@ -582,17 +611,29 @@ public class GameActivity extends Activity {
     // Quarter display now handled by spinner - no separate method needed
     
     private void updateTeamFoulsDisplay() {
-        // Color coding: red when ≥5 fouls (penalty situation)
-        String teamAColor = teamAFouls >= 5 ? "#E74C3C" : "#FFFFFF"; // Red if ≥5, white otherwise
-        String teamBColor = teamBFouls >= 5 ? "#E74C3C" : "#FFFFFF";
-        
-        // For now, just show in text (HTML color styling would need custom TextView)
-        String foulsText = String.format("Team Fouls: A-%d  B-%d", teamAFouls, teamBFouls);
-        if (teamAFouls >= 5 || teamBFouls >= 5) {
-            foulsText += " ⚠️"; // Warning indicator
+        // Build display text and color specific team counts red at ≥5
+        String prefix = "Team Fouls: ";
+        String aPart = "A-" + teamAFouls;
+        String space = "  ";
+        String bPart = "B-" + teamBFouls;
+        String text = prefix + aPart + space + bPart;
+
+        SpannableString spannable = new SpannableString(text);
+
+        int aStart = prefix.length();
+        int aEnd = aStart + aPart.length();
+        int bStart = aEnd + space.length();
+        int bEnd = bStart + bPart.length();
+
+        int redColor = Color.parseColor("#F44336");
+        if (teamAFouls >= 5) {
+            spannable.setSpan(new ForegroundColorSpan(redColor), aStart, aEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
-        
-        tvTeamFouls.setText(foulsText);
+        if (teamBFouls >= 5) {
+            spannable.setSpan(new ForegroundColorSpan(redColor), bStart, bEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        tvTeamFouls.setText(spannable);
     }
     
     private void updatePlayerButtonText() {

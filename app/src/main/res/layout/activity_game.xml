@@ -255,7 +255,7 @@
                             android:paddingHorizontal="12dp" />
                     </LinearLayout>
                     
-                    <!-- Live Event Feed (Last 3 Events) -->
+                    <!-- Live Event Feed (Last 5 Events) -->
                     <LinearLayout
                         android:id="@+id/llLiveEventFeed"
                         android:layout_width="match_parent"

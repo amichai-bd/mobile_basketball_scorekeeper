@@ -400,7 +400,7 @@ ConstraintLayout (main container)
   - **Player Selection Workflow**: Click player → Click event → Record with visual feedback
   - **Quick Visual Feedback**: Buttons flash blue for 0.3 seconds (improved from 3s for better UX)
   - **Professional Layout**: Three-panel design (Team A | Events | Team B) matching specification
-  - **Live Event Feed**: Always-visible last 3 events at bottom of Event Panel for context
+  - **Live Event Feed**: Always-visible last 5 events at bottom of Event Panel for context
   - **View Log Access**: One-tap access to complete event history (Frame 5)
 - ✅ **Complete App Flow**: Game selection → Player selection → Live game recording (FULL BASKETBALL STATS APP!)
 - ✅ **Timer UX Enhanced**: Single toggle button design with pleasant colors and proper timer management  
