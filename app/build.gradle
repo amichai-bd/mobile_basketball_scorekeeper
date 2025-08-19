@@ -33,8 +33,13 @@ android {
 }
 
 dependencies {
-    // Core Android dependencies
-    implementation 'androidx.appcompat:appcompat:1.7.0'
+    // Core Android dependencies - using older stable version to avoid Kotlin conflicts
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    
+    // For Java-only projects, we can exclude all Kotlin dependencies
+    configurations.all {
+        exclude group: 'org.jetbrains.kotlin'
+    }
     
     // TODO: Add your dependencies here
     // Examples:

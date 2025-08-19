@@ -1,24 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 
-    Main Activity Layout
-    
-    TODO: Design your main screen layout here
-    - Add UI components (buttons, text views, etc.)
-    - Set up layout structure (LinearLayout, ConstraintLayout, etc.)
-    - Configure component properties and styling
-    
-    Example components you might use:
-    - TextView for displaying text
-    - Button for user interactions
-    - EditText for text input
-    - RecyclerView for lists
-    - ImageView for images
+    Game Schedule Layout (Frame 1)
+    Simple game schedule management interface
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="16dp">
     
-    <!-- TODO: Add your UI components here -->
+    <!-- Main Title -->
+    <TextView
+        android:id="@+id/tvMainTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Summer League"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+    
+    <!-- Table Title -->
+    <TextView
+        android:id="@+id/tvTableTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Game schedule"
+        android:textSize="18sp"
+        android:layout_marginBottom="16dp" />
+    
+    <!-- Add Game Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+        
+        <EditText
+            android:id="@+id/etHomeTeam"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Home Team"
+            android:layout_marginEnd="8dp" />
+        
+        <EditText
+            android:id="@+id/etAwayTeam"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Away Team"
+            android:layout_marginEnd="8dp" />
+        
+        <EditText
+            android:id="@+id/etDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Date (MM/DD)"
+            android:layout_marginEnd="8dp" />
+        
+        <Button
+            android:id="@+id/btnAddGame"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add" />
+    </LinearLayout>
+    
+    <!-- Game List -->
+    <ListView
+        android:id="@+id/lvGames"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginBottom="16dp" />
+    
+    <!-- Start Game Button -->
+    <Button
+        android:id="@+id/btnStartGame"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Start Game"
+        android:textSize="18sp"
+        android:padding="12dp" />
     
 </LinearLayout>
