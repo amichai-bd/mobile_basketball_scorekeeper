@@ -127,12 +127,26 @@ public class LogActivity extends Activity {
             }
             
             String event = events.get(position);
-            TextView tvEventInfo = convertView.findViewById(R.id.tvEventInfo);
+            
+            // Find table column views
+            TextView tvQuarter = convertView.findViewById(R.id.tvQuarter);
+            TextView tvTime = convertView.findViewById(R.id.tvTime);
+            TextView tvPlayer = convertView.findViewById(R.id.tvPlayer);
+            TextView tvEvent = convertView.findViewById(R.id.tvEvent);
             Button btnEdit = convertView.findViewById(R.id.btnEditEvent);
             Button btnDelete = convertView.findViewById(R.id.btnDeleteEvent);
             
-            // Display event info
-            tvEventInfo.setText(event);
+            // Parse event string (format: "Q1 8:45 - #23 LeBron James - 2P")
+            String[] eventParts = parseEventString(event);
+            
+            // Set table columns
+            tvQuarter.setText(eventParts[0]); // Quarter
+            tvTime.setText(eventParts[1]);    // Time
+            tvPlayer.setText(eventParts[2]);  // Player
+            tvEvent.setText(eventParts[3]);   // Event
+            
+            // Set event color based on type
+            setEventColor(tvEvent, eventParts[3]);
             
             // Edit button (placeholder)
             btnEdit.setOnClickListener(new View.OnClickListener() {
@@ -151,6 +165,99 @@ public class LogActivity extends Activity {
             });
             
             return convertView;
+        }
+        
+        /**
+         * Parse event string into table columns
+         * Expected formats:
+         * - Player events: "Q1 8:45 - #23 LeBron James - 2P"
+         * - Team events: "Q1 8:45 - Lakers - TIMEOUT"
+         * - Legacy format: "8:45 - #23 LeBron James - 2P" (without quarter)
+         */
+        private String[] parseEventString(String event) {
+            String[] result = new String[4]; // Quarter, Time, Player, Event
+            
+            try {
+                // Split by " - "
+                String[] parts = event.split(" - ");
+                
+                if (parts.length >= 3) {
+                    // Check if first part contains quarter info "Q1 8:45" or just time "8:45"
+                    String[] timeInfo = parts[0].split(" ");
+                    
+                    if (timeInfo.length >= 2 && timeInfo[0].startsWith("Q")) {
+                        // New format with quarter: "Q1 8:45"
+                        result[0] = timeInfo[0]; // Quarter (Q1)
+                        result[1] = timeInfo[1]; // Time (8:45)
+                    } else {
+                        // Legacy format without quarter: "8:45"
+                        result[0] = "Q1"; // Default quarter
+                        result[1] = parts[0]; // Time (8:45)
+                    }
+                    
+                    // Second part: Player name or team name
+                    result[2] = parts[1]; // "#23 LeBron James" or "Lakers"
+                    
+                    // Third part: Event type
+                    result[3] = parts[2]; // "2P", "TIMEOUT", etc.
+                    
+                } else if (parts.length == 2) {
+                    // Handle format: "Player - Event"
+                    result[0] = "Q1";
+                    result[1] = "0:00";
+                    result[2] = parts[0];
+                    result[3] = parts[1];
+                } else {
+                    // Single string - treat as event type
+                    result[0] = "Q1";
+                    result[1] = "0:00";
+                    result[2] = "Unknown";
+                    result[3] = event;
+                }
+            } catch (Exception e) {
+                // Error parsing - use defaults with debug info
+                result[0] = "Q1";
+                result[1] = "0:00";
+                result[2] = event.length() > 20 ? event.substring(0, 20) + "..." : event;
+                result[3] = "ERR";
+            }
+            
+            return result;
+        }
+        
+        /**
+         * Set color for event type
+         */
+        private void setEventColor(TextView tvEvent, String eventType) {
+            int color;
+            switch (eventType) {
+                case "1P":
+                case "2P":
+                case "3P":
+                    color = 0xFF27AE60; // Green for scoring
+                    break;
+                case "1M":
+                case "2M":
+                case "3M":
+                    color = 0xFFE74C3C; // Red for misses
+                    break;
+                case "OR":
+                case "DR":
+                case "AST":
+                    color = 0xFF3498DB; // Blue for positive stats
+                    break;
+                case "FOUL":
+                case "TO":
+                    color = 0xFFE67E22; // Orange for violations
+                    break;
+                case "TIMEOUT":
+                    color = 0xFF9B59B6; // Purple for team events
+                    break;
+                default:
+                    color = 0xFF2C3E50; // Dark gray for others
+                    break;
+            }
+            tvEvent.setTextColor(color);
         }
     }
     

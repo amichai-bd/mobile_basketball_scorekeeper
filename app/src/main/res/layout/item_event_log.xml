@@ -1,47 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 
-    Event Log Item Layout
-    Professional list item with event details and edit/delete actions
+    Event Log Item Layout - Professional Table Format
+    Clear columns for Quarter, Time, Player, Event, and Actions
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="12dp"
+    android:padding="8dp"
     android:background="#FFFFFF">
     
-    <!-- Event Info -->
+    <!-- Quarter Column -->
     <TextView
-        android:id="@+id/tvEventInfo"
+        android:id="@+id/tvQuarter"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:text="Q1"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="#34495E"
+        android:gravity="center"
+        android:layout_gravity="center_vertical" />
+    
+    <!-- Time Column -->
+    <TextView
+        android:id="@+id/tvTime"
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        android:text="8:45"
+        android:textSize="12sp"
+        android:textColor="#2C3E50"
+        android:gravity="center"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="4dp" />
+    
+    <!-- Player Column -->
+    <TextView
+        android:id="@+id/tvPlayer"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="Q1 8:45 - #23 LeBron James - 2P"
-        android:textSize="13sp"
+        android:text="#23 LeBron"
+        android:textSize="12sp"
         android:textColor="#2C3E50"
-        android:layout_gravity="center_vertical" />
+        android:gravity="start"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="8dp"
+        android:maxLines="1"
+        android:ellipsize="end" />
     
-    <!-- Edit Button -->
-    <Button
-        android:id="@+id/btnEditEvent"
-        android:layout_width="wrap_content"
-        android:layout_height="32dp"
-        android:text="Edit"
-        android:textSize="11sp"
-        android:background="#3498DB"
-        android:textColor="#FFFFFF"
-        android:layout_marginEnd="6dp"
-        android:paddingHorizontal="10dp" />
+    <!-- Event Column -->
+    <TextView
+        android:id="@+id/tvEvent"
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        android:text="2P"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="#27AE60"
+        android:gravity="center"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="8dp" />
     
-    <!-- Delete Button -->
-    <Button
-        android:id="@+id/btnDeleteEvent"
+    <!-- Actions Column -->
+    <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="32dp"
-        android:text="Delete"
-        android:textSize="11sp"
-        android:background="#E74C3C"
-        android:textColor="#FFFFFF"
-        android:paddingHorizontal="10dp" />
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginStart="8dp">
+        
+        <Button
+            android:id="@+id/btnEditEvent"
+            android:layout_width="50dp"
+            android:layout_height="28dp"
+            android:text="Edit"
+            android:textSize="10sp"
+            android:background="#3498DB"
+            android:textColor="#FFFFFF"
+            android:layout_marginEnd="4dp" />
+        
+        <Button
+            android:id="@+id/btnDeleteEvent"
+            android:layout_width="50dp"
+            android:layout_height="28dp"
+            android:text="Del"
+            android:textSize="10sp"
+            android:background="#E74C3C"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
     
 </LinearLayout>

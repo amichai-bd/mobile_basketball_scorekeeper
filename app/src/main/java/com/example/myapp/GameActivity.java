@@ -5,8 +5,11 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.example.myapp.models.Player;
@@ -32,7 +35,7 @@ public class GameActivity extends Activity {
     private Player selectedPlayer = null;
     
     // UI Components - Top Panel
-    private TextView tvScore, tvGameClock, tvCurrentQuarter, tvTeamFouls;
+    private TextView tvScore, tvGameClock, tvTeamFouls;
     private Button btnGameToggle;
     
     // UI Components - Team Panels
@@ -45,7 +48,7 @@ public class GameActivity extends Activity {
     private Button btnOR, btnDR, btnAST, btnSTL, btnBLK, btnTO, btnFOUL, btnTIMEOUT;
     
     // UI Components - Quarter Management
-    private Button btnQ1, btnQ2, btnQ3, btnQ4;
+    private Spinner spinnerQuarter;
     
     // UI Components - Live Event Feed
     private LinearLayout llLiveEventFeed;
@@ -127,7 +130,6 @@ public class GameActivity extends Activity {
         // Top panel components
         tvScore = findViewById(R.id.tvScore);
         tvGameClock = findViewById(R.id.tvGameClock);
-        tvCurrentQuarter = findViewById(R.id.tvCurrentQuarter);
         tvTeamFouls = findViewById(R.id.tvTeamFouls);
         btnGameToggle = findViewById(R.id.btnGameToggle);
         
@@ -157,11 +159,8 @@ public class GameActivity extends Activity {
         btnFOUL = findViewById(R.id.btnFOUL);
         btnTIMEOUT = findViewById(R.id.btnTIMEOUT);
         
-        // Quarter management components
-        btnQ1 = findViewById(R.id.btnQ1);
-        btnQ2 = findViewById(R.id.btnQ2);
-        btnQ3 = findViewById(R.id.btnQ3);
-        btnQ4 = findViewById(R.id.btnQ4);
+        // Quarter management component
+        spinnerQuarter = findViewById(R.id.spinnerQuarter);
         
         // Live event feed components
         llLiveEventFeed = findViewById(R.id.llLiveEventFeed);
@@ -231,11 +230,8 @@ public class GameActivity extends Activity {
         // Game control toggle
         btnGameToggle.setOnClickListener(v -> toggleGameTimer());
         
-        // Quarter management
-        btnQ1.setOnClickListener(v -> selectQuarter(1));
-        btnQ2.setOnClickListener(v -> selectQuarter(2));
-        btnQ3.setOnClickListener(v -> selectQuarter(3));
-        btnQ4.setOnClickListener(v -> selectQuarter(4));
+        // Quarter management - setup spinner
+        setupQuarterSpinner();
         
         // Scoring events
         btn1P.setOnClickListener(v -> recordScoringEvent("1P", 1));
@@ -310,41 +306,49 @@ public class GameActivity extends Activity {
     }
     
     // Quarter Management
-    private void selectQuarter(int quarter) {
-        // Show quarter confirmation pop-up as per specification
-        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-        builder.setTitle("Start Quarter")
-               .setMessage("Start Q" + quarter + "?")
-               .setPositiveButton("Yes", (dialog, which) -> {
-                   startQuarter(quarter);
-               })
-               .setNegativeButton("No", null)
-               .show();
+    private void setupQuarterSpinner() {
+        // Create quarter options
+        String[] quarters = {"Q1", "Q2", "Q3", "Q4"};
+        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(
+            this, android.R.layout.simple_spinner_item, quarters);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerQuarter.setAdapter(adapter);
+        
+        // Set current quarter
+        spinnerQuarter.setSelection(currentQuarter - 1);
+        
+        // Handle quarter selection
+        spinnerQuarter.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                int newQuarter = position + 1;
+                if (newQuarter != currentQuarter) {
+                    selectQuarter(newQuarter);
+                }
+            }
+            
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
     }
     
-    private void startQuarter(int quarter) {
+    private void selectQuarter(int quarter) {
+        // Direct quarter change - reset clock and stop timer
         currentQuarter = quarter;
         gameTimeSeconds = 600; // Reset to 10 minutes
-        teamAFouls = 0; // Reset team fouls for new quarter
-        teamBFouls = 0;
         
-        // Update quarter button colors (active = blue, inactive = grey)
-        updateQuarterButtonColors();
+        // Stop timer if running
+        if (isClockRunning) {
+            pauseClock();
+        }
+        
+        // Update displays
         updateAllDisplays();
         
-        Toast.makeText(this, "Q" + quarter + " started - 10:00 on clock", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Quarter " + quarter + " selected - Clock reset to 10:00", Toast.LENGTH_SHORT).show();
     }
     
-    private void updateQuarterButtonColors() {
-        Button[] quarterButtons = {btnQ1, btnQ2, btnQ3, btnQ4};
-        for (int i = 0; i < 4; i++) {
-            if (i + 1 == currentQuarter) {
-                quarterButtons[i].setBackgroundColor(Color.parseColor("#34495E")); // Active (dark grey)
-            } else {
-                quarterButtons[i].setBackgroundColor(Color.parseColor("#BDC3C7")); // Inactive (light grey)
-            }
-        }
-    }
+    // Event Recording Methods
     
     // Scoring Events (with assist workflow for 2P/3P)
     private void recordScoringEvent(String eventType, int points) {
@@ -543,14 +547,14 @@ public class GameActivity extends Activity {
     private void updateGameToggleButton() {
         if (isClockRunning) {
             // Timer is running - show PAUSE option
-            btnGameToggle.setText("PAUSE GAME");
+            btnGameToggle.setText("PAUSE");
             btnGameToggle.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_light)); // Blue (pleasant during gameplay)
             
             // Clock background: Green (running)
             tvGameClock.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
         } else {
             // Timer is paused - show START option
-            btnGameToggle.setText("START GAME");
+            btnGameToggle.setText("START");
             btnGameToggle.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light)); // Green (ready to start)
             
             // Clock background: Yellow (paused)
@@ -561,8 +565,8 @@ public class GameActivity extends Activity {
     private void updateAllDisplays() {
         updateScoreDisplay();
         updateGameClockDisplay();
-        updateQuarterDisplay();
         updateTeamFoulsDisplay();
+        // Quarter display is now handled by spinner
     }
     
     private void updateScoreDisplay() {
@@ -575,9 +579,7 @@ public class GameActivity extends Activity {
         tvGameClock.setText(String.format("%d:%02d", minutes, seconds));
     }
     
-    private void updateQuarterDisplay() {
-        tvCurrentQuarter.setText("Q" + currentQuarter);
-    }
+    // Quarter display now handled by spinner - no separate method needed
     
     private void updateTeamFoulsDisplay() {
         // Color coding: red when ≥5 fouls (penalty situation)
@@ -657,13 +659,13 @@ public class GameActivity extends Activity {
         String eventDescription;
         
         if (player != null) {
-            // Player event
-            eventDescription = String.format("%s - #%d %s - %s", 
-                timeStr, player.getNumber(), player.getName(), eventType);
+            // Player event - include quarter info
+            eventDescription = String.format("Q%d %s - #%d %s - %s", 
+                currentQuarter, timeStr, player.getNumber(), player.getName(), eventType);
         } else {
-            // Team event
-            eventDescription = String.format("%s - %s - %s", 
-                timeStr, teamName, eventType);
+            // Team event - include quarter info
+            eventDescription = String.format("Q%d %s - %s - %s", 
+                currentQuarter, timeStr, teamName, eventType);
         }
         
         // Add to complete game events list

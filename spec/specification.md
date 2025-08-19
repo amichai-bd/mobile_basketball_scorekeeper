@@ -207,8 +207,7 @@ This is the main screen where the live updates happen. The user will click butto
 ### UI Layout Structure
 ```
 ┌─────────────────────────────────────────────────────┐
-│  [Score: Team A 45 - Team B 38] [Clock: 8:45] [Q2] │
-│  [Start] [Stop] [Team Fouls: A-3  B-5]             │
+│  [Score: Team A 45 - Team B 38] [START|8:45] [Q2▼] [Fouls: A-3 B-5] │
 ├─────────────────────────────────────────────────────┤
 │ Team A        │    Event Panel      │    Team B     │
 │               │                     │               │
@@ -222,17 +221,24 @@ This is the main screen where the live updates happen. The user will click butto
 │ [Sub]         │                     │  [Sub]        │
 └─────────────────────────────────────────────────────┘
 ```
-**Layout Notes**:
+**Optimized Single-Line Layout**:
+- **Single-Line Top Panel**: Maximum space efficiency and clean design
+- **Left**: Score Display
+- **Center-Left**: Game Control Button + Clock
+- **Center-Right**: Quarter Dropdown (Q1/Q2/Q3/Q4 selection)
+- **Right**: Team Fouls Display
 - Numbers in brackets [ ] next to players show personal fouls
-- Score and clock are prominently displayed at top
-- Team fouls shown with color coding (red when ≥5)
+- Team fouls color coded (red when ≥5)
 - Event buttons in center 3x4 grid plus timeout
 - Player buttons on sides with foul counts
 - Team action buttons (TimeOut, Sub) at bottom of each panel
 
-### Clock Panel
-**Description**: The clock panel will include the game score, time, start and stop button and Q buttons.
-**Location**: Clock panel will be in the top center between the team panels and above the event button panel.
+### Top Control Panel
+**Description**: Ultra-compact single-line control panel with all game state and control information.
+**Location**: Top of screen, above the team panels and event button panel.
+
+#### Layout Structure:
+- **Single Line**: Score Display | Game Control Button + Clock | Quarter Dropdown | Team Fouls Display
 
 #### Game Score Display
 - **Description**: Live game score for both teams
@@ -277,12 +283,16 @@ This is the main screen where the live updates happen. The user will click butto
 - **Clickable**: Yes – long click to edit time if needed
 - **When clicked**: Only if long-clicked, user may edit the time
 
-#### Quarter Buttons (Q1, Q2, Q3, Q4)
-- **Description**: There are 4 quarters in the game. The user clicks the button to declare quarter started
-- **Location**: Under start and stop button in row
-- **Content**: "Q1", "Q2", "Q3", "Q4"
+#### Quarter Dropdown
+- **Description**: Dropdown selector for current quarter with automatic progression
+- **Type**: Spinner/Dropdown
+- **Location**: Center-right of single control line
+- **Content**: "Q1", "Q2", "Q3", "Q4" options
 - **Clickable**: Yes
-- **When clicked**: Enable Quarter pop-up
+- **Current Quarter Display**: Shows current quarter (e.g., "Q2") with dropdown arrow
+- **When clicked**: Opens dropdown to select different quarter
+- **Auto-Progression**: When timer reaches 0:00, automatically advances to next quarter and stops timer
+- **Reset Behavior**: Selecting new quarter resets clock to 10:00 (stopped state)
 
 #### Team Fouls
 - **Description**: Showing the number of fouls committed by the team per quarter. Once it reaches over 5 there is a FT for any foul
@@ -291,21 +301,14 @@ This is the main screen where the live updates happen. The user will click butto
 - **Clickable**: No
 - **Design**: Number of fouls turns Red from 5 fouls or more
 
-#### Quarter Pop-up
-- **Description**: A pop-up frame that asks if you meant to start the Q
-- **Type**: Pop-up
-- **Location**: Center
-- **Content**:
-  - "Start Q[1-4]?"
-  - Yes button
-  - No button
-- **Clickable**: Yes
-- **When clicking Yes button**:
-  - Clock shows 10 minutes
-  - Colors button in blue
-  - Color of rest of Q's in light grey
-- **When clicking No button**:
-  - Go back to Game frame. No action
+#### Quarter Selection Behavior
+- **Direct Selection**: Tap dropdown → select quarter → immediate change (no confirmation)
+- **Clock Reset**: Selecting new quarter automatically resets clock to 10:00 and stops timer
+- **Auto-Advance**: When timer reaches 0:00:
+  - Automatically advance to next quarter (Q1→Q2→Q3→Q4)
+  - Reset clock to 10:00
+  - Stop timer (user must press START for next quarter)
+  - Show notification: "Quarter X Complete! Starting Quarter Y"
 
 ### Team Panel (Team A & Team B)
 **Description**: Team players that are currently on court in 5 buttons one on top of the other. Big and clear for easy clicking. Teams buttons Time out and Subs will be there as well.
@@ -689,19 +692,31 @@ Can view and edit the log of events
 - **Clickable**: No
 
 #### Event Log Table
-- **Description**: Complete log of all recorded game events with management actions
-- **Type**: Interactive List
-- **Clickable**: Edit and Delete buttons per event
-- **Display Format**: List items showing:
-  - **Quarter**: Q1, Q2, Q3, Q4
-  - **Game Time**: MM:SS when event occurred
-  - **Player/Team**: "#Number Player Name" or "Team Name" (for team events)
-  - **Event Type**: 1P, 2P, 3P, FOUL, TIMEOUT, etc.
+- **Description**: Professional table-format display of all recorded game events with management actions
+- **Type**: Interactive Table with Fixed Columns
+- **Layout Structure**:
+  ```
+  ┌────────────────────────────────────────────────┐
+  │ Q  │ Time  │ Player        │ Event │ Actions  │
+  ├────────────────────────────────────────────────┤
+  │ Q1 │ 9:30  │ #23 LeBron    │  2P   │ [Edit][Del] │
+  │ Q1 │ 9:15  │ #30 Curry     │  3P   │ [Edit][Del] │
+  │ Q2 │ 8:45  │ Lakers        │TIMEOUT│ [Edit][Del] │
+  └────────────────────────────────────────────────┘
+  ```
+- **Table Columns**:
+  - **Quarter Column (40dp)**: Q1, Q2, Q3, Q4 - shows which quarter event occurred
+  - **Time Column (50dp)**: MM:SS format when event happened
+  - **Player Column (flexible)**: "#Number Player Name" or "Team Name" (for team events)
+  - **Event Column (50dp)**: Event type with color coding
+  - **Actions Column (108dp)**: Edit and Delete buttons
+- **Header Row**: Fixed header with column names for clear table structure
+- **Color Coding**: Events color-coded by type (green=scoring, red=misses, blue=stats, etc.)
+- **Fixed Column Widths**: Consistent alignment regardless of name length
 - **Actions per Event**:
   - **Edit Button**: Modify event details (placeholder for MVP)
   - **Delete Button**: Remove event with confirmation dialog
-- **Layout**: Professional list with clear event information and action buttons
-- **Details**: Each event displayed as separate list item with individual edit/delete controls
+- **Professional UX**: Clean table format eliminates text alignment issues
 
 ---
 
