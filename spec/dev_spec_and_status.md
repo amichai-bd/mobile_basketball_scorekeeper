@@ -102,11 +102,11 @@ CREATE TABLE team_fouls (
 
 #### Activities (Views)
 1. **MainActivity** - Game schedule management
-2. **GameRosterActivity** - Team roster setup  
-3. **GameActivity** - Live game statistics recording
-4. **SubstitutionActivity** - Player substitution (MVP: enabled)
-5. **LogActivity** - Event log viewing/editing
-6. **StatsActivity** - Statistics and reports
+2. **GameActivity** - Live game statistics recording (includes Setup Mode and Unified Player Selection Modal)
+3. **LogActivity** - Event log viewing/editing
+4. **StatsActivity** - Statistics and reports
+5. **~~GameRosterActivity~~** - *DEPRECATED: Functionality integrated into GameActivity as Setup Mode*
+6. **~~SubstitutionActivity~~** - *DEPRECATED: Functionality integrated into Unified Player Selection Modal*
 
 #### Models
 1. **Game.java** - Game data model
@@ -134,9 +134,9 @@ my_first_app/
 │   ├── src/main/
 │   │   ├── java/com/example/myapp/
 │   │   │   ├── MainActivity.java          # Game schedule management
-│   │   │   ├── GameRosterActivity.java   # Team roster setup
-│   │   │   ├── GameActivity.java         # Live game recording
-│   │   │   ├── SubstitutionActivity.java # Player subs (MVP: disabled)
+│   │   │   ├── GameActivity.java         # Live game recording (includes Setup Mode & Unified Modal)
+│   │   │   ├── ~~GameRosterActivity.java~~ # DEPRECATED - integrated into GameActivity
+│   │   │   ├── ~~SubstitutionActivity.java~~ # DEPRECATED - integrated into Unified Modal
 │   │   │   ├── LogActivity.java          # Event log viewing
 │   │   │   ├── StatsActivity.java        # Statistics reports
 │   │   │   ├── models/
@@ -155,9 +155,9 @@ my_first_app/
 │   │   ├── res/
 │   │   │   ├── layout/
 │   │   │   │   ├── activity_main.xml     # Game schedule UI
-│   │   │   │   ├── activity_game_roster.xml
-│   │   │   │   ├── activity_game.xml     # Live game UI
-│   │   │   │   ├── activity_substitution.xml
+│   │   │   │   ├── activity_game.xml     # Live game UI (dual mode: Setup/Game)
+│   │   │   │   ├── dialog_unified_player_selection.xml # Unified player selection modal
+│   │   │   │   ├── ~~activity_substitution.xml~~ # DEPRECATED - replaced by unified modal
 │   │   │   │   ├── activity_log.xml
 │   │   │   │   └── activity_stats.xml
 │   │   │   ├── values/
@@ -324,11 +324,11 @@ ConstraintLayout (main container)
   - **Game Selection Logic** - Fixed: Completed/in-progress games are no longer selectable
   - **State Management** - Fixed: Game status only changes when actual recording begins
   - **onResume Handling** - Fixed: Proper state reset when returning via back button
-- **Frame 2 User Feedback Fixes** - ✅ **ALL FIXES COMPLETED**
-  - **Team Pre-selection** - Fixed: Teams automatically selected from scheduled game
-  - **UI Redesign** - Fixed: Removed team dropdowns, show pre-selected team names
-  - **Player Selection** - Fixed: Immediate display of relevant team rosters
-  - **Workflow Improvement** - Fixed: Streamlined from team selection to player selection only
+- **Frame 2 Integration** - 🏗️ **PLANNED FOR REFACTOR**
+  - **Player Selection Modal** - Planned: Will be accessed from GameActivity Setup Mode
+  - **Independent Team Selection** - Planned: Each team's 5 players selected separately
+  - **Quarter Lineup Changes** - Planned: Support for changing lineups between quarters
+  - **Context Preservation** - Planned: User stays on game screen throughout
 - **Complete Data Models** - ✅ **SPECIFICATION ALIGNED**
   - **ScheduledGame Model** - League games with status tracking and team linking
   - **Team Models** - Team, TeamPlayer, LeagueDataProvider with 4 predefined teams
@@ -359,16 +359,31 @@ ConstraintLayout (main container)
   - **Professional UI**: Three-panel layout matching specification exactly
 
 ### 🚧 In Progress  
-- **Single-Line Top Panel** - Ultra-compact layout with quarter dropdown replacing 4 buttons for maximum space efficiency
+- **Unified Modal Architecture** - Specifications completed, implementation pending
+  - **Player Selection Modal** - Design and integrate three modes (Setup/Quarter/Substitution)
+  - **GameActivity Refactor** - Add dual modes (Setup Mode and Game Mode)
+  - **Navigation Update** - Direct game selection → GameActivity flow
 
 ### ⏳ Next Up  
 - **Event Logging System** - Database storage for recorded events and statistics
 - **Enhanced Pop-up Workflows** - Full assist/rebound/steal pop-ups (if desired)
-- **Substitution Interface** - Frame 4 implementation
 - **Statistics Reporting** - Frame 5 & 6 implementation
 - Database implementation to replace in-memory storage
 
-### 📋 **Latest Changes - Complete Feature Implementation**
+### 📋 **Latest Changes - Unified Modal Specifications**
+- 📋 **SPECIFICATIONS UPDATED**: Complete redesign for unified player selection approach
+- 📋 **Frame 1 Specified**: Direct navigation to GameActivity (no intermediate player selection screen)
+- 📋 **Frame 2 Redesigned**: Player selection specified as Setup Mode within GameActivity
+- 📋 **Frame 4 Redesigned**: Substitutions specified to use unified modal interface
+- 📋 **Unified Player Selection Modal Specified**: Single modal handles all scenarios:
+  - **Setup Mode**: Select starting 5 players (0/5 → 5/5)
+  - **Quarter Change Mode**: Modify current lineup between quarters
+  - **Substitution Mode**: Replace players during game with flexible patterns
+- 📋 **Game Screen Dual Modes Specified**: 
+  - **Setup Mode**: Shows "Select 5 Players" buttons when no players selected
+  - **Game Mode**: Full game functionality when both teams have 5 players
+- 📋 **Architecture Planned**: Same interaction pattern for all player management scenarios
+- 📋 **Flexible Substitutions Specified**: Support for 1-for-1, 2-for-2, or any valid substitution pattern
 - ✅ **Frame 1 Simplified**: Removed status complexity, clean card-based game selection
 - ✅ **Frame 2 Modernized**: Complete UI overhaul with instant player selection
   - **Modern Player Cards**: Touch-friendly cards with instant highlighting
@@ -445,28 +460,32 @@ ConstraintLayout (main container)
 
 ### 📋 **Specification Compliance Notes**
 
-**Frame 1 (Game Selection) Simplified Implementation:**
+**Frame 1 (Game Selection) Enhanced Implementation:**
 - ✅ **SPECIFICATION COMPLIANT**: Clean, simple game selection interface
 - ✅ **Card-based Design**: Modern, touch-friendly game cards with team matchups and dates
-- ✅ **One-tap Selection**: Tap any game card to immediately proceed to player selection
+- ✅ **One-tap Selection**: Tap any game card to immediately proceed to game screen
+- ✅ **Direct Game Entry**: Skip intermediate screens, go straight to GameActivity
 - ✅ **Clean UI**: Sleek design with proper colors, spacing, and typography
 - ✅ **Edit League Button**: Small gear icon in top-right corner
 - ✅ **No Status Complexity**: Removed complicated status tracking for cleaner experience
-- ✅ **Instant Navigation**: No confirmation dialogs, immediate flow to next screen
+- ✅ **Instant Navigation**: No confirmation dialogs, immediate flow to game screen
 
-**Frame 2 (Game Roster) Modern Implementation:**
-- ✅ **SPECIFICATION COMPLIANT**: Sleek, modern player selection interface
-- ✅ **Team Pre-selection**: Teams automatically displayed in modern card design
-- ✅ **Instant Player Cards**: Touch-friendly grid of player cards with immediate highlighting
-- ✅ **Visual Feedback**: Player cards highlight blue when selected, grey when unselected
-- ✅ **Ready States**: Team sections turn green with "READY" text when 5 players selected
-- ✅ **Auto-Enable Logic**: Start Game button automatically enables/changes color when both teams ready
-- ✅ **Selection Counters**: Live "X/5 selected" feedback for each team
-- ✅ **No Workflow Complexity**: Removed approve/edit buttons for instant selection
-- ✅ **Modern Design**: Card-based layout with elevation, proper spacing, clean typography
+**Frame 2 (Game Roster) Planned Integration:**
+- 📋 **PLANNED REFACTOR INTO FRAME 3**: Player selection to be integrated as Setup Mode in GameActivity
+- 📋 **Modal Overlay Planned**: Clean modal interface for player selection without leaving game screen
+- 📋 **Independent Selection Planned**: Each team's 5 players selected separately via their own modal
+- 📋 **Instant Player Cards Specified**: Touch-friendly grid of player cards with immediate highlighting
+- 📋 **Visual Feedback Specified**: Player cards highlight blue when selected, grey when unselected
+- 📋 **Ready States Planned**: Team panels show selected players once confirmed
+- 📋 **Quarter Lineup Changes Specified**: Support for changing entire lineups between quarters
+- 📋 **Context Preservation Planned**: User stays on game screen throughout selection process
+- 📋 **Modern Design Specified**: Card-based modal with elevation, proper spacing, clean typography
 
-**Frame 3 (Live Game Recording) Complete Implementation:**
-- ✅ **SPECIFICATION COMPLIANT**: Full basketball statistics recording matching specification exactly
+**Frame 3 (Live Game Recording) Enhanced Specification:**
+- ✅ **CURRENT IMPLEMENTATION**: Full basketball statistics recording (existing functionality)
+- 📋 **PLANNED DUAL MODE OPERATION**: 
+  - **Setup Mode Planned**: Player selection interface when no players chosen
+  - **Game Mode Current**: Full game functionality when both teams have 5 players
 - ✅ **Complete Event System**: All 13+ basketball events implemented with proper workflows
 - ✅ **UI Layout**: Three-panel design (Team A | Event Panel | Team B) as specified
 - ✅ **Clock Management**: Game clock, start/stop buttons, quarter selection with pop-ups
@@ -484,8 +503,10 @@ ConstraintLayout (main container)
 ### ✅ Included in MVP
 - **Game Schedule**: Create, edit games for season
 - **Solo Mode**: Single user operation
-- **5-Player Teams**: Fixed roster size with basic substitutions
-- **Player Substitution**: Simple in/out player swapping during games
+- **5-Player Teams**: Fixed roster size with flexible substitutions
+- **Unified Player Management**: Single modal interface for all player selection scenarios
+- **Flexible Substitutions**: Support for any valid substitution pattern (1-for-1, 2-for-2, 3-for-3, etc.)
+- **Quarter Lineup Changes**: Modify entire lineups between quarters
 - **Core Events**: All 13 basketball events (1P, 2P, 3P, misses, rebounds, etc.)
 - **Live Scoring**: Real-time score updates
 - **Team Foul Tracking**: Per-quarter team foul counts with visual indicators
@@ -515,15 +536,19 @@ ConstraintLayout (main container)
 
 ### Business Logic Decisions  
 1. **League Teams**: 4 predefined teams (Lakers, Warriors, Bulls, Heat) with 12 players each
-2. **Simple Game Selection**: Tap game card to proceed - no status complexity
-3. **Game Roster**: Select exactly 5 players from each team's 12-player roster  
-4. **Team Pre-selection**: Teams automatically selected from chosen game matchup
-5. **10-Minute Quarters**: Standard amateur league timing
-6. **Solo Operation**: Single device/user per game
-7. **Simple Fouls**: Personal fouls only, no technical/flagrant
-8. **Basic Timeouts**: Record timeout event, no duration tracking
-9. **Statistics Approach**: Count events in real-time, calculate percentages in reports
-10. **Team Fouls**: Track per-quarter, visual warning at 5+ fouls
+2. **Direct Game Entry**: Tap game card to go directly to game screen - no intermediate screens
+3. **Setup Mode**: Game screen starts with player selection interface when no players chosen
+4. **Unified Player Management**: Single modal interface for all player selection scenarios
+5. **Game Roster**: Select exactly 5 players from each team's 12-player roster
+6. **Independent Team Selection**: Each team's 5 players selected separately via modal
+7. **Flexible Substitutions**: Support for any valid substitution pattern (1-for-1, 2-for-2, etc.)
+8. **Quarter Lineup Changes**: Support for changing lineups between quarters using same interface
+9. **10-Minute Quarters**: Standard amateur league timing
+10. **Solo Operation**: Single device/user per game
+11. **Simple Fouls**: Personal fouls only, no technical/flagrant
+12. **Basic Timeouts**: Record timeout event, no duration tracking
+13. **Statistics Approach**: Count events in real-time, calculate percentages in reports
+14. **Team Fouls**: Track per-quarter, visual warning at 5+ fouls
 
 ### UI/UX Decisions
 1. **Portrait Orientation**: Mobile-first design
@@ -591,23 +616,30 @@ ConstraintLayout (main container)
 
 ### High Priority Tasks
 1. ✅ **COMPLETED**: Frame 1 (Game Schedule) complete refactor to specification alignment
-2. ✅ **COMPLETED**: Frame 2 (Game Roster) specification-aligned implementation  
-3. ✅ **COMPLETED**: ScheduledGame model and league database structure
-4. ✅ **COMPLETED**: League Management interface with Games and Teams tabs
-5. ✅ **COMPLETED**: All user feedback fixes (game selection logic, state management, team pre-selection)
-6. ✅ **COMPLETED**: Modern UI improvements (jersey-style cards, scrolling, visual feedback)
-7. ✅ **COMPLETED**: 🏀 **FRAME 3 (LIVE GAME RECORDING)** - Complete core basketball statistics functionality
-8. **READY**: Mobile device testing and deployment verification of complete app flow
-9. **NEXT**: Event logging system and statistics reporting
+2. ✅ **COMPLETED**: ScheduledGame model and league database structure
+3. ✅ **COMPLETED**: League Management interface with Games and Teams tabs
+4. ✅ **COMPLETED**: All user feedback fixes (game selection logic, state management, team pre-selection)
+5. ✅ **COMPLETED**: Modern UI improvements (jersey-style cards, scrolling, visual feedback)
+6. ✅ **COMPLETED**: 🏀 **FRAME 3 (LIVE GAME RECORDING)** - Complete core basketball statistics functionality
+7. ✅ **COMPLETED**: Unified Modal Architecture Specification - Complete design document
+8. **NEXT**: Implement Unified Player Selection Modal with three modes:
+   - **Setup Mode**: Initial 5 player selection (0/5 → 5/5)
+   - **Quarter Change Mode**: Modify current lineup between quarters
+   - **Substitution Mode**: Replace players during game (flexible patterns)
+9. **NEXT**: Update GameActivity to support dual modes (Setup/Game) with unified modal integration
+10. **NEXT**: Remove/deprecate GameRosterActivity and SubstitutionActivity
+11. **NEXT**: Update MainActivity navigation to go directly to GameActivity
+12. **NEXT**: Implement Frame 2 Integration into Frame 3 as Setup Mode
+13. **READY**: Mobile device testing and deployment verification of complete app flow
 
 ### Upcoming Tasks
 1. **Event Logging & Database** - Persistent storage for recorded game events and statistics
 2. **Enhanced Pop-up Workflows** - Full assist/rebound/steal pop-ups (currently simplified for MVP)
-3. **Frame 4 (Substitutions)** - Player substitution interface during live games
-4. **Frame 5 (Event Log)** - View and edit recorded game events
-5. **Frame 6 (Statistics)** - Game and season statistics reporting
-6. **Enhanced Player Management** - Complete roster management within Teams tab
-7. **Performance Optimization** - Database queries, UI responsiveness, memory management
+3. **Frame 5 (Event Log)** - View and edit recorded game events
+4. **Frame 6 (Statistics)** - Game and season statistics reporting
+5. **Enhanced Player Management** - Complete roster management within Teams tab
+6. **Performance Optimization** - Database queries, UI responsiveness, memory management
+7. **Unified Modal Polish** - Advanced features like preset lineups, formation templates
 
 ### Partner Input Needed
 - Validation of basketball rules implementation
@@ -615,5 +647,5 @@ ConstraintLayout (main container)
 - Feedback on event button layout and sizing
 - Testing with actual game scenarios
 
-**Last Updated**: December 2024 - After Frame 3 Enhanced UX (Quick Feedback + Live Event Feed)  
-**Status**: Active Development - Phase 1 (🏀 COMPLETE ENHANCED BASKETBALL STATISTICS APP - Perfect UX Implemented!)
+**Last Updated**: December 2024 - Unified Modal Architecture: Specifications Complete, Implementation Pending
+**Status**: Active Development - Phase 1 (📋 PLANNING COMPLETE: Ready to implement unified modal for all player management scenarios)

@@ -12,7 +12,7 @@ This app is designed for recording basketball statistics in minor and amateur le
 ## Frame 1 – Game Selection
 
 ### Description
-Simple, clean interface for selecting a game to start recording statistics. User chooses from pre-configured matchups and proceeds directly to player selection.
+Simple, clean interface for selecting a game to start recording statistics. User chooses from pre-configured matchups and proceeds directly to the game screen.
 
 ### Components
 
@@ -47,20 +47,20 @@ Simple, clean interface for selecting a game to start recording statistics. User
   - **Team A vs Team B**
   - **Date**
 - **Clickable**: Yes – Tap any game to proceed
-- **Selection**: Single tap immediately proceeds to roster selection
+- **Selection**: Single tap immediately proceeds to game screen (Frame 3)
 - **Design**: Card-based layout with clear typography, generous spacing
 
 #### Quick Info
 - **Description**: Brief instruction text
 - **Type**: Text (small, subtle)
 - **Location**: Bottom of screen
-- **Content**: "Tap a game to select players and start recording"
+- **Content**: "Tap a game to start recording"
 - **Clickable**: No
 
 ### Flow
 1. User sees clean list of available games
 2. User taps any game card
-3. Automatically proceeds to game roster selection (Frame 2)
+3. Automatically proceeds to game screen in Setup Mode (Frame 3)
 4. **No status tracking, no mode selection, no confirmation dialogs**
 
 ### Simplified Design Principles
@@ -68,14 +68,16 @@ Simple, clean interface for selecting a game to start recording statistics. User
 - **Clean cards**: Each game displayed as a clear, touch-friendly card
 - **Minimal text**: Only essential information (teams, date)
 - **No status complexity**: All games are simply available for selection
-- **Instant navigation**: Tap game → go to player selection
+- **Instant navigation**: Tap game → go directly to game screen
 
 ---
 
-## Frame 2 – Game Roster
+## Frame 2 – Game Roster (Integrated into Frame 3)
 
 ### Description
-Modern, sleek interface for selecting players from pre-determined team rosters. Teams are automatically loaded from the selected game, and player selection is instant with beautiful visual feedback.
+**NOTE: This functionality is now integrated directly into Frame 3 (Game Screen) as "Setup Mode"**
+
+Player selection is now handled within the game screen itself through modal overlays. When entering a game without players selected, the game screen presents player selection buttons in place of the player list. This allows for more flexible lineup management, including quarter-by-quarter lineup changes.
 
 ### League Teams Data (MVP)
 **4 Placeholder Teams with Player Rosters:**
@@ -190,6 +192,10 @@ Modern, sleek interface for selecting players from pre-determined team rosters. 
 - **Auto-enabling**: Start Game button enables automatically when ready
 - **Touch-friendly**: Large player cards optimized for mobile tapping
 
+### Components (When accessed as modal from Frame 3)
+
+The original Frame 2 components are now available as a modal overlay within the game screen, triggered by clicking "Select 5 Players" buttons in Setup Mode. The same instant selection interface with team cards and player grids is maintained.
+
 ### Future Feature: Team/Player Management
 - **Separate screen** for editing league teams and player rosters
 - **Add/remove teams** from league
@@ -202,9 +208,33 @@ Modern, sleek interface for selecting players from pre-determined team rosters. 
 ## Frame 3 - Game
 
 ### Description
-This is the main screen where the live updates happen. The user will click buttons to start and pause time, select players and events to log, click for time out or substitute players etc. Each team will be on one side and the event buttons in the middle for easy and fast clicking.
+This is the main screen where the live updates happen. The screen now has two distinct modes:
+
+**Setup Mode**: When entering from game selection without players chosen, the team panels show "Select 5 Players" buttons instead of player lists. Event buttons are disabled until both teams have 5 players selected.
+
+**Game Mode**: Once both teams have 5 players selected, all game features become active. The user will click buttons to start and pause time, select players and events to log, click for time out or substitute players etc. Each team will be on one side and the event buttons in the middle for easy and fast clicking.
 
 ### UI Layout Structure
+
+#### Setup Mode (No Players Selected)
+```
+┌─────────────────────────────────────────────────────┐
+│  [Score: 0 - 0] [START|10:00] [Q1▼] [Fouls: 0-0]  │
+├─────────────────────────────────────────────────────┤
+│ Team A        │   Event Panel       │    Team B     │
+│               │    (Disabled)       │               │
+│  ┌─────────┐  │                     │  ┌─────────┐ │
+│  │         │  │  Events disabled    │  │         │ │
+│  │ Select  │  │  until both teams   │  │ Select  │ │
+│  │    5    │  │  have 5 players     │  │    5    │ │
+│  │ Players │  │  selected           │  │ Players │ │
+│  │         │  │                     │  │         │ │
+│  └─────────┘  │                     │  └─────────┘ │
+│               │                     │               │
+└─────────────────────────────────────────────────────┘
+```
+
+#### Game Mode (Players Selected)
 ```
 ┌─────────────────────────────────────────────────────┐
 │  [Score: Team A 45 - Team B 38] [START|8:45] [Q2▼] [Fouls: A-3 B-5] │
@@ -218,7 +248,7 @@ This is the main screen where the live updates happen. The user will click butto
 │ Player 5 [0]  │  [FOUL] [TIMEOUT]  │  [3] Player 10│
 │               │                     │               │
 │ [TimeOut]     │                     │  [TimeOut]    │
-│ [Sub]         │                     │  [Sub]        │
+│ [Sub]         │  [Change Lineup]    │  [Sub]        │
 └─────────────────────────────────────────────────────┘
 ```
 **Optimized Single-Line Layout**:
@@ -311,7 +341,11 @@ This is the main screen where the live updates happen. The user will click butto
   - Show notification: "Quarter X Complete! Starting Quarter Y"
 
 ### Team Panel (Team A & Team B)
-**Description**: Team players that are currently on court in 5 buttons one on top of the other. Big and clear for easy clicking. Teams buttons Time out and Subs will be there as well.
+**Description**: Team panels adapt based on whether players are selected:
+
+**Setup Mode**: Shows a large "Select 5 Players" button in place of the player list. Clicking this button opens a modal overlay with the player selection interface.
+
+**Game Mode**: Shows the 5 selected players as buttons, one on top of the other. Big and clear for easy clicking. Team buttons Time out and Subs will be there as well.
 
 #### Player Title
 - **Description**: Title of team panel
@@ -321,11 +355,22 @@ This is the main screen where the live updates happen. The user will click butto
 - **Clickable**: No
 
 
-#### Player Buttons
+#### Select Players Button (Setup Mode Only)
+- **Description**: Large button shown when no players are selected for this team
+- **Type**: Button
+- **Location**: Center of team panel where player buttons would normally be
+- **Content**: "Select 5 Players"
+- **Clickable**: Yes
+- **When clicked**: Opens modal overlay with player selection interface
+- **Visual State**: 
+  - Default: Grey background
+  - After selection: Replaced with 5 player buttons
+
+#### Player Buttons (Game Mode Only)
 - **Description**: 5 buttons, one for each player. These buttons will be used to log the events by clicking on player and then the event that the player did
 - **Type**: Button
 - **Location**: Side panel. 5 buttons spread evenly one on top of the other
-- **Content**: Player name and player number (automatically filled from roster)
+- **Content**: Player name and player number (automatically filled from selected roster)
 - **Clickable**: Yes
 - **When clicked**: Colors button turns blue
 
@@ -367,7 +412,11 @@ This is the main screen where the live updates happen. The user will click butto
 
 
 ### Event Panel
-**Description**: The event panel has the buttons of the events and a live event feed. When an event appears in the game, the user will click a player and then an event, and it will be stored in the log and shown in the live feed. An event button can be clicked only if a player button is selected. If there is no player button selected, a pop-up will state "Select player". The panel will be between the team panels and under the time panel.
+**Description**: The event panel has the buttons of the events and a live event feed. The panel adapts based on game state:
+
+**Setup Mode**: All event buttons are disabled/greyed out with a message "Select players for both teams to start recording events"
+
+**Game Mode**: When an event appears in the game, the user will click a player and then an event, and it will be stored in the log and shown in the live feed. An event button can be clicked only if a player button is selected. If there is no player button selected, a pop-up will state "Select player". The panel will be between the team panels and under the time panel.
 
 #### Live Event Feed
 - **Description**: Shows the last 5 recorded events for immediate feedback and context
@@ -589,6 +638,18 @@ This is the main screen where the live updates happen. The user will click butto
   - All players unclicked and turn grey
 
 ### Flow
+
+#### Setup Mode Flow
+1. User enters game screen from Frame 1 game selection
+2. Both team panels show "Select 5 Players" buttons
+3. User clicks Team A's "Select 5 Players" button
+4. Modal overlay appears with Team A's roster (12 players)
+5. User selects exactly 5 players with instant visual feedback
+6. Modal closes, Team A panel now shows 5 player buttons
+7. User repeats for Team B
+8. Once both teams have 5 players, event buttons enable and game enters Game Mode
+
+#### Game Mode Flow  
 1. The game begins and user clicks Q1, the time will show 10 minutes and start
 2. When an event happens the user clicks on the player and then on the event
 3. Event is recorded with quick 0.3-second button flash and appears in live event feed
@@ -596,6 +657,13 @@ This is the main screen where the live updates happen. The user will click butto
 5. The system records the event in the log and live feed shows last 5 events
 6. User can tap "View Log" to see complete event history
 7. User will apply substitutions and time outs when they happen
+
+#### Quarter Transition Flow
+1. When transitioning between quarters (Q1→Q2, Q2→Q3, Q3→Q4)
+2. Optional prompt: "Starting Quarter X - Change lineup?"
+3. Options:
+   - **"Keep Same"** - Continue with current 5 players
+   - **"Change Lineup"** - Opens Unified Modal in Quarter Change Mode with current 5 pre-selected
 
 ### Enhanced UX Principles
 - **Quick Visual Feedback**: 0.3-second button flash for immediate confirmation
@@ -605,73 +673,120 @@ This is the main screen where the live updates happen. The user will click butto
 - **Clear Timer State**: Clock background color immediately shows running (green) vs paused (yellow)
 - **Pleasant Single Toggle**: Single game control button eliminates UI complexity
 - **Intuitive Button Colors**: 
-  - 🟢 Green = "START" (positive action when stopped)
-  - 🔵 Blue = "PAUSE" (pleasant during gameplay, not aggressive)
+  - 🟢 Green = "START" (positive action when stopped) / "ON COURT" (current players)
+  - 🔵 Blue = "PAUSE" (pleasant during gameplay) / "SELECTED/GOING IN" (player states)
+  - 🔴 Red = "COMING OUT" (substitution only)
+  - 🩶 Grey = Available/unselected players
   - Clock background = Primary state indicator (green=running, yellow=paused)
 - **Always Available Events**: All basketball events can be recorded regardless of timer state
+- **Progressive Mode Transition**: Game screen naturally progresses from Setup Mode to Game Mode
+- **Unified Player Management**: Single modal interface for all player selection scenarios
+- **Learn Once, Use Everywhere**: Same interaction pattern for setup, quarter changes, and substitutions
+- **Flexible Lineup Management**: Support for any substitution pattern (1-for-1, 2-for-2, 3-for-3, etc.)
+- **Context-Aware Interface**: Modal adapts its display and behavior based on usage scenario
+
+### Unified Player Selection Modal
+
+#### Description
+A single, versatile modal that handles all player selection scenarios: initial setup, quarter lineup changes, and substitutions. Same UI, different contexts - clean and consistent.
+
+#### Core Modal Components
+- **Context Header**: Shows scenario-specific title
+- **Player Grid**: 12 player cards in clean 3x4 layout
+- **Status Display**: Shows current selection state
+- **Single Action Button**: Context-aware button text
+- **Cancel Button**: "Cancel" (returns without changes)
+
+#### Three Usage Modes
+
+##### **Setup Mode** (New Game/Team Setup)
+- **Header**: "[Team Name] - Select Starting 5"
+- **Player State**: All players grey (unselected)
+- **Status Display**: "0/5 selected"
+- **Selection**: Tap to select (blue), tap again to deselect
+- **Validation**: Must select exactly 5 players
+- **Action Button**: "Set Lineup" (enabled when exactly 5 selected)
+
+##### **Quarter Change Mode** (Between Quarters)
+- **Header**: "[Team Name] - Quarter X Lineup"
+- **Player State**: Current 5 pre-selected (blue), others grey
+- **Status Display**: "5/5 selected" (can modify)
+- **Selection**: Tap to add/remove players freely
+- **Validation**: Must end with exactly 5 players
+- **Action Button**: "Update Lineup" (enabled when exactly 5 selected)
+
+##### **Substitution Mode** (During Game)
+- **Header**: "[Team Name] - Substitution"
+- **Player State**: Current 5 shown as "ON COURT" (green), others available (grey)
+- **Status Display**: "Making substitution..."
+- **Selection**: 
+  - Tap ON COURT player → "COMING OUT" (red)
+  - Tap available player → "GOING IN" (blue)
+- **Validation**: Equal numbers in/out (1-for-1, 2-for-2, etc.)
+- **Action Button**: "Make Substitution" (enabled when valid swap)
+
+#### Universal Selection Behavior
+- **Visual States**:
+  - **Grey**: Available to select
+  - **Blue**: Selected/Going in
+  - **Green**: Currently on court (Substitution mode only)
+  - **Red**: Coming out (Substitution mode only)
+- **Instant Feedback**: Cards change color immediately on tap
+- **Clear Status**: Always shows what's happening
+- **Simple Interaction**: Just tap players to change their state
+
+#### Benefits of Unified Approach
+- **Learn Once, Use Everywhere**: Same interaction pattern for all scenarios
+- **Clean UI**: Single modal design, no UI complexity
+- **Flexible**: Supports any substitution pattern (1-for-1, 2-for-2, 3-for-3)
+- **Fast**: Familiar interface means quick decisions
+- **Context-Aware**: Header and status adapt to show relevant information
 
 ---
 
-## Frame 4 – Substitutions (MVP Feature)
+## Frame 4 – Substitutions (Unified Modal)
 
 ### Description
-User will substitute players and edit the 5 playing players. This allows for basic player rotation during the game.
+**INTEGRATED WITH UNIFIED PLAYER SELECTION MODAL**: Substitutions now use the same clean modal interface as initial setup and quarter changes. No separate substitution screen needed.
 
-### Components
+### How It Works
 
-#### Main Title
-- **Description**: Main title of frame
-- **Type**: Text
-- **Location**: Top left corner
-- **Content**: "Substitution Team A"
-- **Clickable**: No
+#### Accessing Substitutions
+- **From Game Screen**: Click "Sub" button in either team panel
+- **Opens**: Unified Player Selection Modal in **Substitution Mode**
+- **Context**: Modal shows team name and "Substitution" in header
 
-#### Table Playing Title
-- **Description**: Table playing title
-- **Type**: Text
-- **Location**: Top left corner under main title
-- **Content**: "Sub team A"
-- **Clickable**: No
+#### Substitution Interface (Using Unified Modal)
+- **Current Players**: 5 players on court shown in GREEN ("ON COURT")
+- **Available Players**: 7 bench players shown in GREY ("AVAILABLE")
+- **Simple Interaction**:
+  1. Tap GREEN player → turns RED ("COMING OUT")
+  2. Tap GREY player → turns BLUE ("GOING IN")
+  3. Must have equal numbers: 1 out + 1 in, or 2 out + 2 in, etc.
+- **Status Display**: "Making substitution..." with validation feedback
+- **Action Button**: "Make Substitution" (enabled when valid swap)
 
-#### Sub Out Buttons
-- **Description**: The 5 players that are currently playing will be displayed in 5 buttons like in the game frame
-- **Type**: Button
-- **Location**: Left side. 5 buttons spread evenly one on top of the other
-- **Content**: Player name and player number (automatically filled from currently playing)
-- **Clickable**: Yes
-- **When clicked**: Colors button turns blue
+#### Substitution Flow
+1. User clicks "Sub" button on team panel in game screen
+2. Unified Modal opens in Substitution Mode
+3. User taps current player(s) to remove (GREEN → RED)
+4. User taps bench player(s) to bring in (GREY → BLUE)
+5. User clicks "Make Substitution"
+6. Modal closes, game updates with new lineup
+7. Substitution event logged automatically
 
-#### Sub In Buttons
-- **Description**: The rest of the players on the roster that are not currently playing
-- **Type**: Button
-- **Location**: Right side. Buttons spread evenly
-- **Content**: Player name and player number (automatically filled from roster and currently playing)
-- **Clickable**: Yes
-- **When clicked**: Colors button turns blue
+#### Benefits of Unified Approach
+- **No Separate Screen**: Substitutions happen in familiar modal interface
+- **Consistent UX**: Same interaction as setup and quarter changes
+- **Flexible**: Supports 1-for-1, 2-for-2, or any valid substitution pattern
+- **Visual Clarity**: Color coding makes intentions crystal clear
+- **Fast**: No navigation between screens, familiar interface
 
-
-#### Sub Button
-- **Description**: Once the user chose a player in and a player to go out, clicks to activate substitution
-- **Type**: Button
-- **Content**: "Sub"
-- **Clickable**: Yes
-- **When clicked**:
-  - Creates substitution
-  - Tooltip showing who was subbed (disappears after 3 seconds)
-  - All players go back to grey
-
-#### Back to Game Button
-- **Description**: After completing substitutions, user clicks to go back to game
-- **Type**: Button
-- **Content**: "Back to game"
-- **Clickable**: Yes
-- **When clicked**: Go to game frame
-
-### Flow
-1. User clicks one of the 5 players playing he wants to substitute
-2. User clicks one of the players that are on the bench
-3. User clicks on button substitute
-4. The players have been substituted and ready to go back to game
+### Removed Components
+- **~~Separate Substitution Activity~~**: No longer needed
+- **~~Sub Out/In Button Lists~~**: Replaced by unified player grid
+- **~~Back to Game Button~~**: Modal closes automatically
+- **~~Complex Workflow~~**: Simplified to tap-and-confirm
 
 ---
 

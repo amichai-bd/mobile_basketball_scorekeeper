@@ -17,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.example.myapp.models.Player;
 import com.example.myapp.models.Team;
+import com.example.myapp.models.TeamPlayer;
 import com.example.myapp.data.LeagueDataProvider;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +25,9 @@ import java.util.List;
 /**
  * Game Activity - Live Basketball Statistics Recording (Frame 3)
  * THE CORE FUNCTIONALITY - Real-time game statistics recording interface
+ * Now supports dual modes: Setup Mode (player selection) and Game Mode (live recording)
  */
-public class GameActivity extends Activity {
+public class GameActivity extends Activity implements PlayerSelectionModal.PlayerSelectionListener {
     
     // Game State
     private int gameId;
@@ -36,6 +38,12 @@ public class GameActivity extends Activity {
     private int gameTimeSeconds = 600; // 10 minutes
     private boolean isClockRunning = false;
     private Player selectedPlayer = null;
+    
+    // Dual Mode Support (Setup Mode vs Game Mode)
+    private boolean isInSetupMode = true; // Start in setup mode
+    private Team teamA, teamB; // Full team rosters for player selection
+    private Button btnSelectTeamAPlayers, btnSelectTeamBPlayers; // Setup mode buttons
+    private String currentModalTeamSide; // Track which team's modal is currently open
     
     // UI Components - Top Panel
     private TextView tvScore, tvGameClock, tvTeamFouls;
@@ -90,44 +98,44 @@ public class GameActivity extends Activity {
         // Initialize clock
         setupGameClock();
         
+        // Check initial game readiness and set up UI accordingly
+        checkIfGameReady();
+        
         // Update initial display
         updateAllDisplays();
-        
-        Toast.makeText(this, "🏀 Live Game Recording Started!", Toast.LENGTH_LONG).show();
     }
     
     private void getGameDataFromIntent() {
         gameId = getIntent().getIntExtra("gameId", 1);
+        
+        // Try to get team names from different intent sources
         teamAName = getIntent().getStringExtra("teamAName");
         teamBName = getIntent().getStringExtra("teamBName");
         
-        // Get player data (for now use placeholder, will come from Frame 2 later)
-        // TODO: Get actual selected players from Frame 2
+        // If not found, try alternative keys (for compatibility with MainActivity)
+        if (teamAName == null) teamAName = getIntent().getStringExtra("homeTeam");
+        if (teamBName == null) teamBName = getIntent().getStringExtra("awayTeam");
+        
+        // Load full team rosters for player selection
+        teamA = LeagueDataProvider.getTeamByName(teamAName);
+        teamB = LeagueDataProvider.getTeamByName(teamBName);
+        
+        // Initialize empty player lists (will be populated when players are selected)
         teamAPlayers = new ArrayList<>();
         teamBPlayers = new ArrayList<>();
         
-        // Create sample players for testing
-        createSamplePlayers();
+        // Check if we have pre-selected players from previous activities
+        // For MVP, we start in Setup Mode
+        isInSetupMode = teamAPlayers.isEmpty() || teamBPlayers.isEmpty();
+        
+        if (!isInSetupMode) {
+            // If we somehow got pre-selected players, use them (future enhancement)
+            // For now, we always start in Setup Mode
+            isInSetupMode = true;
+        }
     }
     
-    private void createSamplePlayers() {
-        // Create 5 sample players for each team for testing
-        // TODO: Replace with actual players from Frame 2
-        Team teamA = LeagueDataProvider.getTeamByName(teamAName);
-        Team teamB = LeagueDataProvider.getTeamByName(teamBName);
-        
-        if (teamA != null && teamA.getPlayers().size() >= 5) {
-            for (int i = 0; i < 5; i++) {
-                teamAPlayers.add(teamA.getPlayers().get(i).toGamePlayer(gameId, "home"));
-            }
-        }
-        
-        if (teamB != null && teamB.getPlayers().size() >= 5) {
-            for (int i = 0; i < 5; i++) {
-                teamBPlayers.add(teamB.getPlayers().get(i).toGamePlayer(gameId, "away"));
-            }
-        }
-    }
+
     
     private void initializeViews() {
         // Top panel components
@@ -188,18 +196,82 @@ public class GameActivity extends Activity {
     }
     
     private void createPlayerButtons() {
-        // Create Team A player buttons
-        for (Player player : teamAPlayers) {
-            Button playerBtn = createPlayerButton(player);
-            teamAPlayerButtons.add(playerBtn);
-            llTeamAPlayers.addView(playerBtn);
-        }
+        // Clear existing buttons
+        llTeamAPlayers.removeAllViews();
+        llTeamBPlayers.removeAllViews();
+        teamAPlayerButtons.clear();
+        teamBPlayerButtons.clear();
         
-        // Create Team B player buttons
-        for (Player player : teamBPlayers) {
-            Button playerBtn = createPlayerButton(player);
-            teamBPlayerButtons.add(playerBtn);
-            llTeamBPlayers.addView(playerBtn);
+        // Create UI for each team independently
+        createTeamAButtons();
+        createTeamBButtons();
+    }
+    
+    private void createTeamAButtons() {
+        if (teamAPlayers.size() == 5) {
+            // Team A has players selected - show player buttons
+            for (Player player : teamAPlayers) {
+                Button playerBtn = createPlayerButton(player);
+                teamAPlayerButtons.add(playerBtn);
+                llTeamAPlayers.addView(playerBtn);
+            }
+        } else {
+            // Team A needs player selection - show "Select 5 Players" button
+            btnSelectTeamAPlayers = new Button(this);
+            btnSelectTeamAPlayers.setText("Select 5 Players");
+            btnSelectTeamAPlayers.setTextSize(16);
+            btnSelectTeamAPlayers.setBackgroundColor(Color.parseColor("#BDC3C7")); // Light grey
+            btnSelectTeamAPlayers.setTextColor(Color.parseColor("#2C3E50"));
+            btnSelectTeamAPlayers.setPadding(16, 32, 16, 32);
+            
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 
+                LinearLayout.LayoutParams.MATCH_PARENT);
+            params.setMargins(8, 8, 8, 8);
+            btnSelectTeamAPlayers.setLayoutParams(params);
+            
+            btnSelectTeamAPlayers.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openPlayerSelectionModal(teamA, "home");
+                }
+            });
+            
+            llTeamAPlayers.addView(btnSelectTeamAPlayers);
+        }
+    }
+    
+    private void createTeamBButtons() {
+        if (teamBPlayers.size() == 5) {
+            // Team B has players selected - show player buttons
+            for (Player player : teamBPlayers) {
+                Button playerBtn = createPlayerButton(player);
+                teamBPlayerButtons.add(playerBtn);
+                llTeamBPlayers.addView(playerBtn);
+            }
+        } else {
+            // Team B needs player selection - show "Select 5 Players" button
+            btnSelectTeamBPlayers = new Button(this);
+            btnSelectTeamBPlayers.setText("Select 5 Players");
+            btnSelectTeamBPlayers.setTextSize(16);
+            btnSelectTeamBPlayers.setBackgroundColor(Color.parseColor("#BDC3C7")); // Light grey
+            btnSelectTeamBPlayers.setTextColor(Color.parseColor("#2C3E50"));
+            btnSelectTeamBPlayers.setPadding(16, 32, 16, 32);
+            
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 
+                LinearLayout.LayoutParams.MATCH_PARENT);
+            params.setMargins(8, 8, 8, 8);
+            btnSelectTeamBPlayers.setLayoutParams(params);
+            
+            btnSelectTeamBPlayers.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openPlayerSelectionModal(teamB, "away");
+                }
+            });
+            
+            llTeamBPlayers.addView(btnSelectTeamBPlayers);
         }
     }
     
@@ -272,6 +344,146 @@ public class GameActivity extends Activity {
         
         // View Log button
         btnViewLog.setOnClickListener(v -> openEventLog());
+    }
+    
+    // Player Selection Modal Methods
+    private void openPlayerSelectionModal(Team team, String teamSide) {
+        if (team == null || team.getPlayers() == null || team.getPlayers().isEmpty()) {
+            Toast.makeText(this, "No players available for " + team.getName(), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Track which team's modal is open
+        currentModalTeamSide = teamSide;
+        
+        // Create modal with Setup mode
+        PlayerSelectionModal modal = PlayerSelectionModal.newInstance(
+            PlayerSelectionModal.SelectionMode.SETUP,
+            team.getName(),
+            team.getPlayers(),
+            null // No current lineup for setup mode
+        );
+        
+        modal.setPlayerSelectionListener(this);
+        modal.show(getFragmentManager(), "PlayerSelection");
+    }
+    
+    // PlayerSelectionModal.PlayerSelectionListener interface implementation
+    @Override
+    public void onPlayersSelected(List<TeamPlayer> selectedPlayers, List<TeamPlayer> playersOut) {
+        if (selectedPlayers.size() != 5) {
+            Toast.makeText(this, "Must select exactly 5 players", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Convert TeamPlayer to Player (game players)
+        List<Player> gamePlayers = new ArrayList<>();
+        for (TeamPlayer teamPlayer : selectedPlayers) {
+            gamePlayers.add(teamPlayer.toGamePlayer(gameId, currentModalTeamSide));
+        }
+        
+        // Assign to appropriate team
+        if ("home".equals(currentModalTeamSide)) {
+            teamAPlayers = gamePlayers;
+            Toast.makeText(this, "Team A lineup set! ✅", Toast.LENGTH_SHORT).show();
+        } else {
+            teamBPlayers = gamePlayers;
+            Toast.makeText(this, "Team B lineup set! ✅", Toast.LENGTH_SHORT).show();
+        }
+        
+        // Immediately update UI for this team (independent of other team)
+        createPlayerButtons();
+        
+        // Enable event buttons only when BOTH teams have 5 players
+        checkIfGameReady();
+    }
+    
+    @Override
+    public void onSelectionCancelled() {
+        Toast.makeText(this, "Player selection cancelled", Toast.LENGTH_SHORT).show();
+    }
+    
+    private void checkIfGameReady() {
+        // Enable event buttons only when BOTH teams have 5 players
+        boolean bothTeamsReady = (teamAPlayers.size() == 5 && teamBPlayers.size() == 5);
+        
+        enableEventButtons(bothTeamsReady);
+        
+        if (bothTeamsReady) {
+            isInSetupMode = false; // We're now in full game mode
+            Toast.makeText(this, "🏀 Game Ready! Both teams set - events enabled.", Toast.LENGTH_LONG).show();
+        } else {
+            isInSetupMode = true; // Still in setup mode
+            // Only show messages after user has started selecting (not on initial load)
+            if (teamAPlayers.size() > 0 || teamBPlayers.size() > 0) {
+                if (teamAPlayers.size() != 5 && teamBPlayers.size() != 5) {
+                    // This shouldn't happen since we only get here when one team is done
+                } else if (teamAPlayers.size() != 5) {
+                    Toast.makeText(this, "Now select Team A players to enable events", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Now select Team B players to enable events", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                // Initial state - show welcoming message
+                Toast.makeText(this, "Select 5 players for each team to begin", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+    
+    private void enableEventButtons(boolean enabled) {
+        // Enable/disable all event buttons based on mode
+        btn1P.setEnabled(enabled);
+        btn2P.setEnabled(enabled);
+        btn3P.setEnabled(enabled);
+        btn1M.setEnabled(enabled);
+        btn2M.setEnabled(enabled);
+        btn3M.setEnabled(enabled);
+        btnOR.setEnabled(enabled);
+        btnDR.setEnabled(enabled);
+        btnAST.setEnabled(enabled);
+        btnSTL.setEnabled(enabled);
+        btnBLK.setEnabled(enabled);
+        btnTO.setEnabled(enabled);
+        btnFOUL.setEnabled(enabled);
+        btnTIMEOUT.setEnabled(enabled);
+        
+        // Set colors based on enabled state - preserve original colors when enabled
+        int disabledColor = Color.parseColor("#BDC3C7"); // Light grey for disabled
+        
+        // Scoring makes (green)
+        int scoringColor = enabled ? Color.parseColor("#2ECC71") : disabledColor;
+        btn1P.setBackgroundColor(scoringColor);
+        btn2P.setBackgroundColor(scoringColor);
+        btn3P.setBackgroundColor(scoringColor);
+        
+        // Scoring misses (red)
+        int missColor = enabled ? Color.parseColor("#E74C3C") : disabledColor;
+        btn1M.setBackgroundColor(missColor);
+        btn2M.setBackgroundColor(missColor);
+        btn3M.setBackgroundColor(missColor);
+        
+        // Rebounds & assists (teal)
+        int reboundColor = enabled ? Color.parseColor("#16A085") : disabledColor;
+        btnOR.setBackgroundColor(reboundColor);
+        btnDR.setBackgroundColor(reboundColor);
+        btnAST.setBackgroundColor(reboundColor);
+        
+        // Defense (purple)
+        int defenseColor = enabled ? Color.parseColor("#9B59B6") : disabledColor;
+        btnSTL.setBackgroundColor(defenseColor);
+        btnBLK.setBackgroundColor(defenseColor);
+        
+        // Turnover (orange)
+        int turnoverColor = enabled ? Color.parseColor("#E67E22") : disabledColor;
+        btnTO.setBackgroundColor(turnoverColor);
+        
+        // Foul (dark purple)
+        int foulColor = enabled ? Color.parseColor("#8E44AD") : disabledColor;
+        btnFOUL.setBackgroundColor(foulColor);
+        
+        // Timeout (orange/yellow)
+        int timeoutColor = enabled ? Color.parseColor("#F39C12") : disabledColor;
+        btnTIMEOUT.setBackgroundColor(timeoutColor);
     }
     
     private void setupGameClock() {

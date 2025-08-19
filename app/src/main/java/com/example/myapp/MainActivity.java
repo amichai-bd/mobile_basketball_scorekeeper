@@ -89,17 +89,17 @@ public class MainActivity extends Activity {
             }
         });
         
-        // Game selection - one tap to proceed to player selection
+        // Game selection - one tap to proceed directly to game screen
         lvGames.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 SimpleGame selectedGame = gamesList.get(position);
-                proceedToPlayerSelection(selectedGame);
+                proceedToGameScreen(selectedGame);
             }
         });
     }
     
-    private void proceedToPlayerSelection(SimpleGame game) {
+    private void proceedToGameScreen(SimpleGame game) {
         // Verify game still exists (in case it was deleted in League Management)
         if (game == null || game.getHomeTeam() == null || game.getAwayTeam() == null) {
             Toast.makeText(this, "Error: Game no longer available", Toast.LENGTH_SHORT).show();
@@ -108,10 +108,10 @@ public class MainActivity extends Activity {
         }
         
         // Debug output
-        Toast.makeText(this, "Game selected: " + game.getMatchupText(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Starting game: " + game.getMatchupText(), Toast.LENGTH_SHORT).show();
         
-        // Navigate directly to Game Roster Activity (Frame 2)
-        Intent intent = new Intent(this, GameRosterActivity.class);
+        // Navigate directly to Game Activity (Frame 3) - Unified Refactor
+        Intent intent = new Intent(this, GameActivity.class);
         intent.putExtra("gameId", game.getId());
         intent.putExtra("homeTeam", game.getHomeTeam().getName());
         intent.putExtra("awayTeam", game.getAwayTeam().getName());
