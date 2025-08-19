@@ -359,19 +359,17 @@ public class GameRosterActivity extends Activity {
             teamBGamePlayers.add(tp.toGamePlayer(gameId, "away"));
         }
         
-        // For MVP, show confirmation message with pre-selected team names
-        String message = String.format("Game Time!!!\n%s vs %s\n(Game interface coming soon)", 
-            homeTeamName, awayTeamName);
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        // Navigate to GameActivity (Frame 3) - THE CORE FUNCTIONALITY!
+        android.content.Intent intent = new android.content.Intent(this, GameActivity.class);
+        intent.putExtra("gameId", gameId);
+        intent.putExtra("teamAName", homeTeamName);
+        intent.putExtra("teamBName", awayTeamName);
+        // For MVP, pass team names and let GameActivity create sample players
+        // TODO: Pass actual selected player data when serialization is implemented
+        startActivity(intent);
         
-        // TODO: Update game status to "In Progress" here when actual game recording begins
-        // TODO: Navigate to GameActivity with roster data
-        // Intent intent = new Intent(this, GameActivity.class);
-        // intent.putExtra("gameId", gameId);
-        // intent.putExtra("teamAName", homeTeamName);
-        // intent.putExtra("teamBName", awayTeamName);
-        // intent.putExtra("teamAPlayers", (Serializable) teamAGamePlayers);  
-        // intent.putExtra("teamBPlayers", (Serializable) teamBGamePlayers);
-        // startActivity(intent);
+        Toast.makeText(this, "🏀 Starting Live Game Recording!", Toast.LENGTH_LONG).show();
+        
+        // TODO: Update game status to "In Progress" when implementing database persistence
     }
 }

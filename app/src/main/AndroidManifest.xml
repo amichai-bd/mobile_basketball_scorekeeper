@@ -38,6 +38,11 @@
         <activity android:name=".LeagueManagementActivity"
             android:exported="false" />
         
+        <!-- Game Activity (Frame 3) - Live Statistics Recording -->
+        <activity android:name=".GameActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        
         <!-- TODO: Register additional activities here
         <activity android:name=".LogActivity" />
         -->
