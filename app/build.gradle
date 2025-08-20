@@ -17,8 +17,12 @@ android {
         // testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    // --- Release signing: only in CI when keystore environment variables are available ---
-    if (System.getenv("ANDROID_KEYSTORE_PATH")) {
+    // --- Release signing: only configured in CI when all environment variables are present ---
+    if (System.getenv("ANDROID_KEYSTORE_PATH") && 
+        System.getenv("ANDROID_KEYSTORE_PASSWORD") && 
+        System.getenv("ANDROID_KEY_ALIAS") && 
+        System.getenv("ANDROID_KEY_PASSWORD")) {
+        
         signingConfigs {
             release {
                 storeFile file(System.getenv("ANDROID_KEYSTORE_PATH"))
@@ -32,8 +36,11 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            // Only use release signing if keystore is available (CI environment)
-            if (System.getenv("ANDROID_KEYSTORE_PATH")) {
+            // Only use release signing if all keystore environment variables are available (CI environment)
+            if (System.getenv("ANDROID_KEYSTORE_PATH") && 
+                System.getenv("ANDROID_KEYSTORE_PASSWORD") && 
+                System.getenv("ANDROID_KEY_ALIAS") && 
+                System.getenv("ANDROID_KEY_PASSWORD")) {
                 signingConfig signingConfigs.release
             }
             // TODO: Configure ProGuard if needed for release builds
