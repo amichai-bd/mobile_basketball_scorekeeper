@@ -4,9 +4,7 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.style.ForegroundColorSpan;
+
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -45,8 +43,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     private Button btnSelectTeamAPlayers, btnSelectTeamBPlayers; // Setup mode buttons
     private String currentModalTeamSide; // Track which team's modal is currently open
     
-    // UI Components - Top Panel
-    private TextView tvScore, tvGameClock, tvTeamFouls;
+    // UI Components - Top Panel (Enhanced 2-Row Layout)
+    private TextView tvTeamAScore, tvTeamBScore, tvGameClock;
+    private TextView tvTeamAFouls, tvTeamBFouls;
     private Button btnGameToggle;
     
     // UI Components - Team Panels
@@ -138,10 +137,12 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
 
     
     private void initializeViews() {
-        // Top panel components
-        tvScore = findViewById(R.id.tvScore);
+        // Top panel components (Enhanced 2-Row Layout)
+        tvTeamAScore = findViewById(R.id.tvTeamAScore);
+        tvTeamBScore = findViewById(R.id.tvTeamBScore);
         tvGameClock = findViewById(R.id.tvGameClock);
-        tvTeamFouls = findViewById(R.id.tvTeamFouls);
+        tvTeamAFouls = findViewById(R.id.tvTeamAFouls);
+        tvTeamBFouls = findViewById(R.id.tvTeamBFouls);
         btnGameToggle = findViewById(R.id.btnGameToggle);
         
         // Team panel components
@@ -1104,7 +1105,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     private void updateScoreDisplay() {
-        tvScore.setText(String.format("%s %d - %s %d", teamAName, teamAScore, teamBName, teamBScore));
+        // Update separate team score displays for enhanced visibility
+        tvTeamAScore.setText(String.format("%s %d", teamAName, teamAScore));
+        tvTeamBScore.setText(String.format("%s %d", teamBName, teamBScore));
     }
     
     private void updateGameClockDisplay() {
@@ -1116,29 +1119,17 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     // Quarter display now handled by spinner - no separate method needed
     
     private void updateTeamFoulsDisplay() {
-        // Build display text and color specific team counts red at ≥5
-        String prefix = "Team Fouls: ";
-        String aPart = "A-" + teamAFouls;
-        String space = "  ";
-        String bPart = "B-" + teamBFouls;
-        String text = prefix + aPart + space + bPart;
-
-        SpannableString spannable = new SpannableString(text);
-
-        int aStart = prefix.length();
-        int aEnd = aStart + aPart.length();
-        int bStart = aEnd + space.length();
-        int bEnd = bStart + bPart.length();
-
+        // Update separate team foul displays with enhanced visibility and color coding
         int redColor = Color.parseColor("#F44336");
-        if (teamAFouls >= 5) {
-            spannable.setSpan(new ForegroundColorSpan(redColor), aStart, aEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-        if (teamBFouls >= 5) {
-            spannable.setSpan(new ForegroundColorSpan(redColor), bStart, bEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-
-        tvTeamFouls.setText(spannable);
+        int whiteColor = Color.parseColor("#FFFFFF");
+        
+        // Update Team A fouls
+        tvTeamAFouls.setText(String.format("%s %d", teamAName, teamAFouls));
+        tvTeamAFouls.setTextColor(teamAFouls >= 5 ? redColor : whiteColor);
+        
+        // Update Team B fouls  
+        tvTeamBFouls.setText(String.format("%s %d", teamBName, teamBFouls));
+        tvTeamBFouls.setTextColor(teamBFouls >= 5 ? redColor : whiteColor);
     }
     
     private void updatePlayerButtonText() {

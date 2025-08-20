@@ -282,24 +282,30 @@ The screen has two distinct modes:
 - Team action buttons (TimeOut, Sub) at bottom of each team panel
 
 ### Middle Top Panel (Game Control Section)
-**Description**: Ultra-compact control section positioned in the middle-top area between the full-height team panels. Contains all game state and control information in minimal vertical space to maximize room for the event button area below.
+**Description**: Enhanced 2-row control panel positioned in the middle-top area between the full-height team panels. Features improved visibility with vertically separated team information and centralized game controls.
 **Location**: Middle-top section of screen, between the left and right team panels, above the event button panel.
 
 #### Layout Structure:
-- **Single Line**: Score Display | Game Control Button + Clock | Quarter Dropdown | Team Fouls Display
+- **2-Row Layout**: 
+  - **Row 1**: Team A Score | Start/Pause Button | Timer Display | Quarter Dropdown | Team A Fouls
+  - **Row 2**: Team B Score | (Button continues) | (Timer continues) | (Dropdown continues) | Team B Fouls
 
-#### Game Score Display
-- **Description**: Live game score for both teams
-- **Type**: Text Display
-- **Location**: Middle-top section, next to game clock
-- **Content**: "Team A: XX - Team B: XX" format
+#### Team Score Display (Enhanced)
+- **Description**: Live game scores displayed vertically for better visibility
+- **Type**: Vertical Score Display  
+- **Location**: Left section of control panel (2 rows)
+- **Content**: 
+  - **Row 1**: "TEAM_A <score>"
+  - **Row 2**: "TEAM_B <score>"
+- **Design**: Each team's score on separate line for clarity
 - **Clickable**: No
 - **Updates**: Automatically when scoring events are recorded
 
-#### Game Control Button (Single Toggle)
-- **Description**: Single button that toggles between start and pause game timer
-- **Type**: Toggle Button
-- **Location**: Top middle section
+#### Game Control Button (Enhanced Single Toggle)
+- **Description**: Enhanced single toggle button spanning both rows vertically for improved visibility
+- **Type**: Vertical Toggle Button
+- **Location**: Middle-left section spanning rows 1-2
+- **Height**: Spans both rows of the control panel
 - **Content & Visual States**:
   - **When Timer Stopped**: 
     - Content: "START"
@@ -309,45 +315,55 @@ The screen has two distinct modes:
     - Content: "PAUSE"
     - Background: 🔵 Blue ("Ready to Pause" - pleasant during gameplay)
     - State: Available/clickable
+- **Enhanced Visibility**: Larger button spanning full control panel height
 - **When clicked (Timer Stopped)**:
   - Start or continue game clock (ensure only ONE timer runs)
-  - Button text changes to "PAUSE GAME"
+  - Button text changes to "PAUSE"
   - Button background becomes blue
   - Clock background becomes green (running state)
 - **When clicked (Timer Running)**:
   - Stop game clock (clear any existing timers)
-  - Button text changes to "START GAME"
+  - Button text changes to "START"
   - Button background becomes green
   - Clock background becomes yellow (paused state)
 
-#### Game Clock
-- **Description**: Game clock with visual state indication
-- **Type**: Time Display with Background
-- **Location**: Middle section, next to score display
-- **Content**: Clock (MM:SS format)
+#### Game Clock (Enhanced Display)
+- **Description**: Enhanced game clock with improved visibility spanning both rows
+- **Type**: Large Time Display with Background
+- **Location**: Middle-center section spanning rows 1-2
+- **Height**: Spans both rows for enhanced visibility
+- **Content**: Clock (MM:SS format) in larger text
 - **Background Color States**:
   - **🟢 Green**: Timer is running (game active)
   - **🟡 Yellow**: Timer is paused (game stopped)
+- **Enhanced Visibility**: Larger display spanning full control panel height
 - **Clickable**: Yes – long click to edit time if needed
 - **When clicked**: Only if long-clicked, user may edit the time
 
-#### Quarter Dropdown
-- **Description**: Dropdown selector for current quarter with automatic progression
-- **Type**: Spinner/Dropdown
-- **Location**: Center-right of single control line
+#### Quarter Dropdown (Enhanced)
+- **Description**: Enhanced dropdown selector spanning both rows for better visibility
+- **Type**: Tall Spinner/Dropdown
+- **Location**: Middle-right section spanning rows 1-2
+- **Height**: Spans both rows of control panel
 - **Content**: "Q1", "Q2", "Q3", "Q4" options
 - **Clickable**: Yes
 - **Current Quarter Display**: Shows current quarter (e.g., "Q2") with dropdown arrow
+- **Enhanced Visibility**: Larger dropdown spanning full control panel height
 - **When clicked**: Opens dropdown to select different quarter
 - **Auto-Progression**: When timer reaches 0:00, automatically advances to next quarter and stops timer
 - **Reset Behavior**: Selecting new quarter resets clock to 10:00 (stopped state)
 
-#### Team Fouls
-- **Description**: Showing the number of fouls committed by the team per quarter. Once it reaches over 5 there is a FT for any foul
-- **Location**: Under start and stop button
-- **Content**: Label "TF" content – number of team fouls recorded this quarter
+#### Team Fouls (Enhanced Vertical Display)
+- **Description**: Enhanced display showing team fouls vertically separated for better clarity
+- **Type**: Vertical Team Fouls Display
+- **Location**: Right section of control panel (2 rows)
+- **Content**: 
+  - **Row 1**: "TEAM_A <foul_count>"
+  - **Row 2**: "TEAM_B <foul_count>"
+- **Design**: Each team's fouls on separate line for clarity
 - **Clickable**: No
-- **Design**: Number of fouls turns Red from 5 fouls or more
+- **Visual States**: Foul counts turn Red when ≥5 fouls (penalty situation)
+- **Updates**: Automatically when foul events are recorded
 
 #### Quarter Selection Behavior
 - **Direct Selection**: Tap dropdown → select quarter → immediate change (no confirmation)

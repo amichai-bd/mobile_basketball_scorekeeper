@@ -83,79 +83,116 @@
             android:layout_margin="4dp"
             android:elevation="2dp">
             
-            <!-- MIDDLE TOP: Minimal Game Controls -->
+            <!-- MIDDLE TOP: Enhanced 2-Row Game Controls -->
             <LinearLayout
                 android:id="@+id/middleTopPanel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="24dp"
+                android:minHeight="48dp"
                 android:orientation="horizontal"
                 android:background="#34495E"
-                android:paddingHorizontal="2dp"
-                android:paddingVertical="0dp"
-                android:gravity="center_vertical">
+                android:paddingHorizontal="4dp"
+                android:paddingVertical="2dp">
                 
-                <!-- Game Score (Left) -->
-                <TextView
-                    android:id="@+id/tvScore"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="2"
-                    android:text="Lakers 45 - Warriors 38"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="#FFFFFF"
-                    android:gravity="center" />
-                
-                <!-- Game Control + Clock (Center) -->
+                <!-- Left Section: Team Scores (Vertical) -->
                 <LinearLayout
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1.5"
-                    android:orientation="horizontal"
-                    android:gravity="center">
-                    
-                    <Button
-                        android:id="@+id/btnGameToggle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="30dp"
-                        android:text="START"
-                        android:textSize="8sp"
-                        android:textStyle="bold"
-                        android:background="@android:color/holo_green_light"
-                        android:textColor="#FFFFFF"
-                        android:layout_marginEnd="1dp"
-                        android:paddingHorizontal="6dp" />
+                    android:layout_height="match_parent"
+                    android:layout_weight="1.8"
+                    android:orientation="vertical"
+                    android:gravity="center_vertical">
                     
                     <TextView
-                        android:id="@+id/tvGameClock"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="10:00"
+                        android:id="@+id/tvTeamAScore"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="Lakers 45"
                         android:textSize="12sp"
                         android:textStyle="bold"
                         android:textColor="#FFFFFF"
-                        android:background="@android:color/holo_orange_light" />
+                        android:gravity="center"
+                        android:layout_marginBottom="1dp" />
+                    
+                    <TextView
+                        android:id="@+id/tvTeamBScore"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="Warriors 38"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:gravity="center"
+                        android:layout_marginTop="1dp" />
                 </LinearLayout>
                 
-                <!-- Quarter Dropdown (Center-Right) -->
+                <!-- Middle-Left: Start/Pause Button (Spanning both rows) -->
+                <Button
+                    android:id="@+id/btnGameToggle"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="START"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:background="@android:color/holo_green_light"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginHorizontal="2dp" />
+                
+                <!-- Middle-Center: Timer (Spanning both rows) -->
+                <TextView
+                    android:id="@+id/tvGameClock"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="10:00"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:background="@android:color/holo_orange_light"
+                    android:gravity="center"
+                    android:layout_marginHorizontal="2dp" />
+                
+                <!-- Middle-Right: Quarter Dropdown (Spanning both rows) -->
                 <Spinner
                     android:id="@+id/spinnerQuarter"
-                    android:layout_width="50dp"
-                    android:layout_height="30dp"
-                    android:background="@android:color/white"
-                    android:layout_marginStart="1dp" />
-                
-                <!-- Team Fouls Display (Right) -->
-                <TextView
-                    android:id="@+id/tvTeamFouls"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0.8"
+                    android:background="@android:color/white"
+                    android:layout_marginHorizontal="2dp" />
+                
+                <!-- Right Section: Team Fouls (Vertical) -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
                     android:layout_weight="1.2"
-                    android:text="Fouls: A-3 B-5"
-                    android:textSize="10sp"
-                    android:textColor="#FFFFFF"
-                    android:gravity="center" />
+                    android:orientation="vertical"
+                    android:gravity="center_vertical">
+                    
+                    <TextView
+                        android:id="@+id/tvTeamAFouls"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="Lakers 3"
+                        android:textSize="11sp"
+                        android:textColor="#FFFFFF"
+                        android:gravity="center"
+                        android:layout_marginBottom="1dp" />
+                    
+                    <TextView
+                        android:id="@+id/tvTeamBFouls"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:text="Warriors 5"
+                        android:textSize="11sp"
+                        android:textColor="#FFFFFF"
+                        android:gravity="center"
+                        android:layout_marginTop="1dp" />
+                </LinearLayout>
             </LinearLayout>
             
             <!-- MIDDLE BOTTOM: Maximized Event Buttons and Live Feed -->

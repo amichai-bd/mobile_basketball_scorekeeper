@@ -264,11 +264,13 @@ Modal headers: 16sp (reduced from 20sp)
 Button text: 10-11sp (reduced from 12-13sp)
 Player numbers: 16sp (reduced from 18-20sp)
 Player names: 10sp (reduced from 11sp)
+Control panel text: 12sp (enhanced for timer visibility)
 
 <!-- Compact spacing -->
 Panel padding: 8-16dp (reduced from 20-24dp)
 Button margins: 2dp (reduced from 3dp)
 Layout margins: 4dp (reduced from 8dp)
+Control panel height: Enhanced 2-row layout for better visibility
 ```
 
 #### Color Coding Standards
