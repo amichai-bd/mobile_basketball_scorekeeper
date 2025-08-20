@@ -1,53 +1,27 @@
 plugins {
-    id 'com.android.application'
-}
-
-android {
-    namespace 'com.example.myapp'
-    compileSdk 34
-
-    defaultConfig {
-        applicationId 'com.example.myapp'
-        minSdk 24
-        targetSdk 34
-        versionCode 1
-        versionName "1.0"
-        
-        // TODO: Add build configuration options as needed
-        // testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            // TODO: Configure ProGuard if needed for release builds
-            // proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        id 'com.android.application'
         }
-    }
-    
-    // TODO: Add additional build features as needed
-    // buildFeatures {
-    //     viewBinding true
-    //     dataBinding true
-    // }
-}
 
-dependencies {
-    // Core Android dependencies - using older stable version to avoid Kotlin conflicts
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    
-    // For Java-only projects, we can exclude all Kotlin dependencies
-    configurations.all {
-        exclude group: 'org.jetbrains.kotlin'
-    }
-    
-    // TODO: Add your dependencies here
-    // Examples:
-    // implementation 'com.google.android.material:material:1.11.0'
-    // implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    // implementation 'androidx.recyclerview:recyclerview:1.3.2'
-    
-    // Testing dependencies
-    // testImplementation 'junit:junit:4.13.2'
-    // androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+        android {
+            namespace 'com.example.myapp'
+                compileSdk 34
+
+                    defaultConfig {
+                            applicationId 'com.example.myapp'
+                                    minSdk 24
+                                            targetSdk 34
+                                                    versionCode 1
+                                                            versionName "1.0"
+                                                                    // testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+                                                                        }
+
+                                                                            // --- Release signing: reads values from environment (set in CI) ---
+                                                                                signingConfigs {
+                                                                                        release {
+                                                                                                    // In CI we write keystore.jks to the repo root and point ANDROID_KEYSTORE_PATH at it
+                                                                                                                storeFile file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "keystore.jks")
+                                                                                                                            storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                                                                                                                                        keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                                                                                                                                                    keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+                                                                                                                                                                v1
 }
