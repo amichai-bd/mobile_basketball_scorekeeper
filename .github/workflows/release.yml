@@ -27,14 +27,7 @@ jobs:
           # space-separated list prevents parsing error
           packages: "platform-tools platforms;android-34 build-tools;34.0.0"
 
-      - name: Restore keystore
-        run: |
-          echo "$ANDROID_KEYSTORE" | base64 -d > keystore.jks
-          echo "ANDROID_KEYSTORE_PATH=$PWD/keystore.jks" >> $GITHUB_ENV
-        env:
-          ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
-
-      - name: Build signed release APK
+      - name: Build release APK
         run: |
           chmod +x gradlew
           ./gradlew --no-daemon clean assembleRelease
@@ -45,4 +38,4 @@ jobs:
           tag_name: v${{ github.run_number }}
           name: Release ${{ github.run_number }}
           body: Automated release from push to main.
-          files: app/build/outputs/apk/release/app-release.apk
+          files: app/build/outputs/apk/release/app-release-unsigned.apk
