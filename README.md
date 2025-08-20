@@ -1,6 +1,14 @@
 # Basketball Statistics App
 
+[![Release APK](https://github.com/amichai-bd/mobile_basketball_scorekeeper/workflows/Release%20APK/badge.svg)](https://github.com/amichai-bd/mobile_basketball_scorekeeper/actions)
+
 A mobile application designed for recording comprehensive basketball statistics in minor and amateur leagues using smartphones and simple, intuitive interfaces.
+
+## 📱 Download
+
+**[⬇️ Download Latest APK](https://github.com/amichai-bd/mobile_basketball_scorekeeper/releases/latest)**
+
+*Enable "Install from unknown sources" on your Android device to install*
 
 ## Problem Statement
 
