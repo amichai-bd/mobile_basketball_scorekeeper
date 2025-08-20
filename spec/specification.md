@@ -999,11 +999,94 @@ Separate interface for managing league data (games, teams, players). Accessed vi
 - **Actions per Team**:
   - **Edit Button**: Rename team with validation
   - **Delete Button**: Remove team (only if not used in scheduled games)
-  - **Manage Players Button**: Access player roster management (future feature)
+  - **Manage Players Button**: Access player roster management modal
 - **Functionality**:
   - Tap Edit → Inline editing of team name
   - Tap Delete → Confirmation dialog → Remove if not in use
+  - Tap Manage Players → Opens Player Management Modal
   - Professional list appearance with clear action buttons
+
+#### Player Management Modal
+- **Description**: Modal overlay for managing individual team rosters
+- **Trigger**: Accessed by clicking "Manage Players" button for any team
+- **Type**: Modal Overlay (not separate screen)
+- **Location**: Center of screen with backdrop
+
+##### Modal Header
+- **Description**: Modal title and team identification
+- **Content**: "[Team Name] - Player Management"
+- **Close Button**: X button in top-right corner
+- **Clickable**: Yes - closes modal without saving changes
+
+##### Current Players List
+- **Description**: Scrollable list showing all existing players for this team
+- **Format**: List items showing "#[Jersey Number] - [Player Name]"
+- **Content**: All current roster players (starts empty for new teams)
+- **Scrollable**: Yes - unlimited players supported
+- **Actions per Player**:
+  - **Edit Button**: Modify player details (jersey number, name)
+  - **Delete Button**: Remove player from roster
+- **Empty State**: Shows "No players added yet" when roster is empty
+
+##### Add Player Section
+- **Description**: Form to add new players to team roster
+- **Location**: Top of modal, above player list
+- **Components**:
+  - **Jersey Number Input**: 
+    - Type: Number input field
+    - Range: 0-99 (inclusive)
+    - Validation: Must be unique within team
+    - Required: Yes
+  - **Player Name Input**:
+    - Type: Text input field
+    - Validation: Cannot be empty
+    - Required: Yes
+  - **Add Player Button**:
+    - Enabled: Only when both fields valid
+    - Action: Adds player to roster and clears form
+
+##### Player Actions
+- **Edit Player**:
+  - **Trigger**: Click Edit button next to player
+  - **Behavior**: Replace list item with inline edit form
+  - **Components**: Jersey number input + name input + Save/Cancel buttons
+  - **Validation**: Same rules as add player (unique jersey number, non-empty name)
+  - **Save**: Updates player details and returns to list view
+  - **Cancel**: Discards changes and returns to list view
+
+- **Delete Player**:
+  - **Trigger**: Click Delete button next to player
+  - **Behavior**: Confirmation dialog appears
+  - **Dialog Content**: "Remove [Player Name] from [Team Name]?"
+  - **Actions**: "Remove" button (confirms deletion) + "Cancel" button
+  - **Validation**: Cannot delete players used in scheduled/completed games
+
+##### Modal Footer
+- **Description**: Action buttons for modal
+- **Components**:
+  - **Save Changes Button**: 
+    - Content: "Save Changes"
+    - Action: Saves all roster changes and closes modal
+    - Updates team list to show "(X players)" with new count
+  - **Cancel Button**:
+    - Content: "Cancel" 
+    - Action: Discards all changes and closes modal
+    - Confirmation dialog if changes were made
+
+##### Validation Rules
+- **Jersey Numbers**: Must be 0-99, unique per team
+- **Player Names**: Cannot be empty, no uniqueness requirement
+- **Roster Size**: No maximum limit (unlimited players)
+- **Game Dependencies**: Cannot delete players used in games
+- **Input Feedback**: Real-time validation with error messages
+
+##### Modal Flow
+1. User clicks "Manage Players" for a team
+2. Modal opens showing current roster (empty for new teams)
+3. User can add players via form at top
+4. User can edit/delete existing players via action buttons
+5. User clicks "Save Changes" to commit or "Cancel" to discard
+6. Modal closes and teams list updates player count
 
 #### Back to Schedule Button
 - **Description**: Return to main game schedule
@@ -1016,14 +1099,26 @@ Separate interface for managing league data (games, teams, players). Accessed vi
 1. User accesses via gear icon "⚙️" button from Frame 1
 2. User selects appropriate tab (Games or Teams)
 3. **Games Tab**: Add/edit scheduled games with teams, dates, and times
-4. **Teams Tab**: Add/edit teams and manage each team's player roster
-5. Changes are automatically saved to league database
-6. User returns to Frame 1 with updated schedule/teams/players
+4. **Teams Tab**: Add/edit/delete teams and manage player rosters
+   - **Add Team**: Enter team name → Add to league
+   - **Edit Team**: Modify team name with validation
+   - **Delete Team**: Remove team (if not used in games)
+   - **Manage Players**: Click team's "Manage Players" button → Player Management Modal
+5. **Player Management**: Within modal overlay
+   - **Add Players**: Enter jersey number (0-99) + name → Add to roster
+   - **Edit Players**: Modify existing player details inline
+   - **Delete Players**: Remove players (if not used in games)
+   - **Save Changes**: Commit roster changes and close modal
+6. Changes are automatically saved to league database
+7. User returns to Frame 1 with updated schedule/teams/players
 
 ### Navigation Flow
 - **From Frame 1**: Tap gear icon "⚙️" → League Management interface
 - **Within Management**: Switch between Games and Teams tabs
-- **Return**: Back button or "Back to Schedule" → Frame 1
+- **To Player Management**: Teams tab → "Manage Players" button → Player Management Modal
+- **Within Modal**: Add/edit/delete players → "Save Changes" or "Cancel"
+- **Return to Teams**: Modal closes → Teams tab (with updated player counts)
+- **Return to Frame 1**: Back button or "Back to Schedule" → Frame 1
 
 ---
 
@@ -1038,15 +1133,17 @@ Separate interface for managing league data (games, teams, players). Accessed vi
   - Enhanced UI optimized for team collaboration
 
 ### Advanced Player Management
-- **Description**: Enhanced roster and substitution management beyond MVP
+- **Description**: Enhanced roster and analytics features beyond basic player management
 - **Features**:
-  - Bench players (more than 5 per team)  
-  - Starting lineup selection from full roster
+  - Player statistics and performance tracking
+  - Starting lineup optimization recommendations  
   - Advanced substitution tracking with statistics
   - Player rotation optimization recommendations
   - Foul-out handling with automatic forced substitutions
   - Player fatigue tracking and alerts
   - Coach decision support and analytics
+  - Player import/export functionality
+  - Photo management for player profiles
 
 ### Enhanced Game Features
 - **Shot Clock**: 24-second shot clock implementation
