@@ -162,6 +162,20 @@ public class LeagueDataProvider {
     }
     
     /**
+     * Update team in teams list (preserves existing team reference)
+     */
+    public static void updateTeam(Team updatedTeam) {
+        if (teams != null) {
+            for (int i = 0; i < teams.size(); i++) {
+                if (teams.get(i).getId() == updatedTeam.getId()) {
+                    teams.set(i, updatedTeam);
+                    return;
+                }
+            }
+        }
+    }
+    
+    /**
      * Initialize the 4 predefined teams with their 12-player rosters
      */
     private static void initializeTeams() {

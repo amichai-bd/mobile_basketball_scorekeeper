@@ -371,7 +371,7 @@ public class LeagueManagementActivity extends Activity {
             btnPlayers.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(context, "Player management for " + team.getName() + " coming soon!", Toast.LENGTH_SHORT).show();
+                    openPlayerManagement(team);
                 }
             });
             
@@ -458,6 +458,17 @@ public class LeagueManagementActivity extends Activity {
         } else {
             Toast.makeText(this, "Cannot delete team - used in scheduled games", Toast.LENGTH_LONG).show();
         }
+    }
+    
+    private void openPlayerManagement(Team team) {
+        PlayerManagementModal modal = new PlayerManagementModal(this, team, new PlayerManagementModal.OnPlayersChangedListener() {
+            @Override
+            public void onPlayersChanged(Team updatedTeam) {
+                // Refresh the teams adapter to show updated player count
+                refreshTeamsData();
+            }
+        });
+        modal.show();
     }
     
     private void refreshGamesData() {

@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    Player Management Modal Layout
+    Complete modal overlay for managing team rosters with CRUD operations
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFFFFF"
+    android:elevation="8dp">
+
+    <!-- Modal Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="20dp"
+        android:background="#2C3E50">
+        
+        <!-- Modal Title -->
+        <TextView
+            android:id="@+id/tvModalTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Team Name - Player Management"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:layout_gravity="center_vertical" />
+            
+        <!-- Close Button -->
+        <Button
+            android:id="@+id/btnCloseModal"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:text="✕"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@android:color/transparent"
+            android:layout_gravity="center_vertical" />
+    </LinearLayout>
+
+    <!-- Add Player Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:background="#ECF0F1">
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add New Player"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#2C3E50"
+            android:layout_marginBottom="12dp" />
+        
+        <!-- Input Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+            
+            <!-- Jersey Number Input -->
+            <EditText
+                android:id="@+id/etJerseyNumber"
+                android:layout_width="80dp"
+                android:layout_height="48dp"
+                android:hint="#"
+                android:inputType="number"
+                android:maxLength="2"
+                android:background="#FFFFFF"
+                android:textAlignment="center"
+                android:textSize="14sp"
+                android:layout_marginEnd="12dp"
+                android:elevation="1dp" />
+                
+            <!-- Player Name Input -->
+            <EditText
+                android:id="@+id/etPlayerName"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:hint="Player Name"
+                android:inputType="textPersonName"
+                android:background="#FFFFFF"
+                android:textSize="14sp"
+                android:paddingHorizontal="12dp"
+                android:layout_marginEnd="12dp"
+                android:elevation="1dp" />
+                
+            <!-- Add Player Button -->
+            <Button
+                android:id="@+id/btnAddPlayer"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="Add"
+                android:textSize="12sp"
+                android:background="#27AE60"
+                android:textColor="#FFFFFF"
+                android:paddingHorizontal="16dp"
+                android:enabled="false" />
+        </LinearLayout>
+        
+        <!-- Validation Messages -->
+        <TextView
+            android:id="@+id/tvValidationMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="12sp"
+            android:textColor="#E74C3C"
+            android:visibility="gone"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
+
+    <!-- Current Players List -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="20dp">
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Current Players"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#2C3E50"
+            android:layout_marginBottom="12dp" />
+            
+        <!-- Player Count -->
+        <TextView
+            android:id="@+id/tvPlayerCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0 players"
+            android:textSize="14sp"
+            android:textColor="#7F8C8D"
+            android:layout_marginBottom="16dp" />
+        
+        <!-- Players ListView -->
+        <ListView
+            android:id="@+id/lvPlayers"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="#F8F9FA"
+            android:divider="#BDC3C7"
+            android:dividerHeight="1dp"
+            android:elevation="1dp" />
+            
+        <!-- Empty State -->
+        <TextView
+            android:id="@+id/tvEmptyState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No players added yet"
+            android:textSize="14sp"
+            android:textColor="#95A5A6"
+            android:textAlignment="center"
+            android:padding="32dp"
+            android:visibility="visible" />
+    </LinearLayout>
+
+    <!-- Modal Footer -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="20dp"
+        android:background="#ECF0F1">
+        
+        <!-- Cancel Button -->
+        <Button
+            android:id="@+id/btnCancel"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="Cancel"
+            android:textSize="14sp"
+            android:background="#95A5A6"
+            android:textColor="#FFFFFF"
+            android:layout_marginEnd="8dp" />
+            
+        <!-- Save Changes Button -->
+        <Button
+            android:id="@+id/btnSaveChanges"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="Save Changes"
+            android:textSize="14sp"
+            android:background="#3498DB"
+            android:textColor="#FFFFFF"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+</LinearLayout>
