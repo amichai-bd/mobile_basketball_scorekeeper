@@ -208,64 +208,82 @@ The original Frame 2 components are now available as a modal overlay within the 
 ## Frame 3 - Game
 
 ### Description
-This is the main screen where the live updates happen. The screen now has two distinct modes:
+This is the main screen where the live updates happen. The screen uses a **4-section layout structure** for optimal space utilization:
 
-**Setup Mode**: When entering from game selection without players chosen, the team panels show "Select 5 Players" buttons instead of player lists. Event buttons are disabled until both teams have 5 players selected.
+- **Left Panel (Team A)**: Full-height team panel extending to top of screen
+- **Right Panel (Team B)**: Full-height team panel extending to top of screen
+- **Middle Top**: Compact game controls (score, timer, quarter, fouls)
+- **Middle Bottom**: Maximized event buttons and live event feed area
 
-**Game Mode**: Once both teams have 5 players selected, all game features become active. The user will click buttons to start and pause time, select players and events to log, click for time out or substitute players etc. Each team will be on one side and the event buttons in the middle for easy and fast clicking.
+The screen has two distinct modes:
+
+**Setup Mode**: When entering from game selection without players chosen, the full-height team panels show "Select 5 Players" buttons in their center. Event buttons are disabled until both teams have 5 players selected.
+
+**Game Mode**: Once both teams have 5 players selected, all game features become active. Players are distributed across the full-height team panels, while the maximized middle-bottom section provides ample space for event buttons and live game tracking.
 
 ### UI Layout Structure
 
 #### Setup Mode (No Players Selected)
 ```
 ┌─────────────────────────────────────────────────────┐
-│  [Score: 0 - 0] [START|10:00] [Q1▼] [Fouls: 0-0]  │
-├─────────────────────────────────────────────────────┤
-│ Team A        │   Event Panel       │    Team B     │
-│               │    (Disabled)       │               │
-│  ┌─────────┐  │                     │  ┌─────────┐ │
-│  │         │  │  Events disabled    │  │         │ │
-│  │ Select  │  │  until both teams   │  │ Select  │ │
-│  │    5    │  │  have 5 players     │  │    5    │ │
-│  │ Players │  │  selected           │  │ Players │ │
-│  │         │  │                     │  │         │ │
-│  └─────────┘  │                     │  └─────────┘ │
-│               │                     │               │
-└─────────────────────────────────────────────────────┘
+│ Team A        │ [Score: 0-0] [START|10:00]   │ Team B    │
+│               │ [Q1▼] [Fouls: A-0 B-0]      │           │
+│               ├──────────────────────────────┤           │
+│  ┌─────────┐  │   Event Panel (Disabled)     │ ┌─────────┐│
+│  │         │  │                              │ │         ││
+│  │ Select  │  │  Events disabled until       │ │ Select  ││
+│  │    5    │  │  both teams have 5 players   │ │    5    ││
+│  │ Players │  │  selected                    │ │ Players ││
+│  │         │  │                              │ │         ││
+│  │         │  │                              │ │         ││
+│  │         │  │                              │ │         ││
+│  │         │  │                              │ │         ││
+│  │         │  │                              │ │         ││
+│  └─────────┘  │                              │ └─────────┘│
+│               │                              │           │
+│               │  [View Log]                  │           │
+└─────────────────────────────────────────────────────────┘
 ```
 
 #### Game Mode (Players Selected)
 ```
 ┌─────────────────────────────────────────────────────┐
-│  [Score: Team A 45 - Team B 38] [START|8:45] [Q2▼] [Fouls: A-3 B-5] │
-├─────────────────────────────────────────────────────┤
-│ Team A        │    Event Panel      │    Team B     │
-│               │                     │               │
-│ Player 1 [3]  │  [1P] [2P] [3P]    │  [2] Player 6 │
-│ Player 2 [0]  │  [1M] [2M] [3M]    │  [1] Player 7 │
-│ Player 3 [1]  │  [OR] [DR] [AST]   │  [4] Player 8 │
-│ Player 4 [2]  │  [STL][BLK][TO ]   │  [0] Player 9 │
-│ Player 5 [0]  │  [FOUL] [TIMEOUT]  │  [3] Player 10│
-│               │                     │               │
-│ [TimeOut]     │                     │  [TimeOut]    │
-│ [Sub]         │  [Change Lineup]    │  [Sub]        │
+│ Team A        │ [Score: A-45 B-38] [PAUSE|8:45] │ Team B    │
+│               │ [Q2▼] [Fouls: A-3 B-5]         │           │
+│ Player 1 [3]  ├─────────────────────────────────┤ [2] Player 6│
+│ Player 2 [0]  │  [1P] [2P] [3P] [AST]          │ [1] Player 7│
+│ Player 3 [1]  │  [1M] [2M] [3M] [OR]           │ [4] Player 8│
+│ Player 4 [2]  │  [DR] [STL][BLK][TO]           │ [0] Player 9│
+│ Player 5 [0]  │  [FOUL][ ][ ][ ]               │ [3] Player 10│
+│               │                                │           │
+│               │  Last 5 Events:                │           │
+│               │  8:45 - #23 LeBron - 2P        │           │
+│               │  8:30 - Lakers - TIMEOUT       │           │
+│               │  8:15 - #30 Curry - 3P         │           │
+│               │                                │           │
+│ [TimeOut]     │  [View Full Log]               │ [TimeOut] │
+│ [Sub]         │                                │ [Sub]     │
 └─────────────────────────────────────────────────────┘
 ```
-**Optimized Single-Line Layout**:
-- **Single-Line Top Panel**: Maximum space efficiency and clean design
-- **Left**: Score Display
-- **Center-Left**: Game Control Button + Clock
-- **Center-Right**: Quarter Dropdown (Q1/Q2/Q3/Q4 selection)
-- **Right**: Team Fouls Display
+**New 4-Section Layout Structure**:
+- **Left Panel (Team A)**: Full-height team panel extending to top of screen
+- **Right Panel (Team B)**: Full-height team panel extending to top of screen  
+- **Middle Top Panel**: Compact control section (score, timer, quarter, fouls)
+- **Middle Bottom Panel**: Maximized event buttons and log area
 - Numbers in brackets [ ] next to players show personal fouls
 - Team fouls color coded (red when ≥5)
-- Event buttons in center 3x4 grid plus timeout
-- Player buttons on sides with foul counts
-- Team action buttons (TimeOut, Sub) at bottom of each panel
+- Event buttons in middle bottom section with maximum available space using **4-column layout**
+- **Intuitive 4-Column Button Grouping**:
+  - **Row 1**: Scoring & Assists (1P, 2P, 3P, AST) - Natural flow: score → assist
+  - **Row 2**: Misses & Offensive Rebound (1M, 2M, 3M, OR) - Natural flow: miss → rebound  
+  - **Row 3**: Defensive Plays (DR, STL, BLK, TO) - All defensive actions grouped
+  - **Row 4**: Personal Fouls (FOUL, empty, empty, empty) - Individual player fouls only
+- Player buttons on sides with foul counts, extending full height
+- Team action buttons (TimeOut, Sub) at bottom of each team panel
 
-### Top Control Panel
-**Description**: Ultra-compact single-line control panel with all game state and control information.
-**Location**: Top of screen, above the team panels and event button panel.
+### Middle Top Panel (Game Control Section)
+**Description**: Ultra-compact control section positioned in the middle-top area between the full-height team panels. Contains all game state and control information in minimal vertical space to maximize room for the event button area below.
+**Location**: Middle-top section of screen, between the left and right team panels, above the event button panel.
 
 #### Layout Structure:
 - **Single Line**: Score Display | Game Control Button + Clock | Quarter Dropdown | Team Fouls Display
@@ -340,12 +358,12 @@ This is the main screen where the live updates happen. The screen now has two di
   - Stop timer (user must press START for next quarter)
   - Show notification: "Quarter X Complete! Starting Quarter Y"
 
-### Team Panel (Team A & Team B)
-**Description**: Team panels adapt based on whether players are selected:
+### Team Panels (Team A & Team B) - Full Height
+**Description**: Full-height team panels extending from top to bottom of screen. Team panels adapt based on whether players are selected:
 
-**Setup Mode**: Shows a large "Select 5 Players" button in place of the player list. Clicking this button opens a modal overlay with the player selection interface.
+**Setup Mode**: Shows a large "Select 5 Players" button in the center of the full-height panel. Clicking this button opens a modal overlay with the player selection interface.
 
-**Game Mode**: Shows the 5 selected players as buttons, one on top of the other. Big and clear for easy clicking. Team buttons Time out and Subs will be there as well.
+**Game Mode**: Shows the 5 selected players as buttons distributed vertically across the full height panel, with team action buttons (TimeOut, Sub) at the bottom. Big and clear for easy clicking throughout the game.
 
 #### Player Title
 - **Description**: Title of team panel
@@ -422,12 +440,12 @@ This is the main screen where the live updates happen. The screen now has two di
 
 
 
-### Event Panel
-**Description**: The event panel has the buttons of the events and a live event feed. The panel adapts based on game state:
+### Middle Bottom Panel (Event Panel) - Maximized Space
+**Description**: The event panel is positioned in the middle-bottom section and utilizes the maximum available space for event buttons and live event feed. The panel adapts based on game state:
 
 **Setup Mode**: All event buttons are disabled/greyed out with a message "Select players for both teams to start recording events"
 
-**Game Mode**: When an event appears in the game, the user will click a player and then an event, and it will be stored in the log and shown in the live feed. An event button can be clicked only if a player button is selected. If there is no player button selected, a pop-up will state "Select player". The panel will be between the team panels and under the time panel.
+**Game Mode**: When an event appears in the game, the user will click a player and then an event, and it will be stored in the log and shown in the live feed. An event button can be clicked only if a player button is selected. If there is no player button selected, a pop-up will state "Select player". The panel occupies the middle-bottom section between the full-height team panels, below the compact control section.
 
 #### Live Event Feed
 - **Description**: Shows the last 5 recorded events for immediate feedback and context

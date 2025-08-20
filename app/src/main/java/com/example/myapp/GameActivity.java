@@ -54,9 +54,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     private LinearLayout llTeamAPlayers, llTeamBPlayers;
     private Button btnTeamATimeout, btnTeamASub, btnTeamBTimeout, btnTeamBSub;
     
-    // UI Components - Event Panel (13+ buttons)
+    // UI Components - Event Panel (12+ buttons)
     private Button btn1P, btn2P, btn3P, btn1M, btn2M, btn3M;
-    private Button btnOR, btnDR, btnAST, btnSTL, btnBLK, btnTO, btnFOUL, btnTIMEOUT;
+    private Button btnOR, btnDR, btnAST, btnSTL, btnBLK, btnTO, btnFOUL;
     
     // UI Components - Quarter Management
     private Spinner spinnerQuarter;
@@ -168,7 +168,6 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         btnBLK = findViewById(R.id.btnBLK);
         btnTO = findViewById(R.id.btnTO);
         btnFOUL = findViewById(R.id.btnFOUL);
-        btnTIMEOUT = findViewById(R.id.btnTIMEOUT);
         
         // Quarter management component
         spinnerQuarter = findViewById(R.id.spinnerQuarter);
@@ -333,8 +332,7 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         btnTO.setOnClickListener(v -> recordTurnoverEvent("TO"));
         btnFOUL.setOnClickListener(v -> recordFoulEvent("FOUL"));
         
-        // Team events
-        btnTIMEOUT.setOnClickListener(v -> recordEvent("TIMEOUT", 0));
+        // Team events (timeouts handled by team buttons only)
         btnTeamATimeout.setOnClickListener(v -> recordTeamTimeout("home"));
         btnTeamBTimeout.setOnClickListener(v -> recordTeamTimeout("away"));
         
@@ -678,7 +676,6 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         btnBLK.setEnabled(enabled);
         btnTO.setEnabled(enabled);
         btnFOUL.setEnabled(enabled);
-        btnTIMEOUT.setEnabled(enabled);
         
         // Set colors based on enabled state - preserve original colors when enabled
         int disabledColor = Color.parseColor("#BDC3C7"); // Light grey for disabled
@@ -713,10 +710,6 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         // Foul (dark purple)
         int foulColor = enabled ? Color.parseColor("#8E44AD") : disabledColor;
         btnFOUL.setBackgroundColor(foulColor);
-        
-        // Timeout (orange/yellow)
-        int timeoutColor = enabled ? Color.parseColor("#F39C12") : disabledColor;
-        btnTIMEOUT.setBackgroundColor(timeoutColor);
     }
     
     private void setupGameClock() {
@@ -1195,8 +1188,6 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             return Color.parseColor("#E67E22"); // Orange for turnover
         } else if (button == btnFOUL) {
             return Color.parseColor("#8E44AD"); // Purple for foul
-        } else if (button == btnTIMEOUT) {
-            return Color.parseColor("#F39C12"); // Yellow for timeout
         }
         return Color.parseColor("#BDC3C7"); // Default grey
     }
@@ -1307,7 +1298,6 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             case "BLK": return btnBLK;
             case "TO": return btnTO;
             case "FOUL": return btnFOUL;
-            case "TIMEOUT": return btnTIMEOUT;
             default: return null;
         }
     }

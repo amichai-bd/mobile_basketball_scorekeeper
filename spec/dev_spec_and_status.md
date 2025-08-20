@@ -225,6 +225,36 @@ ConstraintLayout (main container)
          └── Button (substitution)
 ```
 
+#### Updated Game Activity Layout Structure (4-Section Design) 
+**NEW LAYOUT** - Team panels extend to full height, middle section split vertically:
+```xml
+<!-- activity_game.xml layout hierarchy - UPDATED 4-SECTION LAYOUT -->
+ConstraintLayout (main container)
+| ├── LinearLayout (Team A panel - vertical, FULL-HEIGHT, left side)
+| │   ├── TextView (team name)
+| │   ├── RecyclerView (5 player buttons distributed vertically across full height)
+| │   ├── Button (timeout)
+| │   └── Button (substitution)
+| ├── LinearLayout (middle section - vertical, between teams)
+| │   ├── LinearLayout (COMPACT top controls - horizontal, minimal height)
+| │   │   ├── TextView (score display)
+| │   │   ├── TextView (game clock)
+| │   │   ├── TextView (current quarter)
+| │   │   └── TextView (team fouls display)
+| │   └── LinearLayout (MAXIMIZED event area - vertical, maximum space)
+| │       ├── GridLayout (Event buttons - 4x4 grid with MORE SPACE)
+| │       │   ├── Button (1P, 2P, 3P, AST in row 1 - SCORING & ASSISTS)
+| │       │   ├── Button (1M, 2M, 3M, OR in row 2 - MISSES & OFFENSIVE REBOUND)
+| │       │   ├── Button (DR, STL, BLK, TO in row 3 - DEFENSIVE PLAYS)
+| │       │   └── Button (FOUL, [space], [space], [space] in row 4 - PERSONAL FOULS ONLY)
+| │       └── ScrollView (Live event feed)
+| └── LinearLayout (Team B panel - vertical, FULL-HEIGHT, right side)
+|     ├── TextView (team name)
+|     ├── RecyclerView (5 player buttons distributed vertically across full height)
+|     ├── Button (timeout)
+|     └── Button (substitution)
+```
+
 #### Typography & Spacing Standards (Mobile-Optimized)
 ```xml
 <!-- Mobile-friendly text sizes -->
@@ -387,6 +417,12 @@ Layout margins: 4dp (reduced from 8dp)
 - **Testing Player Management** - Verify complete player management functionality works correctly
 
 ### ⏳ Next Up  
+- **🎨 LAYOUT RESTRUCTURE - Frame 3 (Game Window)** - Updated 4-section layout structure:
+  - **Left Panel (Team A)**: Full-height extending to top of screen
+  - **Right Panel (Team B)**: Full-height extending to top of screen  
+  - **Middle Top**: Compact game controls (score, timer, quarter, fouls)
+  - **Middle Bottom**: Maximized event buttons and live event feed area
+  - **Goal**: More space for event buttons, better visual organization
 - **Event Logging System** - Database storage for recorded events and statistics
 - **Enhanced Pop-up Workflows** - Full assist/rebound/steal pop-ups (if desired)
 - **Statistics Reporting** - Frame 5 & 6 implementation
