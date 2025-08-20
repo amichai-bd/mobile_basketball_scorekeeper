@@ -63,12 +63,14 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     // UI Components - Live Event Feed
     private LinearLayout llLiveEventFeed;
     private Button btnViewLog;
+    private Button btnAllowEvents; // Override toggle for events when timer stopped
     
     // Game Management
     private Handler clockHandler = new Handler();
     private Runnable clockRunnable;
     private List<Button> teamAPlayerButtons, teamBPlayerButtons;
     private int teamAFouls = 0, teamBFouls = 0;
+    private boolean allowEventsOverride = false; // Override to allow events when timer stopped
     
     // Event Tracking
     private static List<String> gameEvents = new ArrayList<>(); // Shared event storage for entire game
@@ -176,6 +178,7 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         // Live event feed components
         llLiveEventFeed = findViewById(R.id.llLiveEventFeed);
         btnViewLog = findViewById(R.id.btnViewLog);
+        btnAllowEvents = findViewById(R.id.btnAllowEvents);
     }
     
     private void initializeGameState() {
@@ -343,6 +346,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         
         // View Log button
         btnViewLog.setOnClickListener(v -> openEventLog());
+        
+        // Allow Events override toggle
+        btnAllowEvents.setOnClickListener(v -> toggleAllowEventsOverride());
     }
     
     // Player Selection Modal Methods
@@ -640,6 +646,8 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         boolean bothTeamsReady = (teamAPlayers.size() == 5 && teamBPlayers.size() == 5);
         
         enableEventButtons(bothTeamsReady);
+        updateGameToggleButton(); // Update START button availability
+        updateAllowEventsButton(); // Update override toggle state
         
         if (bothTeamsReady) {
             isInSetupMode = false; // We're now in full game mode
@@ -662,54 +670,59 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         }
     }
     
-    private void enableEventButtons(boolean enabled) {
-        // Enable/disable all event buttons based on mode
-        btn1P.setEnabled(enabled);
-        btn2P.setEnabled(enabled);
-        btn3P.setEnabled(enabled);
-        btn1M.setEnabled(enabled);
-        btn2M.setEnabled(enabled);
-        btn3M.setEnabled(enabled);
-        btnOR.setEnabled(enabled);
-        btnDR.setEnabled(enabled);
-        btnAST.setEnabled(enabled);
-        btnSTL.setEnabled(enabled);
-        btnBLK.setEnabled(enabled);
-        btnTO.setEnabled(enabled);
-        btnFOUL.setEnabled(enabled);
+    private void enableEventButtons(boolean gameReady) {
+        // Event buttons enabled only if:
+        // 1. Game is ready (both teams have 5 players) AND
+        // 2. Timer is running OR override is active
+        boolean eventsEnabled = gameReady && (isClockRunning || allowEventsOverride);
+        
+        // Enable/disable all event buttons based on combined conditions
+        btn1P.setEnabled(eventsEnabled);
+        btn2P.setEnabled(eventsEnabled);
+        btn3P.setEnabled(eventsEnabled);
+        btn1M.setEnabled(eventsEnabled);
+        btn2M.setEnabled(eventsEnabled);
+        btn3M.setEnabled(eventsEnabled);
+        btnOR.setEnabled(eventsEnabled);
+        btnDR.setEnabled(eventsEnabled);
+        btnAST.setEnabled(eventsEnabled);
+        btnSTL.setEnabled(eventsEnabled);
+        btnBLK.setEnabled(eventsEnabled);
+        btnTO.setEnabled(eventsEnabled);
+        btnFOUL.setEnabled(eventsEnabled);
         
         // Set colors based on enabled state - preserve original colors when enabled
         int disabledColor = Color.parseColor("#BDC3C7"); // Light grey for disabled
         
         // Scoring makes (green)
-        int scoringColor = enabled ? Color.parseColor("#2ECC71") : disabledColor;
+        int scoringColor = eventsEnabled ? Color.parseColor("#2ECC71") : disabledColor;
         btn1P.setBackgroundColor(scoringColor);
         btn2P.setBackgroundColor(scoringColor);
         btn3P.setBackgroundColor(scoringColor);
         
         // Scoring misses (red)
-        int missColor = enabled ? Color.parseColor("#E74C3C") : disabledColor;
+        int missColor = eventsEnabled ? Color.parseColor("#E74C3C") : disabledColor;
         btn1M.setBackgroundColor(missColor);
         btn2M.setBackgroundColor(missColor);
         btn3M.setBackgroundColor(missColor);
         
         // Rebounds & assists (teal)
-        int reboundColor = enabled ? Color.parseColor("#16A085") : disabledColor;
+        int reboundColor = eventsEnabled ? Color.parseColor("#16A085") : disabledColor;
         btnOR.setBackgroundColor(reboundColor);
         btnDR.setBackgroundColor(reboundColor);
         btnAST.setBackgroundColor(reboundColor);
         
         // Defense (purple)
-        int defenseColor = enabled ? Color.parseColor("#9B59B6") : disabledColor;
+        int defenseColor = eventsEnabled ? Color.parseColor("#9B59B6") : disabledColor;
         btnSTL.setBackgroundColor(defenseColor);
         btnBLK.setBackgroundColor(defenseColor);
         
         // Turnover (orange)
-        int turnoverColor = enabled ? Color.parseColor("#E67E22") : disabledColor;
+        int turnoverColor = eventsEnabled ? Color.parseColor("#E67E22") : disabledColor;
         btnTO.setBackgroundColor(turnoverColor);
         
         // Foul (dark purple)
-        int foulColor = enabled ? Color.parseColor("#8E44AD") : disabledColor;
+        int foulColor = eventsEnabled ? Color.parseColor("#8E44AD") : disabledColor;
         btnFOUL.setBackgroundColor(foulColor);
     }
     
@@ -879,6 +892,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         addToLiveEventFeed(eventType, selectedPlayer);
         deselectAllPlayers();
         
+        // Single-event safety: Reset override after event recorded
+        checkAndResetSingleEventOverride();
+        
         // Assist workflow for 2P and 3P
         if ("2P".equals(eventType) || "3P".equals(eventType)) {
             // For MVP, we'll skip the assist pop-up and just enable assist button
@@ -903,6 +919,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         
         addToLiveEventFeed(eventType, selectedPlayer);
         deselectAllPlayers();
+        
+        // Single-event safety: Reset override after event recorded
+        checkAndResetSingleEventOverride();
         
         // Rebound workflow
         // For MVP, we'll skip the rebound pop-up and just show hint
@@ -943,6 +962,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         updateTeamFoulsDisplay();
         addToLiveEventFeed(eventType, selectedPlayer);
         deselectAllPlayers();
+        
+        // Single-event safety: Reset override after event recorded
+        checkAndResetSingleEventOverride();
     }
     
     // Turnover Events (with steal workflow)
@@ -959,6 +981,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         
         addToLiveEventFeed(eventType, selectedPlayer);
         deselectAllPlayers();
+        
+        // Single-event safety: Reset override after event recorded
+        checkAndResetSingleEventOverride();
         
         // Steal workflow
         // For MVP, we'll skip the steal pop-up and just show hint
@@ -981,6 +1006,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         
         addToLiveEventFeed(eventType, selectedPlayer);
         deselectAllPlayers();
+        
+        // Single-event safety: Reset override after event recorded
+        checkAndResetSingleEventOverride();
     }
     
     private void recordTeamTimeout(String team) {
@@ -991,6 +1019,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         
         // Add team event to live feed (no specific player)
         addToLiveEventFeed("TIMEOUT", null, teamName);
+        
+        // Single-event safety: Reset override after event recorded
+        checkAndResetSingleEventOverride();
     }
     
         private void toggleGameTimer() {
@@ -1058,7 +1089,18 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         
         // Update timer state and button
         isClockRunning = true;
+        
+        // Auto-reset override toggle when timer starts
+        allowEventsOverride = false;
+        
+        // Update both buttons to reflect new timer state
         updateGameToggleButton();
+        updateAllowEventsButton();
+        
+        // Update event buttons to reflect new timer state
+        boolean bothTeamsReady = (teamAPlayers.size() == 5 && teamBPlayers.size() == 5);
+        enableEventButtons(bothTeamsReady);
+        
         Toast.makeText(this, "⏰ Game clock started", Toast.LENGTH_SHORT).show();
     }
 
@@ -1075,21 +1117,40 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         // Update timer state and button
         isClockRunning = false;
         updateGameToggleButton();
+        updateAllowEventsButton(); // CRITICAL: Update Allow Events button when timer pauses
+        
+        // Update event buttons to reflect new timer state (they should be disabled unless override active)
+        boolean bothTeamsReady = (teamAPlayers.size() == 5 && teamBPlayers.size() == 5);
+        enableEventButtons(bothTeamsReady);
+        
         Toast.makeText(this, "⏸️ Game clock paused", Toast.LENGTH_SHORT).show();
     }
     
     private void updateGameToggleButton() {
-        if (isClockRunning) {
+        // Check if both teams are ready (have 5 players each)
+        boolean bothTeamsReady = (teamAPlayers.size() == 5 && teamBPlayers.size() == 5);
+        
+        if (!bothTeamsReady) {
+            // Setup incomplete - disable START button
+            btnGameToggle.setText("START");
+            btnGameToggle.setBackgroundColor(Color.parseColor("#BDC3C7")); // Grey (disabled)
+            btnGameToggle.setEnabled(false);
+            
+            // Clock background: Default (neutral)
+            tvGameClock.setBackgroundColor(getResources().getColor(android.R.color.background_light));
+        } else if (isClockRunning) {
             // Timer is running - show PAUSE option
             btnGameToggle.setText("PAUSE");
             btnGameToggle.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_light)); // Blue (pleasant during gameplay)
+            btnGameToggle.setEnabled(true);
             
             // Clock background: Green (running)
             tvGameClock.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
         } else {
-            // Timer is paused - show START option
+            // Timer is paused but game is ready - show START option
             btnGameToggle.setText("START");
             btnGameToggle.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light)); // Green (ready to start)
+            btnGameToggle.setEnabled(true);
             
             // Clock background: Yellow (paused)
             tvGameClock.setBackgroundColor(getResources().getColor(android.R.color.holo_orange_light));
@@ -1105,9 +1166,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     private void updateScoreDisplay() {
-        // Update separate team score displays for enhanced visibility
-        tvTeamAScore.setText(String.format("%s %d", teamAName, teamAScore));
-        tvTeamBScore.setText(String.format("%s %d", teamBName, teamBScore));
+        // Update separate team score displays for enhanced visibility with clear titles
+        tvTeamAScore.setText(String.format("Score: %s %d", teamAName, teamAScore));
+        tvTeamBScore.setText(String.format("Score: %s %d", teamBName, teamBScore));
     }
     
     private void updateGameClockDisplay() {
@@ -1119,16 +1180,16 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     // Quarter display now handled by spinner - no separate method needed
     
     private void updateTeamFoulsDisplay() {
-        // Update separate team foul displays with enhanced visibility and color coding
+        // Update separate team foul displays with enhanced visibility and color coding with clear titles
         int redColor = Color.parseColor("#F44336");
         int whiteColor = Color.parseColor("#FFFFFF");
         
         // Update Team A fouls
-        tvTeamAFouls.setText(String.format("%s %d", teamAName, teamAFouls));
+        tvTeamAFouls.setText(String.format("Fouls: %s %d", teamAName, teamAFouls));
         tvTeamAFouls.setTextColor(teamAFouls >= 5 ? redColor : whiteColor);
         
         // Update Team B fouls  
-        tvTeamBFouls.setText(String.format("%s %d", teamBName, teamBFouls));
+        tvTeamBFouls.setText(String.format("Fouls: %s %d", teamBName, teamBFouls));
         tvTeamBFouls.setTextColor(teamBFouls >= 5 ? redColor : whiteColor);
     }
     
@@ -1293,6 +1354,82 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         }
     }
     
+    // Single-Event Safety: Auto-reset override after each event
+    private void checkAndResetSingleEventOverride() {
+        if (allowEventsOverride && !isClockRunning) {
+            // Single-event safety: Reset override to OFF after event recorded during pause
+            allowEventsOverride = false;
+            updateAllowEventsButton();
+            
+            // Update event buttons to reflect new state (should be disabled now)
+            boolean bothTeamsReady = (teamAPlayers.size() == 5 && teamBPlayers.size() == 5);
+            enableEventButtons(bothTeamsReady);
+            
+            // Optional: Show feedback that override was reset
+            // Toast.makeText(this, "Events disabled - click 'Events: OFF' again for next event", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Allow Events Override Toggle Management
+    private void toggleAllowEventsOverride() {
+        // Only allow toggle when timer is stopped and game is ready
+        boolean bothTeamsReady = (teamAPlayers.size() == 5 && teamBPlayers.size() == 5);
+        
+        if (!bothTeamsReady) {
+            Toast.makeText(this, "Complete team setup first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        if (isClockRunning) {
+            // Events are always allowed when timer is running, no need for override
+            Toast.makeText(this, "Events are already enabled while timer is running", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Toggle the override state
+        allowEventsOverride = !allowEventsOverride;
+        
+        // Update UI to reflect new state
+        updateAllowEventsButton();
+        enableEventButtons(bothTeamsReady); // Refresh event buttons
+        
+        // Show feedback
+        String message = allowEventsOverride ? 
+                        "🟢 Events ON - Can record during pause" : 
+                        "🔴 Events OFF - No recording during pause";
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+    
+    private void updateAllowEventsButton() {
+        boolean bothTeamsReady = (teamAPlayers.size() == 5 && teamBPlayers.size() == 5);
+        
+        if (!bothTeamsReady) {
+            // Game not ready - show disabled state
+            btnAllowEvents.setText("Events: DISABLED");
+            btnAllowEvents.setBackgroundColor(Color.parseColor("#BDC3C7")); // Grey
+            btnAllowEvents.setTextColor(Color.parseColor("#7F8C8D"));
+            btnAllowEvents.setEnabled(false);
+        } else if (isClockRunning) {
+            // Timer is running - events are always enabled, show current state but disable button
+            btnAllowEvents.setText("Events: ACTIVE");
+            btnAllowEvents.setBackgroundColor(Color.parseColor("#3498DB")); // Blue (active during play)
+            btnAllowEvents.setTextColor(Color.parseColor("#FFFFFF"));
+            btnAllowEvents.setEnabled(false); // Can't toggle during live play
+        } else if (allowEventsOverride) {
+            // Timer stopped, override ON - events enabled during pause
+            btnAllowEvents.setText("Events: ON");
+            btnAllowEvents.setBackgroundColor(Color.parseColor("#27AE60")); // Green (override active)
+            btnAllowEvents.setTextColor(Color.parseColor("#FFFFFF"));
+            btnAllowEvents.setEnabled(true); // Can toggle off
+        } else {
+            // Timer stopped, override OFF - events blocked during pause
+            btnAllowEvents.setText("Events: OFF");
+            btnAllowEvents.setBackgroundColor(Color.parseColor("#E74C3C")); // Red (blocked)
+            btnAllowEvents.setTextColor(Color.parseColor("#FFFFFF"));
+            btnAllowEvents.setEnabled(true); // Can toggle on
+        }
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();

@@ -291,23 +291,28 @@ The screen has two distinct modes:
   - **Row 2**: Team B Score | (Button continues) | (Timer continues) | (Dropdown continues) | Team B Fouls
 
 #### Team Score Display (Enhanced)
-- **Description**: Live game scores displayed vertically for better visibility
+- **Description**: Live game scores displayed vertically for better visibility with clear titles
 - **Type**: Vertical Score Display  
 - **Location**: Left section of control panel (2 rows)
 - **Content**: 
-  - **Row 1**: "TEAM_A <score>"
-  - **Row 2**: "TEAM_B <score>"
-- **Design**: Each team's score on separate line for clarity
+  - **Row 1**: "Score: TEAM_A <score>" (e.g., "Score: Lakers 45")
+  - **Row 2**: "Score: TEAM_B <score>" (e.g., "Score: Warriors 38")
+- **Design**: Each team's score on separate line with "Score:" prefix for clarity
 - **Clickable**: No
 - **Updates**: Automatically when scoring events are recorded
 
 #### Game Control Button (Enhanced Single Toggle)
-- **Description**: Enhanced single toggle button spanning both rows vertically for improved visibility
+- **Description**: Enhanced single toggle button spanning both rows vertically for improved visibility with setup gating
 - **Type**: Vertical Toggle Button
 - **Location**: Middle-left section spanning rows 1-2
 - **Height**: Spans both rows of the control panel
 - **Content & Visual States**:
-  - **When Timer Stopped**: 
+  - **When Setup Incomplete** (less than 5 players per team):
+    - Content: "START"
+    - Background: 🩶 Grey (disabled)
+    - State: Disabled/not clickable
+    - Tooltip: "Select 5 players for each team first"
+  - **When Timer Stopped** (and setup complete): 
     - Content: "START"
     - Background: 🟢 Green ("Ready to Start")
     - State: Available/clickable
@@ -316,11 +321,13 @@ The screen has two distinct modes:
     - Background: 🔵 Blue ("Ready to Pause" - pleasant during gameplay)
     - State: Available/clickable
 - **Enhanced Visibility**: Larger button spanning full control panel height
-- **When clicked (Timer Stopped)**:
+- **Setup Validation**: Button remains disabled until both teams have exactly 5 players selected
+- **When clicked (Timer Stopped & Setup Complete)**:
   - Start or continue game clock (ensure only ONE timer runs)
   - Button text changes to "PAUSE"
   - Button background becomes blue
   - Clock background becomes green (running state)
+  - Auto-disable event override toggle (if active)
 - **When clicked (Timer Running)**:
   - Stop game clock (clear any existing timers)
   - Button text changes to "START"
@@ -354,13 +361,13 @@ The screen has two distinct modes:
 - **Reset Behavior**: Selecting new quarter resets clock to 10:00 (stopped state)
 
 #### Team Fouls (Enhanced Vertical Display)
-- **Description**: Enhanced display showing team fouls vertically separated for better clarity
+- **Description**: Enhanced display showing team fouls vertically separated for better clarity with clear titles
 - **Type**: Vertical Team Fouls Display
 - **Location**: Right section of control panel (2 rows)
 - **Content**: 
-  - **Row 1**: "TEAM_A <foul_count>"
-  - **Row 2**: "TEAM_B <foul_count>"
-- **Design**: Each team's fouls on separate line for clarity
+  - **Row 1**: "Fouls: TEAM_A <foul_count>" (e.g., "Fouls: Lakers 3")
+  - **Row 2**: "Fouls: TEAM_B <foul_count>" (e.g., "Fouls: Warriors 5")
+- **Design**: Each team's fouls on separate line with "Fouls:" prefix for clarity
 - **Clickable**: No
 - **Visual States**: Foul counts turn Red when ≥5 fouls (penalty situation)
 - **Updates**: Automatically when foul events are recorded
@@ -457,11 +464,42 @@ The screen has two distinct modes:
 
 
 ### Middle Bottom Panel (Event Panel) - Maximized Space
-**Description**: The event panel is positioned in the middle-bottom section and utilizes the maximum available space for event buttons and live event feed. The panel adapts based on game state:
+**Description**: The event panel is positioned in the middle-bottom section and utilizes the maximum available space for event buttons and live event feed. The panel adapts based on game state and timer status:
 
 **Setup Mode**: All event buttons are disabled/greyed out with a message "Select players for both teams to start recording events"
 
-**Game Mode**: When an event appears in the game, the user will click a player and then an event, and it will be stored in the log and shown in the live feed. An event button can be clicked only if a player button is selected. If there is no player button selected, a pop-up will state "Select player". The panel occupies the middle-bottom section between the full-height team panels, below the compact control section.
+**Game Mode - Timer Stopped**: All event buttons are disabled/greyed out by default. User must activate "Allow Events" override toggle to record events during pauses.
+
+**Game Mode - Timer Running**: Full event functionality available. User can click player then event to record statistics.
+
+**Event Logging Control**: Events can only be recorded when timer is running OR when override toggle is manually activated during pauses. This provides clear feedback on game state and prevents accidental event logging during breaks.
+
+#### Event Override Button (Single-Event Safety)
+- **Description**: Safe single-event button that allows ONE event to be recorded when timer is stopped
+- **Type**: State Button with Single-Event Logic
+- **Location**: Left side of Event Panel, next to "Recent Events" title
+- **Layout**: `[Events: OFF/ON] ... [Recent Events - Centered] ... [View Log]`
+- **Content & Visual States**:
+  - **DISABLED State**: "Events: DISABLED" with grey background when game not ready
+  - **ACTIVE State**: "Events: ACTIVE" with blue background when timer is running (non-clickable)
+  - **OFF State**: "Events: OFF" with red background when timer stopped and events blocked
+  - **ON State**: "Events: ON" with green background when timer stopped and ONE event allowed
+- **Single-Event Safety Logic**:
+  - **Click OFF→ON**: Enables event buttons for recording ONE single event only
+  - **After Event Recorded**: Automatically resets to OFF state to prevent accidental bulk recording
+  - **Manual Reset**: User must manually click ON again for each dead-ball event
+- **Functionality**:
+  - **When Game Not Ready**: Shows "DISABLED" state, non-functional
+  - **When Timer Running**: Shows "ACTIVE" state, disabled (events always allowed)
+  - **When Timer Stopped**: User can click OFF→ON to allow ONE event, then auto-resets to OFF
+- **Auto-Reset Triggers**:
+  - After any single event is recorded while override is ON
+  - When timer starts running (clears override state)
+- **Safety Benefits**:
+  - **Prevents Accidental Bulk Recording**: Can't forget override ON and record many events
+  - **Intentional Action Required**: Each dead-ball event requires deliberate button press
+  - **Controlled Recording**: Perfect for free throws, late fouls, timeout decisions
+- **Purpose**: Safe, controlled recording of rare dead-ball events with automatic safety reset
 
 #### Live Event Feed
 - **Description**: Shows the last 5 recorded events for immediate feedback and context
@@ -473,8 +511,9 @@ The screen has two distinct modes:
 
 #### View Full Log Button
 - **Description**: Button to access complete game event log
-- **Location**: Bottom right of Event Panel
+- **Location**: Right side of Event Panel (part of new 3-element layout)
 - **Content**: "View Log"
+- **Layout Position**: Right element in `[Allow Events] ... [Recent Events - Centered] ... [View Log]`
 - **Clickable**: Yes
 - **When clicked**: Navigate to Event Log screen (Frame 5) showing all recorded events
 
