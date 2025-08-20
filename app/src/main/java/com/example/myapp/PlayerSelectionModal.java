@@ -46,7 +46,7 @@ public class PlayerSelectionModal extends DialogFragment {
     
     // UI Components
     private TextView tvModalHeader, tvStatusDisplay;
-    private GridLayout gridPlayers;
+    private LinearLayout llPlayersContainer;
     private Button btnCancel, btnConfirm;
     private List<View> playerCards;
     private List<Integer> playerStates;
@@ -119,7 +119,7 @@ public class PlayerSelectionModal extends DialogFragment {
     private void initializeViews(View view) {
         tvModalHeader = view.findViewById(R.id.tvModalHeader);
         tvStatusDisplay = view.findViewById(R.id.tvStatusDisplay);
-        gridPlayers = view.findViewById(R.id.gridPlayers);
+        llPlayersContainer = view.findViewById(R.id.llPlayersContainer);
         btnCancel = view.findViewById(R.id.btnCancel);
         btnConfirm = view.findViewById(R.id.btnConfirm);
     }
@@ -152,14 +152,28 @@ public class PlayerSelectionModal extends DialogFragment {
     }
     
     private void createPlayerCards() {
-        gridPlayers.removeAllViews();
+        llPlayersContainer.removeAllViews();
         playerCards.clear();
         playerStates.clear();
         
         LayoutInflater inflater = LayoutInflater.from(getActivity());
         
+        // Create rows of 4 players each for narrow screen compatibility
+        int playersPerRow = 4;
+        LinearLayout currentRow = null;
+        
         for (int i = 0; i < allPlayers.size(); i++) {
             TeamPlayer player = allPlayers.get(i);
+            
+            // Create new row every 4 players
+            if (i % playersPerRow == 0) {
+                currentRow = new LinearLayout(getActivity());
+                currentRow.setOrientation(LinearLayout.HORIZONTAL);
+                currentRow.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+                llPlayersContainer.addView(currentRow);
+            }
             
             // Create player card
             View cardView = inflater.inflate(R.layout.item_modal_player_card, null);
@@ -185,14 +199,15 @@ public class PlayerSelectionModal extends DialogFragment {
                 }
             });
             
-            // Add to grid with fixed dimensions for consistent sizing
-            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-            params.width = dpToPx(108); // Fixed width (100dp card + 8dp margins)
-            params.height = dpToPx(88); // Fixed height (80dp card + 8dp margins)
-            params.setMargins(4, 4, 4, 4); // Smaller margins since we're accounting for them in size
+            // Add to current row with equal weight for consistent sizing
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                0, // 0 width with weight = flexible width
+                dpToPx(54), // Fixed height (50dp card + 4dp margins)
+                1.0f); // Equal weight for all cards in row
+            params.setMargins(2, 2, 2, 2); // Small margins
             
             playerCards.add(cardView);
-            gridPlayers.addView(cardView, params);
+            currentRow.addView(cardView, params);
         }
     }
     

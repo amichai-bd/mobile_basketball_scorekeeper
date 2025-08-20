@@ -8,41 +8,41 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#F8F9FA"
-    android:padding="20dp">
+    android:padding="12dp">
 
     <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:background="#FFFFFF"
-        android:padding="16dp"
+        android:padding="10dp"
         android:elevation="2dp"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="12dp">
         
-        <!-- Title -->
+        <!-- Title (centered) -->
         <TextView
             android:id="@+id/tvLogTitle"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:layout_gravity="center_vertical"
             android:text="Event Log - Lakers vs Warriors"
-            android:textSize="20sp"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="#2C3E50"
-            android:layout_marginBottom="8dp" />
+            android:gravity="center" />
         
-        <!-- Back Button -->
+        <!-- Back Button (top right) -->
         <Button
             android:id="@+id/btnBackToGame"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="← Back to Game"
-            android:textSize="14sp"
-            android:background="@android:color/transparent"
-            android:textColor="#7F8C8D"
-            android:padding="8dp" />
+            android:layout_height="36dp"
+            android:text="← Back"
+            android:textSize="12sp"
+            android:background="#34495E"
+            android:textColor="#FFFFFF"
+            android:paddingHorizontal="12dp" />
     </LinearLayout>
 
     <!-- Event Log List -->
@@ -50,10 +50,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="All Game Events"
-        android:textSize="16sp"
+        android:textSize="14sp"
         android:textStyle="bold"
         android:textColor="#2C3E50"
-        android:layout_marginBottom="12dp" />
+        android:layout_marginBottom="8dp" />
 
     <ListView
         android:id="@+id/lvEventLog"

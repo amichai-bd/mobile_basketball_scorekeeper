@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="#2C3E50"
-        android:padding="16dp"
+        android:padding="10dp"
         android:elevation="4dp">
         
         <!-- Single Line: Score | Game Control + Clock | Quarter Dropdown | Team Fouls -->
@@ -25,7 +25,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="6dp">
             
             <!-- Game Score (Left) -->
             <TextView
@@ -34,7 +34,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
                 android:text="Lakers 45 - Warriors 38"
-                android:textSize="15sp"
+                android:textSize="13sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF"
                 android:gravity="start"
@@ -51,9 +51,9 @@
                 <Button
                     android:id="@+id/btnGameToggle"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
+                    android:layout_height="32dp"
                     android:text="START"
-                    android:textSize="10sp"
+                    android:textSize="9sp"
                     android:textStyle="bold"
                     android:background="@android:color/holo_green_light"
                     android:textColor="#FFFFFF"
@@ -65,7 +65,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="10:00"
-                    android:textSize="18sp"
+                    android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="#FFFFFF"
                     android:padding="4dp"
@@ -109,8 +109,8 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:background="#FFFFFF"
-            android:padding="12dp"
-            android:layout_margin="8dp"
+            android:padding="8dp"
+            android:layout_margin="4dp"
             android:elevation="2dp">
             
             <!-- Team A Title -->
@@ -119,11 +119,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Lakers"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="#2C3E50"
                 android:gravity="center"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginBottom="8dp" />
             
             <!-- Team A Players (5 buttons) -->
             <LinearLayout
@@ -143,10 +143,10 @@
                 <Button
                     android:id="@+id/btnTeamATimeout"
                     android:layout_width="0dp"
-                    android:layout_height="36dp"
+                    android:layout_height="32dp"
                     android:layout_weight="1"
                     android:text="TimeOut"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:background="#F39C12"
                     android:textColor="#FFFFFF"
                     android:layout_marginEnd="4dp" />
@@ -154,10 +154,10 @@
                 <Button
                     android:id="@+id/btnTeamASub"
                     android:layout_width="0dp"
-                    android:layout_height="36dp"
+                    android:layout_height="32dp"
                     android:layout_weight="1"
                     android:text="Sub"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:background="#9B59B6"
                     android:textColor="#FFFFFF"
                     android:layout_marginStart="4dp" />
@@ -171,8 +171,8 @@
             android:layout_weight="1.5"
             android:orientation="vertical"
             android:background="#FFFFFF"
-            android:padding="8dp"
-            android:layout_margin="8dp"
+            android:padding="6dp"
+            android:layout_margin="4dp"
             android:elevation="2dp">
             
             <!-- Event Buttons and Live Feed Container -->
@@ -192,29 +192,29 @@
                     android:layout_gravity="center">
                     
                     <!-- Row 1: Scoring Makes -->
-                    <Button android:id="@+id/btn1P" android:text="1P" android:layout_margin="3dp" android:background="#2ECC71" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                    <Button android:id="@+id/btn2P" android:text="2P" android:layout_margin="3dp" android:background="#2ECC71" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                    <Button android:id="@+id/btn3P" android:text="3P" android:layout_margin="3dp" android:background="#2ECC71" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btn1P" android:text="1P" android:layout_margin="2dp" android:background="#2ECC71" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btn2P" android:text="2P" android:layout_margin="2dp" android:background="#2ECC71" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btn3P" android:text="3P" android:layout_margin="2dp" android:background="#2ECC71" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" />
                     
                     <!-- Row 2: Scoring Misses -->
-                    <Button android:id="@+id/btn1M" android:text="1M" android:layout_margin="3dp" android:background="#E74C3C" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                    <Button android:id="@+id/btn2M" android:text="2M" android:layout_margin="3dp" android:background="#E74C3C" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                    <Button android:id="@+id/btn3M" android:text="3M" android:layout_margin="3dp" android:background="#E74C3C" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btn1M" android:text="1M" android:layout_margin="2dp" android:background="#E74C3C" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btn2M" android:text="2M" android:layout_margin="2dp" android:background="#E74C3C" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btn3M" android:text="3M" android:layout_margin="2dp" android:background="#E74C3C" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" />
                     
                     <!-- Row 3: Rebounds & Assists -->
-                    <Button android:id="@+id/btnOR" android:text="OR" android:layout_margin="3dp" android:background="#16A085" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                    <Button android:id="@+id/btnDR" android:text="DR" android:layout_margin="3dp" android:background="#16A085" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                    <Button android:id="@+id/btnAST" android:text="AST" android:layout_margin="3dp" android:background="#16A085" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btnOR" android:text="OR" android:layout_margin="2dp" android:background="#16A085" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btnDR" android:text="DR" android:layout_margin="2dp" android:background="#16A085" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btnAST" android:text="AST" android:layout_margin="2dp" android:background="#16A085" android:textColor="#FFFFFF" android:textSize="10sp" android:textStyle="bold" />
                     
                     <!-- Row 4: Defense & Violations -->
-                    <Button android:id="@+id/btnSTL" android:text="STL" android:layout_margin="3dp" android:background="#9B59B6" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                    <Button android:id="@+id/btnBLK" android:text="BLK" android:layout_margin="3dp" android:background="#9B59B6" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                    <Button android:id="@+id/btnTO" android:text="TO" android:layout_margin="3dp" android:background="#E67E22" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btnSTL" android:text="STL" android:layout_margin="2dp" android:background="#9B59B6" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btnBLK" android:text="BLK" android:layout_margin="2dp" android:background="#9B59B6" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btnTO" android:text="TO" android:layout_margin="2dp" android:background="#E67E22" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" />
                     
                     <!-- Row 5: Fouls & Team Events -->
-                    <Button android:id="@+id/btnFOUL" android:text="FOUL" android:layout_margin="3dp" android:background="#8E44AD" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
-                    <Button android:id="@+id/btnTIMEOUT" android:text="TIMEOUT" android:layout_margin="3dp" android:background="#F39C12" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" />
-                    <View android:layout_margin="3dp" />
+                    <Button android:id="@+id/btnFOUL" android:text="FOUL" android:layout_margin="2dp" android:background="#8E44AD" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" />
+                    <Button android:id="@+id/btnTIMEOUT" android:text="TIMEOUT" android:layout_margin="2dp" android:background="#F39C12" android:textColor="#FFFFFF" android:textSize="9sp" android:textStyle="bold" />
+                    <View android:layout_margin="2dp" />
                     
                 </GridLayout>
                 
@@ -275,8 +275,8 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:background="#FFFFFF"
-            android:padding="12dp"
-            android:layout_margin="8dp"
+            android:padding="8dp"
+            android:layout_margin="4dp"
             android:elevation="2dp">
             
             <!-- Team B Title -->
@@ -285,11 +285,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Warriors"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="#2C3E50"
                 android:gravity="center"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginBottom="8dp" />
             
             <!-- Team B Players (5 buttons) -->
             <LinearLayout
@@ -309,10 +309,10 @@
                 <Button
                     android:id="@+id/btnTeamBTimeout"
                     android:layout_width="0dp"
-                    android:layout_height="36dp"
+                    android:layout_height="32dp"
                     android:layout_weight="1"
                     android:text="TimeOut"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:background="#F39C12"
                     android:textColor="#FFFFFF"
                     android:layout_marginEnd="4dp" />
@@ -320,10 +320,10 @@
                 <Button
                     android:id="@+id/btnTeamBSub"
                     android:layout_width="0dp"
-                    android:layout_height="36dp"
+                    android:layout_height="32dp"
                     android:layout_weight="1"
                     android:text="Sub"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:background="#9B59B6"
                     android:textColor="#FFFFFF"
                     android:layout_marginStart="4dp" />

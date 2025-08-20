@@ -5,10 +5,10 @@
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@android:color/white"
-    android:padding="24dp">
+    android:padding="16dp">
 
     <!-- Context Header -->
     <TextView
@@ -16,11 +16,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Lakers - Select Starting 5"
-        android:textSize="20sp"
+        android:textSize="16sp"
         android:textStyle="bold"
         android:textColor="#2C3E50"
         android:gravity="center"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="6dp" />
 
     <!-- Status Display -->
     <TextView
@@ -28,26 +28,32 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="0/5 selected"
-        android:textSize="14sp"
+        android:textSize="12sp"
         android:textColor="#7F8C8D"
         android:gravity="center"
-        android:layout_marginBottom="24dp" />
+        android:layout_marginBottom="16dp" />
 
-    <!-- Player Grid (3x4 layout for 12 players) -->
-    <GridLayout
-        android:id="@+id/gridPlayers"
+    <!-- Scrollable Player Grid (4 columns for narrow screens) -->
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:columnCount="3"
-        android:rowCount="4"
-        android:alignmentMode="alignBounds"
-        android:useDefaultMargins="false"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="24dp">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:maxHeight="300dp"
+        android:layout_marginBottom="16dp"
+        android:fillViewport="true">
         
-        <!-- Player cards will be added programmatically -->
+        <LinearLayout
+            android:id="@+id/llPlayersContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="4dp">
+            
+            <!-- Player rows will be added programmatically (4 players per row) -->
+            
+        </LinearLayout>
         
-    </GridLayout>
+    </ScrollView>
 
     <!-- Action Buttons -->
     <LinearLayout
@@ -64,8 +70,8 @@
             android:textColor="#7F8C8D"
             android:background="@android:color/transparent"
             android:layout_marginEnd="12dp"
-            android:paddingHorizontal="24dp"
-            android:paddingVertical="12dp" />
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="10dp" />
 
         <Button
             android:id="@+id/btnConfirm"
@@ -75,8 +81,8 @@
             android:textColor="#FFFFFF"
             android:background="@android:color/holo_blue_bright"
             android:enabled="false"
-            android:paddingHorizontal="24dp"
-            android:paddingVertical="12dp" />
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="10dp" />
 
     </LinearLayout>
 

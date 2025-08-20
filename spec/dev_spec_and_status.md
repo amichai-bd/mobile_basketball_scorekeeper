@@ -225,6 +225,22 @@ ConstraintLayout (main container)
          └── Button (substitution)
 ```
 
+#### Typography & Spacing Standards (Mobile-Optimized)
+```xml
+<!-- Mobile-friendly text sizes -->
+Main titles: 24sp (reduced from 32sp)
+Section titles: 14sp (reduced from 18sp) 
+Modal headers: 16sp (reduced from 20sp)
+Button text: 10-11sp (reduced from 12-13sp)
+Player numbers: 16sp (reduced from 18-20sp)
+Player names: 10sp (reduced from 11sp)
+
+<!-- Compact spacing -->
+Panel padding: 8-16dp (reduced from 20-24dp)
+Button margins: 2dp (reduced from 3dp)
+Layout margins: 4dp (reduced from 8dp)
+```
+
 #### Color Coding Standards
 ```xml
 <!-- colors.xml -->
@@ -236,12 +252,21 @@ ConstraintLayout (main container)
 <color name="event_highlight">#2196F3</color>      <!-- Blue (3 sec flash) -->
 ```
 
-#### Button Sizing Guidelines
-- **Player Buttons**: 120dp width x 60dp height (touch-friendly)
-- **Event Buttons**: 80dp x 80dp (square, large enough for quick tapping)
-- **Control Buttons**: 100dp width x 50dp height
-- **Minimum Touch Target**: 48dp (Android accessibility standard)
-- **Spacing**: 8dp between buttons, 16dp panel margins
+#### Button Sizing Guidelines (Mobile-Optimized)
+- **Player Cards**: 48dp height (reduced from 58dp) for regular cards
+- **Modal Player Cards**: 75dp x 50dp (reduced from 100dp x 64dp) - 25% smaller for narrow screens
+- **Event Buttons**: Auto-sized with reduced margins (2dp instead of 3dp)  
+- **Control Buttons**: 32dp height (reduced from 36dp)
+- **Modal Buttons**: 44dp height (reduced from 48dp)
+- **Minimum Touch Target**: 48dp (Android accessibility standard) - maintained for tap areas
+- **Spacing**: Reduced margins - 4dp panel margins (was 8dp), 2dp button margins (was 3dp)
+
+#### Player Selection Modal Optimizations (Narrow Screen Support)
+- **Layout**: Scrollable rows of 4 players (was fixed 3x4 grid) for better narrow screen compatibility
+- **Scrolling**: ScrollView with 300dp max height supports unlimited players with scroll-through capability  
+- **Flexible Width**: Cards use weight-based layout to adapt to any screen width
+- **Compact Size**: 75dp x 50dp cards (was 100dp x 64dp) fit 4 columns on narrow screens
+- **Touch-Friendly**: Maintained proper touch targets while maximizing screen space usage
 
 ---
 
@@ -429,6 +454,19 @@ ConstraintLayout (main container)
   - **Player Name Validation**: Required field validation with real-time feedback ✅
   - **Teams Integration**: "Manage Players" button integrated in Teams tab ✅
   - **Player Count Display**: Team list shows "(X players)" with live updates ✅
+- ✅ **🔧 MOBILE UI OPTIMIZATION COMPLETE**: Comprehensive mobile compatibility improvements
+  - **Reduced Heights**: Player cards 48dp (was 58dp), modal cards 75x50dp (was 100x64dp) ✅
+  - **Compact Titles**: Main titles 24sp (was 32sp), section titles 14sp (was 18sp) ✅ 
+  - **Smaller Buttons**: Control buttons 32dp (was 36dp), modal buttons 44dp (was 48dp) ✅
+  - **Reduced Padding**: Panel padding 8-16dp (was 20-24dp), button margins 2dp (was 3dp) ✅
+  - **Event Panel**: Reduced text sizes 10-11sp (was 13sp), tighter spacing ✅
+  - **Modal Optimization**: All dialogs use less vertical space with compact layouts ✅
+  - **Narrow Screen Support**: Player selection modal now scrollable with 4-column layout ✅
+  - **Unlimited Players**: Scrollable interface supports teams with any number of players ✅
+  - **Event Log Optimization**: Header reduced to single line with top-right back button ✅
+  - **Home Page Streamlined**: Compact title, removed redundant "Select Game", smaller footer ✅
+  - **Maintained Accessibility**: 48dp minimum touch targets preserved ✅
+  - **Updated Specifications**: Mobile-friendly guidelines added to dev spec ✅
 - ✅ **Complete App Flow**: Game selection → Player selection → Live game recording (FULL BASKETBALL STATS APP!)
 - ✅ **Timer UX Enhanced**: Single toggle button design with pleasant colors and proper timer management  
 - ✅ **Event Log Table Enhanced**: Professional table format with Quarter column and fixed-width columns
