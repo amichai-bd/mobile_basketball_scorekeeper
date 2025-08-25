@@ -1,4 +1,4 @@
-package com.example.myapp.models;
+package com.basketballstats.app.models;
 
 /**
  * TeamPlayer model for players in team rosters

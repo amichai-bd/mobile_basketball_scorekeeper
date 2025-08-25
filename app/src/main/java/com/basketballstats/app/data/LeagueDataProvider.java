@@ -1,8 +1,8 @@
-package com.example.myapp.data;
+package com.basketballstats.app.data;
 
-import com.example.myapp.models.Team;
-import com.example.myapp.models.TeamPlayer;
-import com.example.myapp.models.SimpleGame;
+import com.basketballstats.app.models.Team;
+import com.basketballstats.app.models.TeamPlayer;
+import com.basketballstats.app.models.SimpleGame;
 import java.util.ArrayList;
 import java.util.List;
 

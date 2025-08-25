@@ -1,4 +1,4 @@
-package com.example.myapp.models;
+package com.basketballstats.app.models;
 
 import java.util.ArrayList;
 import java.util.List;

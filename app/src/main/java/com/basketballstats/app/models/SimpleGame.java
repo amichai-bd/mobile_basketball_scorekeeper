@@ -1,4 +1,4 @@
-package com.example.myapp.models;
+package com.basketballstats.app.models;
 
 /**
  * SimpleGame model for clean game selection

@@ -1,4 +1,4 @@
-package com.example.myapp;
+package com.basketballstats.app;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -12,7 +12,7 @@ import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import com.example.myapp.models.TeamPlayer;
+import com.basketballstats.app.models.TeamPlayer;
 import java.util.ArrayList;
 import java.util.List;
 

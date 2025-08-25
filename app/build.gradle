@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.myapp'
+    namespace 'com.basketballstats.app'
     compileSdk 34
 
     defaultConfig {
-        applicationId 'com.example.myapp'
+        applicationId 'com.basketballstats.app'
         minSdk 24
         targetSdk 34
         versionCode 1

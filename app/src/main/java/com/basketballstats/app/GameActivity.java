@@ -1,4 +1,4 @@
-package com.example.myapp;
+package com.basketballstats.app;
 
 import android.app.Activity;
 import android.graphics.Color;
@@ -13,10 +13,10 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.example.myapp.models.Player;
-import com.example.myapp.models.Team;
-import com.example.myapp.models.TeamPlayer;
-import com.example.myapp.data.LeagueDataProvider;
+import com.basketballstats.app.models.Player;
+import com.basketballstats.app.models.Team;
+import com.basketballstats.app.models.TeamPlayer;
+import com.basketballstats.app.data.LeagueDataProvider;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -956,7 +956,11 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         }
         
         // Visual feedback
-        flashEventButton(btnFOUL);
+        if ("home".equals(playerTeam)) {
+            flashEventButton(btnTeamAFoul);
+        } else {
+            flashEventButton(btnTeamBFoul);
+        }
         
         // Check for foul out (5 fouls)
         if (selectedPlayer.getPersonalFouls() >= 5) {

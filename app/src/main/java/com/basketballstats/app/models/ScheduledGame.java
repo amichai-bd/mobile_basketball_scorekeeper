@@ -1,4 +1,4 @@
-package com.example.myapp.models;
+package com.basketballstats.app.models;
 
 /**
  * ScheduledGame model for league scheduled games

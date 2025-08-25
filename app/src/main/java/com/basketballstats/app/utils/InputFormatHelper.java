@@ -1,4 +1,4 @@
-package com.example.myapp.utils;
+package com.basketballstats.app.utils;
 
 import android.text.Editable;
 import android.text.TextWatcher;

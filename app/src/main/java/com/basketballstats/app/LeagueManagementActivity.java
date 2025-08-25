@@ -1,4 +1,4 @@
-package com.example.myapp;
+package com.basketballstats.app;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -18,10 +18,10 @@ import android.widget.Spinner;
 import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.example.myapp.models.Team;
-import com.example.myapp.models.SimpleGame;
-import com.example.myapp.data.LeagueDataProvider;
-import com.example.myapp.utils.InputFormatHelper;
+import com.basketballstats.app.models.Team;
+import com.basketballstats.app.models.SimpleGame;
+import com.basketballstats.app.data.LeagueDataProvider;
+import com.basketballstats.app.utils.InputFormatHelper;
 import java.util.ArrayList;
 import java.util.List;
 

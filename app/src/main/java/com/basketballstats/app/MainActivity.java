@@ -1,4 +1,4 @@
-package com.example.myapp;
+package com.basketballstats.app;
 
 import android.app.Activity;
 import android.content.Context;
@@ -13,8 +13,8 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.example.myapp.models.SimpleGame;
-import com.example.myapp.data.LeagueDataProvider;
+import com.basketballstats.app.models.SimpleGame;
+import com.basketballstats.app.data.LeagueDataProvider;
 import java.util.List;
 
 /**

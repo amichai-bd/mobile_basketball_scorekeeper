@@ -1,4 +1,4 @@
-package com.example.myapp;
+package com.basketballstats.app;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -58,20 +58,9 @@ public class LogActivity extends Activity {
         
         // Get all events from GameActivity's shared storage
         allEvents = new ArrayList<>(GameActivity.getAllGameEvents());
-        
-        // Add some sample historical events for demonstration if empty
-        if (allEvents.isEmpty()) {
-            addSampleEvents();
-        }
     }
     
-    private void addSampleEvents() {
-        allEvents.add("Q1 9:30 - #23 LeBron James - 2P");
-        allEvents.add("Q1 9:15 - #30 Stephen Curry - 3P");
-        allEvents.add("Q1 8:45 - #3 Anthony Davis - DR");
-        allEvents.add("Q1 8:30 - Lakers - TIMEOUT");
-        allEvents.add("Q1 8:00 - #11 Klay Thompson - FOUL");
-    }
+
     
     private void initializeViews() {
         tvTitle = findViewById(R.id.tvLogTitle);
