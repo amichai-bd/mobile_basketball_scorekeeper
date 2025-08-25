@@ -676,7 +676,15 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         // Log lineup change to game events
         String eventLogEntry = String.format("Q%d %s - %s - LINEUP CHANGE", 
                                             currentQuarter, formatGameTime(gameTimeSeconds), teamName);
-        gameEvents.add(eventLogEntry);
+        // Create Event object for lineup change
+        Event lineupEvent = new Event();
+        lineupEvent.setGameId(gameId);
+        lineupEvent.setEventType("LINEUP");
+        lineupEvent.setTeamSide(currentModalTeamSide);
+        lineupEvent.setQuarter(currentQuarter);
+        lineupEvent.setGameTimeSeconds(gameTimeSeconds);
+        lineupEvent.setEventSequence(gameEvents.size() + 1);
+        gameEvents.add(lineupEvent);
         
         // Log individual changes (players coming in/out)
         List<Integer> oldNumbers = new ArrayList<>();
