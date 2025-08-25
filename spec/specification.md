@@ -14,6 +14,8 @@ This app is designed for recording basketball statistics in minor and amateur le
 ### Description
 Simple, clean interface for selecting a game to start recording statistics. User chooses from pre-configured matchups and proceeds directly to the game screen.
 
+**Screen Orientation**: Portrait (Vertical) - Optimized for scrollable game lists and menu navigation.
+
 ### Components
 
 #### Main Title
@@ -209,6 +211,8 @@ The original Frame 2 components are now available as a modal overlay within the 
 
 ### Description
 This is the main screen where the live updates happen. The screen uses a **4-section layout structure** for optimal space utilization:
+
+**Screen Orientation**: Landscape (Horizontal) - Optimized for simultaneous team panels, event button access, and live game recording during fast-paced basketball action.
 
 - **Left Panel (Team A)**: Full-height team panel extending to top of screen
 - **Right Panel (Team B)**: Full-height team panel extending to top of screen
@@ -888,6 +892,8 @@ A single, versatile modal that handles all player selection scenarios: initial s
 ### Description
 Can view and edit the log of events
 
+**Screen Orientation**: Portrait (Vertical) - Optimized for table-format event logs and scrollable text-based content.
+
 ### Components
 
 #### Main Title
@@ -1012,6 +1018,8 @@ Can view the game statistics with sorting, grouping and filter options by game, 
 
 ### Description
 Separate interface for managing league data (games, teams, players). Accessed via "Edit League" button from Frame 1. This is where league administrators set up and maintain the season structure.
+
+**Screen Orientation**: Portrait (Vertical) - Optimized for form inputs, list management, and administrative tasks.
 
 ### Components
 

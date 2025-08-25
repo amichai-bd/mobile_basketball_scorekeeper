@@ -101,12 +101,13 @@ CREATE TABLE team_fouls (
 ### App Architecture (MVC Pattern)
 
 #### Activities (Views)
-1. **MainActivity** - Game schedule management
-2. **GameActivity** - Live game statistics recording (includes Setup Mode and Unified Player Selection Modal)
-3. **LogActivity** - Event log viewing/editing
-4. **StatsActivity** - Statistics and reports
-5. **~~GameRosterActivity~~** - *DEPRECATED: Functionality integrated into GameActivity as Setup Mode*
-6. **~~SubstitutionActivity~~** - *DEPRECATED: Functionality integrated into Unified Player Selection Modal*
+1. **MainActivity** - Game schedule management *(Portrait orientation)*
+2. **GameActivity** - Live game statistics recording *(Landscape orientation)* (includes Setup Mode and Unified Player Selection Modal)
+3. **LogActivity** - Event log viewing/editing *(Portrait orientation)*
+4. **StatsActivity** - Statistics and reports *(Portrait orientation)*
+5. **LeagueManagementActivity** - League setup and team/player management *(Portrait orientation)*
+6. **~~GameRosterActivity~~** - *DEPRECATED: Functionality integrated into GameActivity as Setup Mode*
+7. **~~SubstitutionActivity~~** - *DEPRECATED: Functionality integrated into Unified Player Selection Modal*
 
 #### Models
 1. **Game.java** - Game data model
@@ -660,9 +661,12 @@ Control panel height: Enhanced 2-row layout for better visibility
 14. **Basic Timeouts**: Record timeout event, no duration tracking
 15. **Statistics Approach**: Count events in real-time, calculate percentages in reports
 16. **Team Fouls**: Track per-quarter, visual warning at 5+ fouls
+17. **Screen Orientations**: Portrait for management/lists (home, league, logs), Landscape for live gameplay
 
 ### UI/UX Decisions
-1. **Portrait Orientation**: Mobile-first design
+1. **Screen Orientations**: 
+   - **Portrait (Vertical)**: MainActivity, LeagueManagementActivity, LogActivity, StatsActivity - optimized for lists, forms, and text content
+   - **Landscape (Horizontal)**: GameActivity - optimized for dual team panels, event buttons, and live game recording
 2. **Large Buttons**: Easy tapping during live games
 3. **Minimal Pop-ups**: Streamlined workflow
 4. **Color Coding**: Blue for selected, grey for inactive

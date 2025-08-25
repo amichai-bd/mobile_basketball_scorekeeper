@@ -24,7 +24,7 @@
         <activity 
             android:name=".MainActivity"
             android:exported="true"
-            android:screenOrientation="landscape">
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -36,7 +36,7 @@
         <!-- League Management Activity -->
         <activity android:name=".LeagueManagementActivity"
             android:exported="false"
-            android:screenOrientation="landscape" />
+            android:screenOrientation="portrait" />
         
         <!-- Game Activity (Frame 3) - Live Statistics Recording -->
         <activity android:name=".GameActivity"
@@ -46,7 +46,7 @@
         <!-- Log Activity (Frame 5) - Event Log Viewer -->
         <activity android:name=".LogActivity"
             android:exported="false"
-            android:screenOrientation="landscape" />
+            android:screenOrientation="portrait" />
         
         <!-- TODO: Register additional activities here
         <activity android:name=".StatsActivity" />
