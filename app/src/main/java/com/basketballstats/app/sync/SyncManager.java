@@ -825,13 +825,7 @@ public class SyncManager {
         return false;
     }
     
-    /**
-     * Get last sync timestamp
-     */
-    public long getLastSyncTimestamp() {
-        // TODO: Implement from AppSettings table in Phase 5
-        return System.currentTimeMillis();
-    }
+
     
     /**
      * Get sync statistics for user feedback
