@@ -4,8 +4,44 @@
 
 This app is designed for recording basketball statistics in minor and amateur leagues. Due to budget, manpower, and infrastructure limitations, most games currently track only the final score. Our app makes it possible to capture full game statistics using just one or two people, their own smartphones, and a simple, intuitive interface. The focus is on a smooth workflow and a clear UI that allows even a single person to record as many stats as possible with high accuracy.
 
+### Cloud Integration
+The app uses **Firebase** for authentication and cloud storage, enabling:
+- **User Authentication**: Secure login and user management with Firebase Authentication
+- **Cloud Storage**: All game data, player rosters, and statistics stored in Firebase Firestore
+- **Real-Time Sync**: Live game updates and multi-device synchronization
+- **Offline Support**: Local caching with automatic sync when connectivity resumes
+- **Data Security**: Firebase security rules ensure users only access their own league data
+
 ### General Features
 - **Undo**: Any event saved to log can be undone by swiping screen to the left. When this happens, an approval pop-up will show to make sure that the swipe was intentional.
+
+---
+
+## Authentication Flow (Pre-Frame 1)
+
+### Description  
+**Firebase Authentication Integration**: Before accessing the main app, users will authenticate via Firebase Authentication. This ensures secure access to cloud data and proper user isolation.
+
+### Authentication Options
+1. **Email/Password**: Standard Firebase email and password authentication
+2. **Google Sign-In**: Optional integration with Google OAuth for simplified login  
+3. **Guest Mode**: Anonymous authentication for demo/testing purposes
+4. **Auto-Login**: Persistent authentication sessions for returning users
+
+### User Flow
+1. App launches → Check existing Firebase authentication session
+2. **If authenticated**: Proceed directly to Frame 1 (Game Selection)
+3. **If not authenticated**: Show login screen with options:
+   - **Login**: Email/password or Google Sign-In  
+   - **Register**: Create new account with email/password
+   - **Guest**: Anonymous access for demos (limited functionality)
+4. **Post-authentication**: Navigate to Frame 1 with user's league data loaded
+
+### Data Security
+- **User Isolation**: Each authenticated user only sees their own leagues, games, and statistics
+- **Firebase Security Rules**: Server-side validation ensures data access permissions
+- **Secure Tokens**: All Firebase operations use secure authentication tokens
+- **Data Encryption**: All cloud data encrypted in transit and at rest
 
 ---
 
@@ -1246,18 +1282,29 @@ Separate interface for managing league data (games, teams, players). Accessed vi
   - Photo management for player profiles
 
 ### Enhanced Game Features
-- **Shot Clock**: 24-second shot clock implementation
-- **Advanced Fouls**: Technical fouls, flagrant fouls, coach fouls
-- **Overtime Support**: Multiple overtime periods
+- **Shot Clock**: 24-second shot clock implementation with Firebase sync
+- **Advanced Fouls**: Technical fouls, flagrant fouls, coach fouls stored in Firestore
+- **Overtime Support**: Multiple overtime periods with cloud tracking
 - **Timeout Management**: Full timeout, 20-second timeout tracking
-- **Game Replay**: Step-by-step game event replay
-- **Live Commentary**: Text notes during game events
+- **Game Replay**: Step-by-step game event replay from Firebase event log
+- **Live Commentary**: Text notes during game events synchronized across devices
 
 ### Statistics & Analytics
-- **Advanced Stats**: Player efficiency rating, plus/minus, heat maps
-- **Team Analytics**: Possession analysis, pace statistics
-- **Comparison Tools**: Player vs player, team vs team comparisons
-- **Export Options**: PDF reports, CSV data, integration with league management systems
+- **Advanced Stats**: Player efficiency rating, plus/minus, heat maps from Firebase data
+- **Team Analytics**: Possession analysis, pace statistics calculated from cloud events
+- **Comparison Tools**: Player vs player, team vs team comparisons across multiple seasons
+- **Export Options**: PDF reports, CSV data, Firebase-powered league management integration
+- **Real-Time Analytics**: Live game statistics for spectators via Firebase listeners
+
+### Firebase-Powered Features
+- **Multi-User Leagues**: League administrators can invite multiple users with role-based permissions
+- **Live Spectator Mode**: Real-time game viewing for fans and family via shared Firebase streams
+- **Cross-Device Continuity**: Start recording on one device, continue on another seamlessly
+- **Automated Backups**: All game data automatically backed up to Firebase with version history
+- **League Standings**: Automated calculation and updates of league standings and player rankings
+- **Push Notifications**: Game reminders, league updates, and live game alerts via Firebase Cloud Messaging
+- **Team Collaboration**: Multiple scorekeepers can work together on the same game simultaneously
+- **Historical Analytics**: Season-over-season comparisons and multi-year player development tracking
 
 
 

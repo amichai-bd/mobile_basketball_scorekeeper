@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "104204131485",
+    "project_id": "scorekeeper-577f4",
+    "storage_bucket": "scorekeeper-577f4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:104204131485:android:ebcfb10c90dd8b3c550874",
+        "android_client_info": {
+          "package_name": "com.basketballstats.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCj8GR-njcGTVB8kxHW4vs73ULFw6PQNRA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

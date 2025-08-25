@@ -10,9 +10,14 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     
-    <!-- TODO: Add permissions here if needed
-    Examples:
+    <!-- Firebase requires internet permission -->
     <uses-permission android:name="android.permission.INTERNET" />
+    
+    <!-- Optional: Network state for better offline handling -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
+    <!-- TODO: Add other permissions here if needed
+    Examples:
     <uses-permission android:name="android.permission.CAMERA" />
     -->
     

@@ -1,6 +1,17 @@
 // Root build.gradle
 // Project-wide Gradle settings.
 
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        // Add the dependency for the Google services Gradle plugin
+        classpath 'com.google.gms:google-services:4.3.15'
+    }
+}
+
 // TODO: Add project-wide configurations here if needed
 // For example:
 // - Version variables for dependencies

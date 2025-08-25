@@ -11,12 +11,31 @@
 
 ### Technology Stack
 - **Frontend**: Android (Java/Kotlin)
-- **Backend**: Local SQLite Database (Phase 1)
-- **Future**: Firebase/Cloud backend (Phase 2)
+- **Backend**: Firebase Firestore (Cloud Database)
+- **Authentication**: Firebase Authentication
+- **Local Storage**: SQLite Database (offline caching/backup)
 - **UI Framework**: Native Android XML layouts
 - **Development Environment**: Android Studio
+- **Cloud Platform**: Google Firebase
 
-### Database Schema (SQLite)
+### Database Schema
+
+#### Cloud Storage (Firebase Firestore)
+**Primary Data Storage**: All data is stored in Firebase Firestore collections for real-time synchronization, cloud backup, and multi-device access.
+
+**Firestore Collections Structure:**
+- **`users`**: User authentication and profile data
+- **`teams`**: League teams data 
+- **`players`**: Team player rosters (sub-collection under teams)
+- **`games`**: Scheduled and completed games
+- **`game_events`**: Real-time game events and statistics
+- **`user_leagues`**: User-specific league memberships and permissions
+
+**Authentication**: Firebase Authentication handles user login, registration, and security.
+
+**Real-time Updates**: Firestore listeners provide live updates for multi-device synchronization.
+
+#### Local Storage (SQLite - Offline Cache)
 
 #### Games Table (With Time Support)
 ```sql
@@ -98,6 +117,32 @@ CREATE TABLE team_fouls (
 );
 ```
 
+### Firebase Integration Architecture
+
+#### Authentication Flow
+1. **User Registration/Login**: Firebase Authentication with email/password
+2. **User Sessions**: Persistent login with automatic session management
+3. **Security Rules**: Firestore security rules ensuring users only access their league data
+4. **Guest Mode**: Optional anonymous authentication for demo purposes
+
+#### Data Synchronization Strategy
+1. **Online-First**: Primary operations use Firestore with real-time listeners
+2. **Offline Cache**: SQLite mirrors Firestore data for offline functionality
+3. **Automatic Sync**: Background synchronization when network connectivity resumes
+4. **Conflict Resolution**: Last-write-wins with timestamp-based conflict resolution
+
+#### Real-Time Features
+1. **Live Game Updates**: Firestore listeners for real-time score and event updates
+2. **Multi-Device Sync**: Instant synchronization across user devices
+3. **Spectator Mode**: Real-time game viewing for non-recorder users
+4. **League Management**: Live updates when league administrators modify teams/games
+
+#### Firebase Security Model
+1. **User Isolation**: Each user has access only to their created leagues and games
+2. **Role-Based Access**: League creators can invite others with specific permissions
+3. **Data Validation**: Firebase security rules validate all data writes
+4. **API Security**: All Firebase operations secured through authentication tokens
+
 ### App Architecture (MVC Pattern)
 
 #### Activities (Views)
@@ -110,19 +155,23 @@ CREATE TABLE team_fouls (
 7. **~~SubstitutionActivity~~** - *DEPRECATED: Functionality integrated into Unified Player Selection Modal*
 
 #### Models
-1. **Game.java** - Game data model
-2. **Team.java** - League team data model (Lakers, Warriors, etc.)
-3. **TeamPlayer.java** - Team roster player data model (12 players per team)
+1. **Game.java** - Game data model with Firebase integration
+2. **Team.java** - League team data model (Lakers, Warriors, etc.) with Firestore mapping
+3. **TeamPlayer.java** - Team roster player data model with cloud sync
 4. **GamePlayer.java** - Selected players for specific game (5 per side)
-5. **Event.java** - Game event data model
-6. **DatabaseHelper.java** - SQLite operations
-7. **StatsCalculator.java** - Statistics calculation utilities (basic counts only for MVP)
-8. **TeamFoulTracker.java** - Team foul management
+5. **Event.java** - Game event data model with real-time Firestore updates
+6. **User.java** - User authentication and profile data model
+7. **DatabaseHelper.java** - SQLite operations (offline cache)
+8. **FirebaseManager.java** - Firebase Firestore operations and authentication
+9. **StatsCalculator.java** - Statistics calculation utilities (basic counts only for MVP)
+10. **TeamFoulTracker.java** - Team foul management
 
 #### Controllers
-1. **GameController.java** - Game state management
-2. **EventController.java** - Event logging logic
-3. **StatsController.java** - Statistics generation
+1. **GameController.java** - Game state management with Firebase sync
+2. **EventController.java** - Event logging logic with real-time Firestore updates
+3. **StatsController.java** - Statistics generation from cloud data
+4. **AuthController.java** - Firebase Authentication management
+5. **SyncController.java** - Online/offline data synchronization
 
 ---
 
@@ -177,18 +226,28 @@ my_first_app/
 ### Key Generated Files
 - **R.java** - Auto-generated resource IDs
 - **BuildConfig.java** - Build configuration constants  
-- **SQLite Database** - Local storage at runtime
+- **google-services.json** - Firebase project configuration
+- **SQLite Database** - Local storage at runtime (offline cache)
 - **APK** - Compiled Android application
 
 ### External Dependencies
 ```gradle
 // app/build.gradle
 dependencies {
+    // Android UI Components
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.10.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
     implementation 'androidx.gridlayout:gridlayout:1.0.0' // For event button grid
+    
+    // Firebase Platform
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.firebase:firebase-analytics'
+    
+    // Testing
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
 }
@@ -321,54 +380,68 @@ Control panel height: Enhanced 2-row layout for better visibility
 - [x] Basic Game model class implemented
 - [x] MainActivity UI layout (Frame 1) completed
 - [x] Build system configured and dependency conflicts resolved
-- [ ] Database schema implementation (using in-memory storage for MVP)
+- [ ] Firebase project setup and configuration
+- [ ] Firebase Authentication integration
+- [ ] Firebase Firestore database schema implementation
+- [ ] User authentication and registration flows
 - [ ] Navigation between activities
-- [ ] Remaining model classes (Player, Event, TeamFoul)
-- [ ] DatabaseHelper implementation (planned for Phase 2)
+- [ ] Remaining model classes (Player, Event, TeamFoul, User)
+- [ ] FirebaseManager implementation for cloud operations
+- [ ] DatabaseHelper implementation for offline cache
+- [ ] SyncController for online/offline data synchronization
 - [ ] TeamFoulTracker utility class
 
 #### Game Management Tasks
 - [x] Game schedule creation/display (MainActivity) - **MVP version with simplified interface**
 - [x] Basic game addition functionality with validation
 - [x] Game list display with in-memory storage
+- [ ] Migration to Firebase Firestore for game data
+- [ ] Real-time game synchronization across devices
 - [ ] Team roster input - 5 players each (GameRosterActivity)
 - [ ] Game state management (quarters, clock)  
 - [ ] Score display functionality
-- [ ] Full Game CRUD operations (edit, delete, database persistence)
+- [ ] Full Game CRUD operations (edit, delete, cloud persistence)
 
 #### Event Recording Tasks
 - [ ] Event button implementation (13 event types plus timeout)
 - [ ] Player selection workflow
 - [ ] Real-time score calculation
 - [ ] Team foul tracking and display
-- [ ] Event logging to database (including team events)
+- [ ] Event logging to Firebase Firestore (including team events)
+- [ ] Real-time event synchronization for live spectator feeds
 - [ ] Basic substitution workflow (SubstitutionActivity)
 - [ ] Pop-up workflows for assists, rebounds, steals
-- [ ] Basic event log viewing (LogActivity)
+- [ ] Basic event log viewing (LogActivity) with cloud data
 - [ ] Live game UI with defined layout (GameActivity)
 
 ### Phase 2: Statistics & Polish
-**Goal**: Complete statistics and user experience
+**Goal**: Complete statistics and user experience with cloud integration
 
-- [ ] Statistics calculation engine - percentages and advanced metrics (StatsCalculator)
-- [ ] Statistics reports and filtering (StatsActivity)
-- [ ] Real-time shooting percentages display
-- [ ] Data export capabilities
+- [ ] Statistics calculation engine from Firebase data - percentages and advanced metrics (StatsCalculator)
+- [ ] Cloud-based statistics reports and filtering (StatsActivity)
+- [ ] Real-time shooting percentages display with Firestore listeners
+- [ ] Firebase-powered data export capabilities
+- [ ] Multi-user statistics aggregation and league standings
+- [ ] Real-time game statistics for live spectators
 - [ ] UI polish and user experience improvements
-- [ ] Error handling and edge cases
-- [ ] Input validation
-- [ ] Performance optimization
-- [ ] Advanced analytics (efficiency ratings, trends)
+- [ ] Error handling and edge cases for offline/online scenarios
+- [ ] Input validation and Firebase security rules
+- [ ] Performance optimization for cloud operations
+- [ ] Advanced analytics (efficiency ratings, trends) stored in Firestore
 
 ### Phase 3: Future Features (Post-MVP)
-**Goal**: Advanced features for production use
+**Goal**: Advanced features for production use with full Firebase integration
 
-- [ ] Team mode implementation
-- [ ] Advanced player management (bench, substitutions)
-- [ ] Cloud synchronization
-- [ ] Enhanced analytics and reporting
-- [ ] Shot clock functionality
-- [ ] Advanced foul types
+- [ ] Multi-device team mode implementation with Firebase real-time updates
+- [ ] Advanced player management with cloud player profiles and statistics history
+- [ ] Live spectator mode with real-time Firebase feeds
+- [ ] Enhanced analytics and reporting with Firebase Analytics integration
+- [ ] Cloud Functions for automated league standings and award calculations
+- [ ] Firebase Storage integration for team/player photos and documents
+- [ ] Shot clock functionality with cloud synchronization
+- [ ] Advanced foul types with Firebase rule engine
+- [ ] Push notifications for game updates and league announcements
+- [ ] Firebase Cloud Messaging for real-time game alerts
 
 ---
 
@@ -654,9 +727,11 @@ Control panel height: Enhanced 2-row layout for better visibility
 ## Key Assumptions & Decisions
 
 ### Technical Decisions
-1. **Local-First**: SQLite database, no cloud dependency for MVP
-2. **Single Platform**: Android only initially
-3. **Native Development**: Android Java/XML (not cross-platform)
+1. **Cloud-First with Offline Cache**: Firebase Firestore as primary database with SQLite for offline functionality
+2. **Firebase Authentication**: Secure user management and data isolation
+3. **Real-Time Synchronization**: Firebase listeners for live game updates and multi-device sync
+4. **Single Platform**: Android only initially (Firebase supports easy expansion to iOS/Web)
+5. **Native Development**: Android Java/XML with Firebase SDK integration (not cross-platform)
 
 ### Business Logic Decisions  
 1. **League Teams**: 4 predefined teams (Lakers, Warriors, Bulls, Heat) with 12 players each
