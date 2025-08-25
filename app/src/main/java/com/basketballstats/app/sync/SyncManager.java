@@ -4,6 +4,7 @@ import android.content.Context;
 import com.basketballstats.app.data.DatabaseController;
 import com.basketballstats.app.auth.AuthController;
 import com.basketballstats.app.firebase.FirebaseManager;
+import com.basketballstats.app.network.NetworkManager;
 import com.basketballstats.app.models.Game;
 import com.basketballstats.app.models.Team;
 import com.basketballstats.app.models.TeamPlayer;
@@ -27,6 +28,8 @@ public class SyncManager {
     private DatabaseController dbController;
     private AuthController authController;
     private FirebaseManager firebaseManager;
+    private NetworkManager networkManager;
+    private SyncQueueManager syncQueueManager;
     
     // Sync operation callback interface
     public interface SyncCallback {
@@ -52,6 +55,8 @@ public class SyncManager {
         this.dbController = DatabaseController.getInstance(context);
         this.authController = AuthController.getInstance(context);
         this.firebaseManager = FirebaseManager.getInstance(context);
+        this.networkManager = NetworkManager.getInstance(context);
+        this.syncQueueManager = SyncQueueManager.getInstance(context);
     }
     
     /**
@@ -70,8 +75,58 @@ public class SyncManager {
             return;
         }
         
-        // Perform actual Firebase sync (Phase 4 implementation)
-        performFirebaseSync(callback);
+        // Check network connectivity
+        if (!networkManager.isNetworkAvailable()) {
+            callback.onSyncError("No network connection. Changes will sync when connectivity resumes.");
+            callback.onSyncComplete();
+            return;
+        }
+        
+        // Perform actual Firebase sync with queue integration
+        performFirebaseSyncWithQueue(callback);
+    }
+    
+    /**
+     * Perform complete Firebase sync operation with pull/merge/push workflow and queue integration
+     * Phase 6: Enhanced with error handling and queue management
+     */
+    private void performFirebaseSyncWithQueue(SyncCallback callback) {
+        try {
+            // First, process any pending queue operations
+            syncQueueManager.processQueue(new SyncQueueManager.QueueCallback() {
+                @Override
+                public void onQueueProcessingStarted(int totalOperations) {
+                    if (totalOperations > 0) {
+                        callback.onSyncProgress("🔄 Processing " + totalOperations + " pending operations...");
+                    }
+                }
+
+                @Override
+                public void onOperationRetried(String operation, int attempt, int maxRetries) {
+                    // Silent processing - queue handles its own logging
+                }
+
+                @Override
+                public void onOperationSuccess(String operation) {
+                    // Silent processing
+                }
+
+                @Override
+                public void onOperationFailed(String operation, String error) {
+                    // Silent processing - errors will be reported in final callback
+                }
+
+                @Override
+                public void onQueueProcessingComplete(int successful, int failed) {
+                    // After queue processing, perform regular sync
+                    performFirebaseSync(callback);
+                }
+            });
+            
+        } catch (Exception e) {
+            callback.onSyncError("Sync initialization error: " + e.getMessage());
+            callback.onSyncComplete();
+        }
     }
     
     /**
@@ -253,7 +308,7 @@ public class SyncManager {
                 }
             }
             
-            // Use batch upload for efficiency
+            // Use batch upload for efficiency with queue fallback
             firebaseManager.batchUpload(teamsToUpload, gamesToUpload, eventsToUpload, 
                 new FirebaseManager.BatchCallback() {
                     @Override
@@ -268,8 +323,11 @@ public class SyncManager {
 
                     @Override
                     public void onBatchError(String errorMessage) {
+                        // Queue failed operations for retry when network resumes
+                        queueFailedOperations(teamsToUpload, gamesToUpload, eventsToUpload, errorMessage);
+                        
                         String errorMsg = String.format(
-                            "Upload failed after successful merge. Merged %d teams, %d games, but upload error: %s",
+                            "Upload failed but queued for retry. Merged %d teams, %d games. Error: %s",
                             mergedTeams, mergedGames, errorMessage
                         );
                         callback.onSyncError(errorMsg);
@@ -664,6 +722,54 @@ public class SyncManager {
         
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MMM dd, HH:mm");
         return sdf.format(new java.util.Date(timestamp));
+    }
+    
+    /**
+     * Queue failed operations for retry when connectivity resumes
+     */
+    private void queueFailedOperations(List<Team> teams, List<Game> games, List<Event> events, String errorMessage) {
+        try {
+            // Queue teams
+            for (Team team : teams) {
+                syncQueueManager.queueFailedOperation(
+                    "teams", 
+                    team.getId(), 
+                    team.getFirebaseId() != null ? "update" : "create",
+                    team.getFirebaseId(),
+                    team,
+                    errorMessage
+                );
+            }
+            
+            // Queue games
+            for (Game game : games) {
+                syncQueueManager.queueFailedOperation(
+                    "games", 
+                    game.getId(), 
+                    game.getFirebaseId() != null ? "update" : "create",
+                    game.getFirebaseId(),
+                    game,
+                    errorMessage
+                );
+            }
+            
+            // Queue events
+            for (Event event : events) {
+                syncQueueManager.queueFailedOperation(
+                    "events", 
+                    event.getId(), 
+                    event.getFirebaseId() != null ? "update" : "create",
+                    event.getFirebaseId(),
+                    event,
+                    errorMessage
+                );
+            }
+            
+            android.util.Log.d("SyncManager", "Queued " + (teams.size() + games.size() + events.size()) + " failed operations for retry");
+            
+        } catch (Exception e) {
+            android.util.Log.e("SyncManager", "Error queueing failed operations", e);
+        }
     }
     
     /**

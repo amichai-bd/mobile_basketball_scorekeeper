@@ -403,6 +403,78 @@ public class SyncQueue {
         Log.d(TAG, "Cleared " + rowsDeleted + " failed sync queue items");
     }
     
+    /**
+     * Find pending operations (not exceeded max retries)
+     */
+    public static List<SyncQueue> findPendingOperations(DatabaseHelper dbHelper) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        List<SyncQueue> operations = new ArrayList<>();
+        
+        // SQL to find operations where retry_count < max_retries
+        String sql = "SELECT * FROM " + DatabaseHelper.TABLE_SYNC_QUEUE + 
+                    " WHERE " + DatabaseHelper.SYNC_QUEUE_COLUMN_RETRY_COUNT + " < " + DatabaseHelper.SYNC_QUEUE_COLUMN_MAX_RETRIES +
+                    " ORDER BY " + DatabaseHelper.COLUMN_CREATED_AT + " ASC";
+        
+        Cursor cursor = db.rawQuery(sql, null);
+        
+        while (cursor.moveToNext()) {
+            operations.add(fromCursor(cursor));
+        }
+        cursor.close();
+        
+        Log.d(TAG, "Found " + operations.size() + " pending sync operations");
+        return operations;
+    }
+    
+    /**
+     * Find failed operations (exceeded max retries)
+     */
+    public static List<SyncQueue> findFailedOperations(DatabaseHelper dbHelper) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        List<SyncQueue> operations = new ArrayList<>();
+        
+        // SQL to find operations where retry_count >= max_retries
+        String sql = "SELECT * FROM " + DatabaseHelper.TABLE_SYNC_QUEUE + 
+                    " WHERE " + DatabaseHelper.SYNC_QUEUE_COLUMN_RETRY_COUNT + " >= " + DatabaseHelper.SYNC_QUEUE_COLUMN_MAX_RETRIES +
+                    " ORDER BY " + DatabaseHelper.COLUMN_CREATED_AT + " DESC";
+        
+        Cursor cursor = db.rawQuery(sql, null);
+        
+        while (cursor.moveToNext()) {
+            operations.add(fromCursor(cursor));
+        }
+        cursor.close();
+        
+        Log.d(TAG, "Found " + operations.size() + " failed sync operations");
+        return operations;
+    }
+    
+    /**
+     * Get all sync queue operations
+     */
+    public static List<SyncQueue> findAll(DatabaseHelper dbHelper) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        List<SyncQueue> operations = new ArrayList<>();
+        
+        Cursor cursor = db.query(
+            DatabaseHelper.TABLE_SYNC_QUEUE,
+            null,
+            null,
+            null,
+            null,
+            null,
+            DatabaseHelper.COLUMN_CREATED_AT + " DESC"
+        );
+        
+        while (cursor.moveToNext()) {
+            operations.add(fromCursor(cursor));
+        }
+        cursor.close();
+        
+        Log.d(TAG, "Loaded " + operations.size() + " sync queue operations");
+        return operations;
+    }
+    
     // ========== CONVENIENCE METHODS ==========
     
     /**
