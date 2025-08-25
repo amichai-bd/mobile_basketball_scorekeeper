@@ -75,31 +75,247 @@ public class SyncManager {
     }
     
     /**
-     * Perform actual Firebase sync operation
-     * Phase 4: Basic implementation, Phase 5: Full conflict resolution
+     * Perform complete Firebase sync operation with pull/merge/push workflow
+     * Phase 5: Full implementation with conflict resolution
      */
     private void performFirebaseSync(SyncCallback callback) {
         try {
-            // Phase 1: Pull changes from Firebase (Download)
-            callback.onSyncProgress("Downloading latest data from Firebase...");
-            
-            new android.os.Handler().postDelayed(() -> {
-                // Phase 2: Push local changes to Firebase (Upload)
-                callback.onSyncProgress("Uploading local changes to Firebase...");
-                
-                new android.os.Handler().postDelayed(() -> {
-                    uploadLocalDataToFirebase(callback);
-                }, 1000);
-            }, 1000);
+            // PHASE 1: PULL - Download latest data from Firebase
+            callback.onSyncProgress("⬇️ Pulling latest data from Firebase...");
+            pullDataFromFirebase(callback);
             
         } catch (Exception e) {
-            callback.onSyncError("Sync error: " + e.getMessage());
+            callback.onSyncError("Sync initialization error: " + e.getMessage());
             callback.onSyncComplete();
         }
     }
     
     /**
-     * Upload local SQLite data to Firebase Firestore
+     * PHASE 1: PULL - Download data from Firebase Firestore
+     */
+    private void pullDataFromFirebase(SyncCallback callback) {
+        // Download teams first (foundational data)
+        firebaseManager.downloadTeams(new FirebaseManager.FirestoreCallback<List<Team>>() {
+            @Override
+            public void onSuccess(List<Team> firebaseTeams) {
+                // Download games
+                firebaseManager.downloadGames(new FirebaseManager.FirestoreCallback<List<Game>>() {
+                    @Override
+                    public void onSuccess(List<Game> firebaseGames) {
+                        // Now proceed to merge phase with downloaded data
+                        callback.onSyncProgress("🔄 Merging data with conflict resolution...");
+                        
+                        new android.os.Handler().postDelayed(() -> {
+                            mergeDataWithConflictResolution(firebaseTeams, firebaseGames, callback);
+                        }, 500);
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        callback.onSyncError("Failed to download games: " + errorMessage);
+                        callback.onSyncComplete();
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                callback.onSyncError("Failed to download teams: " + errorMessage);
+                callback.onSyncComplete();
+            }
+        });
+    }
+    
+    /**
+     * PHASE 2: MERGE - Implement "User Device Wins" conflict resolution
+     */
+    private void mergeDataWithConflictResolution(List<Team> firebaseTeams, List<Game> firebaseGames, SyncCallback callback) {
+        try {
+            // Get local data for comparison
+            List<Team> localTeams = Team.findAll(dbController.getDatabaseHelper());
+            List<Game> localGames = Game.findAll(dbController.getDatabaseHelper());
+            
+            int mergedTeams = 0;
+            int mergedGames = 0;
+            int conflictsResolved = 0;
+            
+            // Merge Teams with conflict resolution
+            for (Team firebaseTeam : firebaseTeams) {
+                Team localTeam = findTeamByFirebaseId(localTeams, firebaseTeam.getFirebaseId());
+                
+                if (localTeam == null) {
+                    // New team from Firebase - add to local database
+                    firebaseTeam.setSyncStatus("synced");
+                    firebaseTeam.save(dbController.getDatabaseHelper());
+                    mergedTeams++;
+                } else {
+                    // Conflict resolution: Compare timestamps
+                    boolean localIsNewer = localTeam.getUpdatedAt() > firebaseTeam.getLastSyncTimestamp();
+                    
+                    if (localIsNewer) {
+                        // User device wins - keep local data, mark for upload
+                        localTeam.setSyncStatus("pending_upload");
+                        localTeam.save(dbController.getDatabaseHelper());
+                        conflictsResolved++;
+                    } else {
+                        // Firebase data is newer - update local
+                        firebaseTeam.setId(localTeam.getId()); // Preserve local ID
+                        firebaseTeam.setSyncStatus("synced");
+                        firebaseTeam.save(dbController.getDatabaseHelper());
+                        mergedTeams++;
+                    }
+                }
+            }
+            
+            // Merge Games with conflict resolution
+            for (Game firebaseGame : firebaseGames) {
+                Game localGame = findGameByFirebaseId(localGames, firebaseGame.getFirebaseId());
+                
+                if (localGame == null) {
+                    // New game from Firebase - add to local database
+                    firebaseGame.setSyncStatus("synced");
+                    firebaseGame.save(dbController.getDatabaseHelper());
+                    mergedGames++;
+                } else {
+                    // Conflict resolution: Compare timestamps
+                    boolean localIsNewer = localGame.getUpdatedAt() > firebaseGame.getLastSyncTimestamp();
+                    
+                    if (localIsNewer) {
+                        // User device wins - keep local data, mark for upload
+                        localGame.setSyncStatus("pending_upload");
+                        localGame.save(dbController.getDatabaseHelper());
+                        conflictsResolved++;
+                    } else {
+                        // Firebase data is newer - update local
+                        firebaseGame.setId(localGame.getId()); // Preserve local ID
+                        firebaseGame.setSyncStatus("synced");
+                        firebaseGame.save(dbController.getDatabaseHelper());
+                        mergedGames++;
+                    }
+                }
+            }
+            
+            // Proceed to push phase
+            callback.onSyncProgress("⬆️ Pushing local changes to Firebase...");
+            
+            String mergeMessage = String.format(
+                "Merged %d teams, %d games. Resolved %d conflicts (user device wins)",
+                mergedTeams, mergedGames, conflictsResolved
+            );
+            android.util.Log.d("SyncManager", mergeMessage);
+            
+            new android.os.Handler().postDelayed(() -> {
+                pushLocalChangesToFirebase(callback, mergedTeams, mergedGames, conflictsResolved);
+            }, 500);
+            
+        } catch (Exception e) {
+            callback.onSyncError("Merge operation failed: " + e.getMessage());
+            callback.onSyncComplete();
+        }
+    }
+    
+    /**
+     * PHASE 3: PUSH - Upload local changes to Firebase
+     */
+    private void pushLocalChangesToFirebase(SyncCallback callback, int mergedTeams, int mergedGames, int conflictsResolved) {
+        try {
+            // Get all local data that needs syncing (pending_upload or never synced)
+            List<Team> localTeams = Team.findAll(dbController.getDatabaseHelper());
+            List<Game> localGames = Game.findAll(dbController.getDatabaseHelper());
+            List<Event> localEvents = Event.findAll(dbController.getDatabaseHelper());
+            
+            // Filter for records that need uploading
+            List<Team> teamsToUpload = new ArrayList<>();
+            List<Game> gamesToUpload = new ArrayList<>();
+            List<Event> eventsToUpload = new ArrayList<>();
+            
+            for (Team team : localTeams) {
+                if (team.getSyncStatus() == null || 
+                    team.getSyncStatus().equals("pending_upload") || 
+                    team.getFirebaseId() == null) {
+                    teamsToUpload.add(team);
+                }
+            }
+            
+            for (Game game : localGames) {
+                if (game.getSyncStatus() == null || 
+                    game.getSyncStatus().equals("pending_upload") || 
+                    game.getFirebaseId() == null) {
+                    gamesToUpload.add(game);
+                }
+            }
+            
+            for (Event event : localEvents) {
+                if (event.getSyncStatus() == null || 
+                    event.getSyncStatus().equals("pending_upload") || 
+                    event.getFirebaseId() == null) {
+                    eventsToUpload.add(event);
+                }
+            }
+            
+            // Use batch upload for efficiency
+            firebaseManager.batchUpload(teamsToUpload, gamesToUpload, eventsToUpload, 
+                new FirebaseManager.BatchCallback() {
+                    @Override
+                    public void onBatchSuccess(int operationsCount) {
+                        String successMessage = String.format(
+                            "✅ Sync Complete! Merged %d teams, %d games. Uploaded %d operations. Resolved %d conflicts (user wins)",
+                            mergedTeams, mergedGames, operationsCount, conflictsResolved
+                        );
+                        callback.onSyncSuccess(successMessage);
+                        callback.onSyncComplete();
+                    }
+
+                    @Override
+                    public void onBatchError(String errorMessage) {
+                        String errorMsg = String.format(
+                            "Upload failed after successful merge. Merged %d teams, %d games, but upload error: %s",
+                            mergedTeams, mergedGames, errorMessage
+                        );
+                        callback.onSyncError(errorMsg);
+                        callback.onSyncComplete();
+                    }
+                });
+            
+        } catch (Exception e) {
+            callback.onSyncError("Push operation failed: " + e.getMessage());
+            callback.onSyncComplete();
+        }
+    }
+    
+    // ===== UTILITY METHODS FOR CONFLICT RESOLUTION =====
+    
+    /**
+     * Find local team by Firebase ID
+     */
+    private Team findTeamByFirebaseId(List<Team> teams, String firebaseId) {
+        if (firebaseId == null) return null;
+        
+        for (Team team : teams) {
+            if (firebaseId.equals(team.getFirebaseId())) {
+                return team;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Find local game by Firebase ID
+     */
+    private Game findGameByFirebaseId(List<Game> games, String firebaseId) {
+        if (firebaseId == null) return null;
+        
+        for (Game game : games) {
+            if (firebaseId.equals(game.getFirebaseId())) {
+                return game;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Upload local SQLite data to Firebase Firestore (Legacy - kept for compatibility)
+     * Use pushLocalChangesToFirebase for new implementation
      */
     private void uploadLocalDataToFirebase(SyncCallback callback) {
         try {
@@ -131,6 +347,323 @@ public class SyncManager {
             callback.onSyncError("Upload preparation failed: " + e.getMessage());
             callback.onSyncComplete();
         }
+    }
+    
+    // ===== INCREMENTAL SYNC METHODS =====
+    
+    /**
+     * Perform incremental sync - only sync data changed since last sync
+     * Uses last_sync_timestamp for performance optimization
+     */
+    public void performIncrementalSync(SyncCallback callback) {
+        callback.onSyncStarted();
+        
+        // Check authentication first
+        if (!authController.isUserAuthenticated()) {
+            callback.onSyncError("User must be signed in to sync data");
+            callback.onSyncComplete();
+            return;
+        }
+        
+        try {
+            // Get last sync timestamp from app settings
+            long lastSyncTimestamp = getLastSyncTimestamp();
+            callback.onSyncProgress("📅 Incremental sync since " + formatTimestamp(lastSyncTimestamp));
+            
+            // Perform incremental pull/merge/push
+            performIncrementalPull(lastSyncTimestamp, callback);
+            
+        } catch (Exception e) {
+            callback.onSyncError("Incremental sync error: " + e.getMessage());
+            callback.onSyncComplete();
+        }
+    }
+    
+    /**
+     * Pull only data changed since last sync timestamp
+     */
+    private void performIncrementalPull(long lastSyncTimestamp, SyncCallback callback) {
+        // Download only teams modified since last sync
+        firebaseManager.downloadTeamsModifiedSince(lastSyncTimestamp, 
+            new FirebaseManager.FirestoreCallback<List<Team>>() {
+                @Override
+                public void onSuccess(List<Team> modifiedTeams) {
+                    // Download only games modified since last sync
+                    firebaseManager.downloadGamesModifiedSince(lastSyncTimestamp,
+                        new FirebaseManager.FirestoreCallback<List<Game>>() {
+                            @Override
+                            public void onSuccess(List<Game> modifiedGames) {
+                                callback.onSyncProgress("🔄 Processing " + 
+                                    modifiedTeams.size() + " teams, " + 
+                                    modifiedGames.size() + " games...");
+                                
+                                new android.os.Handler().postDelayed(() -> {
+                                    mergeIncrementalData(modifiedTeams, modifiedGames, lastSyncTimestamp, callback);
+                                }, 500);
+                            }
+
+                            @Override
+                            public void onError(String errorMessage) {
+                                callback.onSyncError("Failed to download modified games: " + errorMessage);
+                                callback.onSyncComplete();
+                            }
+                        });
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    callback.onSyncError("Failed to download modified teams: " + errorMessage);
+                    callback.onSyncComplete();
+                }
+            });
+    }
+    
+    /**
+     * Merge incremental data with optimized conflict resolution
+     */
+    private void mergeIncrementalData(List<Team> modifiedTeams, List<Game> modifiedGames, 
+                                    long lastSyncTimestamp, SyncCallback callback) {
+        try {
+            int mergedTeams = 0;
+            int mergedGames = 0;
+            int conflictsResolved = 0;
+            
+            // Process modified teams
+            for (Team firebaseTeam : modifiedTeams) {
+                Team localTeam = Team.findByFirebaseId(dbController.getDatabaseHelper(), firebaseTeam.getFirebaseId());
+                
+                if (localTeam == null) {
+                    // New team from Firebase
+                    firebaseTeam.setSyncStatus("synced");
+                    firebaseTeam.save(dbController.getDatabaseHelper());
+                    mergedTeams++;
+                } else {
+                    // Check if local was modified since last sync
+                    boolean localModifiedSinceSync = localTeam.getUpdatedAt() > lastSyncTimestamp;
+                    
+                    if (localModifiedSinceSync) {
+                        // Local changes take priority - mark for upload
+                        localTeam.setSyncStatus("pending_upload");
+                        localTeam.save(dbController.getDatabaseHelper());
+                        conflictsResolved++;
+                    } else {
+                        // No local changes - accept Firebase version
+                        firebaseTeam.setId(localTeam.getId());
+                        firebaseTeam.setSyncStatus("synced");
+                        firebaseTeam.save(dbController.getDatabaseHelper());
+                        mergedTeams++;
+                    }
+                }
+            }
+            
+            // Process modified games
+            for (Game firebaseGame : modifiedGames) {
+                Game localGame = Game.findByFirebaseId(dbController.getDatabaseHelper(), firebaseGame.getFirebaseId());
+                
+                if (localGame == null) {
+                    // New game from Firebase
+                    firebaseGame.setSyncStatus("synced");
+                    firebaseGame.save(dbController.getDatabaseHelper());
+                    mergedGames++;
+                } else {
+                    // Check if local was modified since last sync
+                    boolean localModifiedSinceSync = localGame.getUpdatedAt() > lastSyncTimestamp;
+                    
+                    if (localModifiedSinceSync) {
+                        // Local changes take priority - mark for upload
+                        localGame.setSyncStatus("pending_upload");
+                        localGame.save(dbController.getDatabaseHelper());
+                        conflictsResolved++;
+                    } else {
+                        // No local changes - accept Firebase version
+                        firebaseGame.setId(localGame.getId());
+                        firebaseGame.setSyncStatus("synced");
+                        firebaseGame.save(dbController.getDatabaseHelper());
+                        mergedGames++;
+                    }
+                }
+            }
+            
+            // Proceed to incremental push
+            callback.onSyncProgress("⬆️ Pushing incremental changes...");
+            
+            new android.os.Handler().postDelayed(() -> {
+                pushIncrementalChanges(callback, mergedTeams, mergedGames, conflictsResolved, lastSyncTimestamp);
+            }, 500);
+            
+        } catch (Exception e) {
+            callback.onSyncError("Incremental merge failed: " + e.getMessage());
+            callback.onSyncComplete();
+        }
+    }
+    
+    /**
+     * Push only data modified since last sync
+     */
+    private void pushIncrementalChanges(SyncCallback callback, int mergedTeams, int mergedGames, 
+                                      int conflictsResolved, long lastSyncTimestamp) {
+        try {
+            // Get only data modified since last sync OR marked as pending upload
+            List<Team> teamsToUpload = getTeamsModifiedSinceSync(lastSyncTimestamp);
+            List<Game> gamesToUpload = getGamesModifiedSinceSync(lastSyncTimestamp);
+            List<Event> eventsToUpload = getEventsModifiedSinceSync(lastSyncTimestamp);
+            
+            if (teamsToUpload.isEmpty() && gamesToUpload.isEmpty() && eventsToUpload.isEmpty()) {
+                // No local changes to upload
+                updateLastSyncTimestamp();
+                String successMessage = String.format(
+                    "✅ Incremental sync complete! Merged %d teams, %d games. No local changes to upload.",
+                    mergedTeams, mergedGames
+                );
+                callback.onSyncSuccess(successMessage);
+                callback.onSyncComplete();
+                return;
+            }
+            
+            // Upload incremental changes
+            firebaseManager.batchUpload(teamsToUpload, gamesToUpload, eventsToUpload,
+                new FirebaseManager.BatchCallback() {
+                    @Override
+                    public void onBatchSuccess(int operationsCount) {
+                        // Update last sync timestamp
+                        updateLastSyncTimestamp();
+                        
+                        String successMessage = String.format(
+                            "✅ Incremental sync complete! Merged %d teams, %d games. Uploaded %d operations. Resolved %d conflicts.",
+                            mergedTeams, mergedGames, operationsCount, conflictsResolved
+                        );
+                        callback.onSyncSuccess(successMessage);
+                        callback.onSyncComplete();
+                    }
+
+                    @Override
+                    public void onBatchError(String errorMessage) {
+                        String errorMsg = String.format(
+                            "Incremental upload failed. Merged %d teams, %d games, but upload error: %s",
+                            mergedTeams, mergedGames, errorMessage
+                        );
+                        callback.onSyncError(errorMsg);
+                        callback.onSyncComplete();
+                    }
+                });
+            
+        } catch (Exception e) {
+            callback.onSyncError("Incremental push failed: " + e.getMessage());
+            callback.onSyncComplete();
+        }
+    }
+    
+    // ===== INCREMENTAL SYNC UTILITIES =====
+    
+    /**
+     * Get teams modified since last sync timestamp
+     */
+    private List<Team> getTeamsModifiedSinceSync(long lastSyncTimestamp) {
+        List<Team> allTeams = Team.findAll(dbController.getDatabaseHelper());
+        List<Team> modifiedTeams = new ArrayList<>();
+        
+        for (Team team : allTeams) {
+            boolean isModified = team.getUpdatedAt() > lastSyncTimestamp;
+            boolean isPendingUpload = "pending_upload".equals(team.getSyncStatus());
+            boolean hasNoFirebaseId = team.getFirebaseId() == null;
+            
+            if (isModified || isPendingUpload || hasNoFirebaseId) {
+                modifiedTeams.add(team);
+            }
+        }
+        
+        return modifiedTeams;
+    }
+    
+    /**
+     * Get games modified since last sync timestamp
+     */
+    private List<Game> getGamesModifiedSinceSync(long lastSyncTimestamp) {
+        List<Game> allGames = Game.findAll(dbController.getDatabaseHelper());
+        List<Game> modifiedGames = new ArrayList<>();
+        
+        for (Game game : allGames) {
+            boolean isModified = game.getUpdatedAt() > lastSyncTimestamp;
+            boolean isPendingUpload = "pending_upload".equals(game.getSyncStatus());
+            boolean hasNoFirebaseId = game.getFirebaseId() == null;
+            
+            if (isModified || isPendingUpload || hasNoFirebaseId) {
+                modifiedGames.add(game);
+            }
+        }
+        
+        return modifiedGames;
+    }
+    
+    /**
+     * Get events modified since last sync timestamp
+     */
+    private List<Event> getEventsModifiedSinceSync(long lastSyncTimestamp) {
+        List<Event> allEvents = Event.findAll(dbController.getDatabaseHelper());
+        List<Event> modifiedEvents = new ArrayList<>();
+        
+        for (Event event : allEvents) {
+            boolean isModified = event.getUpdatedAt() > lastSyncTimestamp;
+            boolean isPendingUpload = "pending_upload".equals(event.getSyncStatus());
+            boolean hasNoFirebaseId = event.getFirebaseId() == null;
+            
+            if (isModified || isPendingUpload || hasNoFirebaseId) {
+                modifiedEvents.add(event);
+            }
+        }
+        
+        return modifiedEvents;
+    }
+    
+    /**
+     * Get last sync timestamp from app settings
+     */
+    private long getLastSyncTimestamp() {
+        try {
+            AppSettings lastSyncSetting = AppSettings.findByKey(dbController.getDatabaseHelper(), "last_sync_timestamp");
+            if (lastSyncSetting != null) {
+                return Long.parseLong(lastSyncSetting.getSettingValue());
+            }
+        } catch (Exception e) {
+            android.util.Log.w("SyncManager", "Could not get last sync timestamp", e);
+        }
+        // Default to 0 (sync everything) if no previous sync
+        return 0L;
+    }
+    
+    /**
+     * Update last sync timestamp in app settings
+     */
+    private void updateLastSyncTimestamp() {
+        try {
+            long currentTimestamp = System.currentTimeMillis();
+            
+            AppSettings lastSyncSetting = AppSettings.findByKey(dbController.getDatabaseHelper(), "last_sync_timestamp");
+            if (lastSyncSetting == null) {
+                // Create new setting
+                lastSyncSetting = new AppSettings();
+                lastSyncSetting.setSettingKey("last_sync_timestamp");
+            }
+            
+            lastSyncSetting.setSettingValue(String.valueOf(currentTimestamp));
+            lastSyncSetting.save(dbController.getDatabaseHelper());
+            
+            android.util.Log.d("SyncManager", "Updated last sync timestamp: " + currentTimestamp);
+        } catch (Exception e) {
+            android.util.Log.e("SyncManager", "Failed to update last sync timestamp", e);
+        }
+    }
+    
+    /**
+     * Format timestamp for user display
+     */
+    private String formatTimestamp(long timestamp) {
+        if (timestamp == 0) {
+            return "beginning";
+        }
+        
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MMM dd, HH:mm");
+        return sdf.format(new java.util.Date(timestamp));
     }
     
     /**

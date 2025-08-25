@@ -361,6 +361,37 @@ public class Team {
         return count;
     }
     
+    /**
+     * Find team by Firebase ID (for sync operations)
+     */
+    public static Team findByFirebaseId(DatabaseHelper dbHelper, String firebaseId) {
+        if (firebaseId == null) {
+            return null;
+        }
+        
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String selection = DatabaseHelper.COLUMN_FIREBASE_ID + " = ?";
+        String[] selectionArgs = {firebaseId};
+        
+        Cursor cursor = db.query(
+            DatabaseHelper.TABLE_TEAMS,
+            null,
+            selection,
+            selectionArgs,
+            null,
+            null,
+            null
+        );
+        
+        Team team = null;
+        if (cursor.moveToFirst()) {
+            team = fromCursor(cursor);
+        }
+        cursor.close();
+        
+        return team;
+    }
+    
     // ========== OBJECT METHODS ==========
     
     @Override

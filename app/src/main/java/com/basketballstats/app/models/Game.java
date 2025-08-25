@@ -456,6 +456,38 @@ public class Game {
         return count;
     }
     
+    /**
+     * Find game by Firebase ID (for sync operations)
+     */
+    public static Game findByFirebaseId(DatabaseHelper dbHelper, String firebaseId) {
+        if (firebaseId == null) {
+            return null;
+        }
+        
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String selection = DatabaseHelper.COLUMN_FIREBASE_ID + " = ?";
+        String[] selectionArgs = {firebaseId};
+        
+        Cursor cursor = db.query(
+            DatabaseHelper.TABLE_GAMES,
+            null,
+            selection,
+            selectionArgs,
+            null,
+            null,
+            null
+        );
+        
+        Game game = null;
+        if (cursor.moveToFirst()) {
+            game = fromCursor(cursor);
+            game.loadTeams(dbHelper);
+        }
+        cursor.close();
+        
+        return game;
+    }
+    
     // ========== OBJECT METHODS ==========
     
     @Override

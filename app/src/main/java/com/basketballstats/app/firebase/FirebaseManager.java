@@ -161,6 +161,35 @@ public class FirebaseManager {
         }
     }
     
+    /**
+     * Download teams modified since timestamp (incremental sync)
+     */
+    public void downloadTeamsModifiedSince(long lastSyncTimestamp, FirestoreCallback<List<Team>> callback) {
+        try {
+            getUserCollection(COLLECTION_TEAMS)
+                .whereGreaterThan("lastSyncTimestamp", lastSyncTimestamp)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<Team> teams = new ArrayList<>();
+                    for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                        Team team = mapToTeam(doc.getData(), doc.getId());
+                        if (team != null) {
+                            teams.add(team);
+                        }
+                    }
+                    callback.onSuccess(teams);
+                    Log.d(TAG, "Downloaded " + teams.size() + " teams modified since " + lastSyncTimestamp);
+                })
+                .addOnFailureListener(e -> {
+                    callback.onError("Failed to download modified teams: " + e.getMessage());
+                    Log.e(TAG, "Modified teams download failed", e);
+                });
+        } catch (Exception e) {
+            callback.onError("Download modified teams error: " + e.getMessage());
+            Log.e(TAG, "Download modified teams error", e);
+        }
+    }
+    
     // ===== GAME OPERATIONS =====
     
     /**
@@ -236,76 +265,191 @@ public class FirebaseManager {
         }
     }
     
+    /**
+     * Download games modified since timestamp (incremental sync)
+     */
+    public void downloadGamesModifiedSince(long lastSyncTimestamp, FirestoreCallback<List<Game>> callback) {
+        try {
+            getUserCollection(COLLECTION_GAMES)
+                .whereGreaterThan("lastSyncTimestamp", lastSyncTimestamp)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<Game> games = new ArrayList<>();
+                    for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                        Game game = mapToGame(doc.getData(), doc.getId());
+                        if (game != null) {
+                            games.add(game);
+                        }
+                    }
+                    callback.onSuccess(games);
+                    Log.d(TAG, "Downloaded " + games.size() + " games modified since " + lastSyncTimestamp);
+                })
+                .addOnFailureListener(e -> {
+                    callback.onError("Failed to download modified games: " + e.getMessage());
+                    Log.e(TAG, "Modified games download failed", e);
+                });
+        } catch (Exception e) {
+            callback.onError("Download modified games error: " + e.getMessage());
+            Log.e(TAG, "Download modified games error", e);
+        }
+    }
+    
     // ===== BATCH OPERATIONS =====
     
     /**
      * Upload multiple records in a single batch operation for efficiency
+     * Enhanced with intelligent batching and error recovery
      */
     public void batchUpload(List<Team> teams, List<Game> games, List<Event> events, BatchCallback callback) {
         try {
-            WriteBatch batch = firestore.batch();
-            int operationCount = 0;
+            // Firestore has a 500 operation limit per batch
+            int totalOperations = teams.size() + games.size() + events.size();
             
-            // Add teams to batch
-            CollectionReference teamsRef = getUserCollection(COLLECTION_TEAMS);
-            for (Team team : teams) {
-                Map<String, Object> teamData = teamToMap(team);
-                if (team.getFirebaseId() != null) {
-                    batch.set(teamsRef.document(team.getFirebaseId()), teamData);
-                } else {
-                    DocumentReference newDoc = teamsRef.document();
-                    batch.set(newDoc, teamData);
-                    team.setFirebaseId(newDoc.getId());
-                }
-                operationCount++;
+            if (totalOperations == 0) {
+                callback.onBatchSuccess(0);
+                return;
             }
             
-            // Add games to batch
-            CollectionReference gamesRef = getUserCollection(COLLECTION_GAMES);
-            for (Game game : games) {
-                Map<String, Object> gameData = gameToMap(game);
-                if (game.getFirebaseId() != null) {
-                    batch.set(gamesRef.document(game.getFirebaseId()), gameData);
-                } else {
-                    DocumentReference newDoc = gamesRef.document();
-                    batch.set(newDoc, gameData);
-                    game.setFirebaseId(newDoc.getId());
-                }
-                operationCount++;
+            // If over 500 operations, split into multiple batches
+            if (totalOperations > 450) { // Leave some margin
+                performMultipleBatches(teams, games, events, callback);
+                return;
             }
             
-            // Add events to batch
-            CollectionReference eventsRef = getUserCollection(COLLECTION_EVENTS);
-            for (Event event : events) {
-                Map<String, Object> eventData = eventToMap(event);
-                if (event.getFirebaseId() != null) {
-                    batch.set(eventsRef.document(event.getFirebaseId()), eventData);
-                } else {
-                    DocumentReference newDoc = eventsRef.document();
-                    batch.set(newDoc, eventData);
-                    event.setFirebaseId(newDoc.getId());
-                }
-                operationCount++;
-            }
+            // Single batch operation
+            performSingleBatch(teams, games, events, callback);
             
-            // Commit batch
-            final int finalOperationCount = operationCount;
-            batch.commit()
-                .addOnSuccessListener(aVoid -> {
-                    // Update SQLite sync status for all records
-                    updateSyncStatusAfterBatch(teams, games, events);
-                    callback.onBatchSuccess(finalOperationCount);
-                    Log.d(TAG, "Batch upload successful: " + finalOperationCount + " operations");
-                })
-                .addOnFailureListener(e -> {
-                    callback.onBatchError("Batch upload failed: " + e.getMessage());
-                    Log.e(TAG, "Batch upload failed", e);
-                });
-                
         } catch (Exception e) {
             callback.onBatchError("Batch upload error: " + e.getMessage());
             Log.e(TAG, "Batch upload error", e);
         }
+    }
+    
+    /**
+     * Perform single batch upload (under 450 operations)
+     */
+    private void performSingleBatch(List<Team> teams, List<Game> games, List<Event> events, BatchCallback callback) {
+        WriteBatch batch = firestore.batch();
+        int operationCount = 0;
+        
+        // Add teams to batch
+        CollectionReference teamsRef = getUserCollection(COLLECTION_TEAMS);
+        for (Team team : teams) {
+            Map<String, Object> teamData = teamToMap(team);
+            if (team.getFirebaseId() != null) {
+                batch.set(teamsRef.document(team.getFirebaseId()), teamData);
+            } else {
+                DocumentReference newDoc = teamsRef.document();
+                batch.set(newDoc, teamData);
+                team.setFirebaseId(newDoc.getId());
+            }
+            operationCount++;
+        }
+        
+        // Add games to batch
+        CollectionReference gamesRef = getUserCollection(COLLECTION_GAMES);
+        for (Game game : games) {
+            Map<String, Object> gameData = gameToMap(game);
+            if (game.getFirebaseId() != null) {
+                batch.set(gamesRef.document(game.getFirebaseId()), gameData);
+            } else {
+                DocumentReference newDoc = gamesRef.document();
+                batch.set(newDoc, gameData);
+                game.setFirebaseId(newDoc.getId());
+            }
+            operationCount++;
+        }
+        
+        // Add events to batch
+        CollectionReference eventsRef = getUserCollection(COLLECTION_EVENTS);
+        for (Event event : events) {
+            Map<String, Object> eventData = eventToMap(event);
+            if (event.getFirebaseId() != null) {
+                batch.set(eventsRef.document(event.getFirebaseId()), eventData);
+            } else {
+                DocumentReference newDoc = eventsRef.document();
+                batch.set(newDoc, eventData);
+                event.setFirebaseId(newDoc.getId());
+            }
+            operationCount++;
+        }
+        
+        // Commit batch
+        final int finalOperationCount = operationCount;
+        batch.commit()
+            .addOnSuccessListener(aVoid -> {
+                // Update SQLite sync status for all records
+                updateSyncStatusAfterBatch(teams, games, events);
+                callback.onBatchSuccess(finalOperationCount);
+                Log.d(TAG, "Single batch upload successful: " + finalOperationCount + " operations");
+            })
+            .addOnFailureListener(e -> {
+                callback.onBatchError("Batch upload failed: " + e.getMessage());
+                Log.e(TAG, "Single batch upload failed", e);
+            });
+    }
+    
+    /**
+     * Perform multiple batch uploads for large datasets
+     */
+    private void performMultipleBatches(List<Team> teams, List<Game> games, List<Event> events, BatchCallback callback) {
+        // Split into chunks of 400 operations each
+        int chunkSize = 400;
+        int totalOperations = teams.size() + games.size() + events.size();
+        int batchCount = (totalOperations + chunkSize - 1) / chunkSize; // Ceiling division
+        
+        Log.d(TAG, "Large dataset detected: " + totalOperations + " operations, splitting into " + batchCount + " batches");
+        
+        performBatchChunk(teams, games, events, 0, chunkSize, batchCount, 0, callback);
+    }
+    
+    /**
+     * Recursively perform batch chunks
+     */
+    private void performBatchChunk(List<Team> teams, List<Game> games, List<Event> events, 
+                                 int startIndex, int chunkSize, int totalBatches, 
+                                 int currentBatch, BatchCallback callback) {
+        
+        // Create lists for this chunk
+        List<Team> chunkTeams = getChunk(teams, startIndex, chunkSize);
+        List<Game> chunkGames = getChunk(games, startIndex - teams.size(), chunkSize - chunkTeams.size());
+        List<Event> chunkEvents = getChunk(events, startIndex - teams.size() - games.size(), 
+                                         chunkSize - chunkTeams.size() - chunkGames.size());
+        
+        // Perform single batch for this chunk
+        performSingleBatch(chunkTeams, chunkGames, chunkEvents, new BatchCallback() {
+            @Override
+            public void onBatchSuccess(int operationsCount) {
+                int nextBatch = currentBatch + 1;
+                if (nextBatch < totalBatches) {
+                    // Continue with next batch
+                    performBatchChunk(teams, games, events, startIndex + chunkSize, 
+                                    chunkSize, totalBatches, nextBatch, callback);
+                } else {
+                    // All batches complete
+                    int totalOperations = teams.size() + games.size() + events.size();
+                    callback.onBatchSuccess(totalOperations);
+                    Log.d(TAG, "Multiple batch upload successful: " + totalOperations + " operations in " + totalBatches + " batches");
+                }
+            }
+
+            @Override
+            public void onBatchError(String errorMessage) {
+                callback.onBatchError("Batch " + (currentBatch + 1) + " failed: " + errorMessage);
+            }
+        });
+    }
+    
+    /**
+     * Get chunk of list for batch processing
+     */
+    private <T> List<T> getChunk(List<T> list, int startIndex, int maxSize) {
+        if (startIndex < 0 || startIndex >= list.size() || maxSize <= 0) {
+            return new ArrayList<>();
+        }
+        
+        int endIndex = Math.min(startIndex + maxSize, list.size());
+        return list.subList(startIndex, endIndex);
     }
     
     // ===== UTILITY METHODS =====
