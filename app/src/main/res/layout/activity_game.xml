@@ -290,7 +290,7 @@
                     android:padding="8dp"
                     android:layout_marginTop="8dp">
                     
-                    <!-- Live Feed Header: [Allow Events] ... [Last 2 Events - Centered] ... [Undo] [View Log] -->
+                    <!-- Live Feed Header: [Allow Events] ... [Undo] [View Log] -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -317,17 +317,7 @@
                             android:layout_height="1dp"
                             android:layout_weight="1" />
                         
-                        <!-- Last 2 Events Title (Centered) -->
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Last 2 Events"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:textColor="#7F8C8D"
-                            android:gravity="center" />
-                        
-                        <!-- Spacer for centering Recent Events -->
+                        <!-- Spacer to push buttons to sides -->
                         <View
                             android:layout_width="0dp"
                             android:layout_height="1dp"

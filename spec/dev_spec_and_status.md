@@ -249,7 +249,7 @@ ConstraintLayout (main container)
 | │   ├── LinearLayout (event area - vertical)
 | │   │   └── GridLayout (Event buttons - 4x4 grid)
 | │   └── LinearLayout (log section - horizontal) [ENHANCED]
-| │       ├── LinearLayout (last 2 events) [REDUCED FROM 5]
+| │       ├── LinearLayout (last 2 events) [REDUCED FROM 5, NO TITLE]
 | │       ├── Button (undo) [NEW]
 | │       └── Button (view log)
 | └── LinearLayout (Team B panel - vertical, FULL-HEIGHT, right side)

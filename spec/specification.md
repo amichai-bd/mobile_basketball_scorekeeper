@@ -259,10 +259,9 @@ The screen has two distinct modes:
 │ Player 3 [1]  │  [DR] [STL][BLK][TO]           │ [4] Player 8│
 │ Player 4 [2]  │                                │ [0] Player 9│
 │ Player 5 [0]  │                                │ [3] Player 10│
-│               │  Last 2 Events:                │           │
 │               │  8:45 - #23 LeBron - 2P    [⟲] │           │
 │               │  8:30 - Lakers - TIMEOUT       │           │
-│               │  [View Log]                    │           │
+│               │              [View Log]        │           │
 │[TimeOut]      │                                │ [TimeOut] │
 │[Foul]         │                                │ [Foul]    │
 │[Sub]          │                                │ [Sub]     │
@@ -529,12 +528,13 @@ The screen has two distinct modes:
 - **Purpose**: Safe, controlled recording of rare dead-ball events with automatic safety reset
 
 #### Live Event Feed (Updated)
-- **Description**: Shows the last 2 recorded events for immediate feedback and context
+- **Description**: Shows the last 2 recorded events for immediate feedback and context  
 - **Location**: Bottom center between Team A and Team B panels, under event buttons
 - **Content**: List showing "Time - Player - Event" format (e.g., "8:45 - #23 LeBron - 2P")
 - **Updates**: Automatically when events are recorded
-- **Format**: Most recent event at top, maximum 2 events shown
+- **Format**: Most recent event at top, maximum 2 events shown, no title header
 - **Team Events**: Shows team name instead of player (e.g., "8:30 - Lakers - TIMEOUT")
+- **Design**: Clean list without unnecessary "Last 2 Events" title for minimal clutter
 
 #### Undo Button (New)
 - **Description**: Allows undoing the last recorded event(s)
@@ -553,7 +553,7 @@ The screen has two distinct modes:
 - **Description**: Button to access complete game event log
 - **Location**: Right side of Event Panel (part of new 3-element layout)
 - **Content**: "View Log"
-- **Layout Position**: Right element in `[Allow Events] ... [Recent Events - Centered] ... [View Log]`
+- **Layout Position**: Right element in `[Allow Events] ... [Undo] [View Log]`
 - **Clickable**: Yes
 - **When clicked**: Navigate to Event Log screen (Frame 5) showing all recorded events
 
