@@ -382,4 +382,46 @@ public class TeamPlayer {
         result = 31 * result + (name != null ? name.hashCode() : 0);
         return result;
     }
+    
+    /**
+     * Find all team players
+     */
+    public static List<TeamPlayer> findAll(DatabaseHelper dbHelper) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        List<TeamPlayer> teamPlayers = new ArrayList<>();
+        
+        Cursor cursor = db.query(
+            DatabaseHelper.TABLE_TEAM_PLAYERS,
+            null,
+            null,
+            null,
+            null,
+            null,
+            DatabaseHelper.TEAM_PLAYERS_COLUMN_JERSEY_NUMBER + " ASC"
+        );
+        
+        while (cursor.moveToNext()) {
+            teamPlayers.add(fromCursor(cursor));
+        }
+        cursor.close();
+        
+        Log.d(TAG, "Loaded " + teamPlayers.size() + " team players");
+        return teamPlayers;
+    }
+    
+    /**
+     * Get total count of all team players
+     */
+    public static int getTotalCount(DatabaseHelper dbHelper) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + DatabaseHelper.TABLE_TEAM_PLAYERS, null);
+        
+        int count = 0;
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+        cursor.close();
+        
+        return count;
+    }
 }

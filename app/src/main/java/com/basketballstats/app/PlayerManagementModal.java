@@ -285,7 +285,7 @@ public class PlayerManagementModal {
         team.getPlayers().addAll(playersList);
         
         // Save to data provider
-        team.save(DatabaseController.getInstance(this).getDatabaseHelper());
+        team.save(DatabaseController.getInstance(context).getDatabaseHelper());
         
         // Notify listener
         if (listener != null) {

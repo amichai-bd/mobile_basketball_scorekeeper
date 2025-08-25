@@ -204,7 +204,7 @@ public class SyncManager {
                     // New team from Firebase - add to local database
                     firebaseTeam.setSyncStatus("synced");
                     firebaseTeam.save(dbController.getDatabaseHelper());
-                    mergedTeams++;
+                    mergedTeams[0]++;
                 } else {
                     // Conflict resolution: Compare timestamps
                     boolean localIsNewer = localTeam.getUpdatedAtLong() > firebaseTeam.getLastSyncTimestampLong();
@@ -213,13 +213,13 @@ public class SyncManager {
                         // User device wins - keep local data, mark for upload
                         localTeam.setSyncStatus("pending_upload");
                         localTeam.save(dbController.getDatabaseHelper());
-                        conflictsResolved++;
+                        conflictsResolved[0]++;
                     } else {
                         // Firebase data is newer - update local
                         firebaseTeam.setId(localTeam.getId()); // Preserve local ID
                         firebaseTeam.setSyncStatus("synced");
                         firebaseTeam.save(dbController.getDatabaseHelper());
-                        mergedTeams++;
+                        mergedTeams[0]++;
                     }
                 }
             }
@@ -232,7 +232,7 @@ public class SyncManager {
                     // New game from Firebase - add to local database
                     firebaseGame.setSyncStatus("synced");
                     firebaseGame.save(dbController.getDatabaseHelper());
-                    mergedGames++;
+                    mergedGames[0]++;
                 } else {
                     // Conflict resolution: Compare timestamps
                     boolean localIsNewer = localGame.getUpdatedAtLong() > firebaseGame.getLastSyncTimestampLong();
@@ -241,13 +241,13 @@ public class SyncManager {
                         // User device wins - keep local data, mark for upload
                         localGame.setSyncStatus("pending_upload");
                         localGame.save(dbController.getDatabaseHelper());
-                        conflictsResolved++;
+                        conflictsResolved[0]++;
                     } else {
                         // Firebase data is newer - update local
                         firebaseGame.setId(localGame.getId()); // Preserve local ID
                         firebaseGame.setSyncStatus("synced");
                         firebaseGame.save(dbController.getDatabaseHelper());
-                        mergedGames++;
+                        mergedGames[0]++;
                     }
                 }
             }
@@ -262,7 +262,7 @@ public class SyncManager {
             android.util.Log.d("SyncManager", mergeMessage);
             
             new android.os.Handler().postDelayed(() -> {
-                pushLocalChangesToFirebase(callback, mergedTeams, mergedGames, conflictsResolved);
+                pushLocalChangesToFirebase(callback, mergedTeams[0], mergedGames[0], conflictsResolved[0]);
             }, 500);
             
         } catch (Exception e) {
@@ -496,7 +496,7 @@ public class SyncManager {
                     // New team from Firebase
                     firebaseTeam.setSyncStatus("synced");
                     firebaseTeam.save(dbController.getDatabaseHelper());
-                    mergedTeams++;
+                    mergedTeams[0]++;
                 } else {
                     // Check if local was modified since last sync
                     boolean localModifiedSinceSync = localTeam.getUpdatedAtLong() > lastSyncTimestamp;
@@ -505,13 +505,13 @@ public class SyncManager {
                         // Local changes take priority - mark for upload
                         localTeam.setSyncStatus("pending_upload");
                         localTeam.save(dbController.getDatabaseHelper());
-                        conflictsResolved++;
+                        conflictsResolved[0]++;
                     } else {
                         // No local changes - accept Firebase version
                         firebaseTeam.setId(localTeam.getId());
                         firebaseTeam.setSyncStatus("synced");
                         firebaseTeam.save(dbController.getDatabaseHelper());
-                        mergedTeams++;
+                        mergedTeams[0]++;
                     }
                 }
             }
@@ -524,7 +524,7 @@ public class SyncManager {
                     // New game from Firebase
                     firebaseGame.setSyncStatus("synced");
                     firebaseGame.save(dbController.getDatabaseHelper());
-                    mergedGames++;
+                    mergedGames[0]++;
                 } else {
                     // Check if local was modified since last sync
                     boolean localModifiedSinceSync = localGame.getUpdatedAtLong() > lastSyncTimestamp;
@@ -533,13 +533,13 @@ public class SyncManager {
                         // Local changes take priority - mark for upload
                         localGame.setSyncStatus("pending_upload");
                         localGame.save(dbController.getDatabaseHelper());
-                        conflictsResolved++;
+                        conflictsResolved[0]++;
                     } else {
                         // No local changes - accept Firebase version
                         firebaseGame.setId(localGame.getId());
                         firebaseGame.setSyncStatus("synced");
                         firebaseGame.save(dbController.getDatabaseHelper());
-                        mergedGames++;
+                        mergedGames[0]++;
                     }
                 }
             }
@@ -548,7 +548,7 @@ public class SyncManager {
             callback.onSyncProgress("⬆️ Pushing incremental changes...");
             
             new android.os.Handler().postDelayed(() -> {
-                pushIncrementalChanges(callback, mergedTeams, mergedGames, conflictsResolved, lastSyncTimestamp);
+                pushIncrementalChanges(callback, mergedTeams[0], mergedGames[0], conflictsResolved[0], lastSyncTimestamp);
             }, 500);
             
         } catch (Exception e) {
