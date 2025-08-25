@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 
-    Live Game Recording Layout (Frame 3) - NEW 4-SECTION LAYOUT
-    Team panels extend full height, middle section split vertically
+    Live Game Recording Layout (Frame 3) - CORRECTED 4-SECTION LAYOUT
+    Team info in team panels, clean blue strip, enhanced log section
     Professional basketball statistics recording interface
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -22,7 +22,43 @@
         android:layout_margin="4dp"
         android:elevation="2dp">
             
-            <!-- Team A Players Section -->
+            <!-- Team A Info: Name, Score, Fouls -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+                
+                <TextView
+                    android:id="@+id/tvTeamAName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Lakers"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#2C3E50"
+                    android:gravity="start" />
+                
+                <TextView
+                    android:id="@+id/tvTeamAScore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="45"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#2C3E50"
+                    android:layout_marginEnd="8dp" />
+                
+                <TextView
+                    android:id="@+id/tvTeamAFouls"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="3F"
+                    android:textSize="12sp"
+                    android:textColor="#2C3E50" />
+            </LinearLayout>
             
             <!-- Team A Players (5 buttons) -->
             <LinearLayout
@@ -84,7 +120,7 @@
             android:layout_margin="4dp"
             android:elevation="2dp">
             
-            <!-- MIDDLE TOP: Blue Strip with Team Names on Sides -->
+            <!-- MIDDLE TOP: Game Controls Only -->
             <LinearLayout
                 android:id="@+id/middleTopPanel"
                 android:layout_width="match_parent"
@@ -93,49 +129,10 @@
                 android:orientation="horizontal"
                 android:background="#34495E"
                 android:paddingHorizontal="4dp"
-                android:paddingVertical="2dp">
+                android:paddingVertical="2dp"
+                android:gravity="center">
                 
-                <!-- Left Side: Team A Name, Score, and Fouls -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="2"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-                    
-                    <TextView
-                        android:id="@+id/tvTeamANameStrip"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:text="Lakers"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF"
-                        android:gravity="center_vertical"
-                        android:layout_marginEnd="8dp" />
-                    
-                    <TextView
-                        android:id="@+id/tvTeamAScore"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:text="45"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF"
-                        android:gravity="center_vertical"
-                        android:layout_marginEnd="8dp" />
-                    
-                    <TextView
-                        android:id="@+id/tvTeamAFouls"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:text="3F"
-                        android:textSize="12sp"
-                        android:textColor="#FFFFFF"
-                        android:gravity="center_vertical" />
-                </LinearLayout>
-                
-                <!-- Middle-Left: Start/Pause Button (Spanning both rows) -->
+                <!-- Start/Pause Button -->
                 <Button
                     android:id="@+id/btnGameToggle"
                     android:layout_width="0dp"
@@ -146,9 +143,9 @@
                     android:textStyle="bold"
                     android:background="@android:color/holo_green_light"
                     android:textColor="#FFFFFF"
-                    android:layout_marginHorizontal="2dp" />
+                    android:layout_marginEnd="4dp" />
                 
-                <!-- Middle-Center: Timer (Spanning both rows) -->
+                <!-- Game Clock -->
                 <TextView
                     android:id="@+id/tvGameClock"
                     android:layout_width="0dp"
@@ -160,56 +157,16 @@
                     android:textColor="#FFFFFF"
                     android:background="@android:color/holo_orange_light"
                     android:gravity="center"
-                    android:layout_marginHorizontal="2dp" />
+                    android:layout_marginHorizontal="4dp" />
                 
-                <!-- Middle-Right: Quarter Dropdown (Spanning both rows) -->
+                <!-- Quarter Dropdown -->
                 <Spinner
                     android:id="@+id/spinnerQuarter"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="0.8"
                     android:background="@android:color/white"
-                    android:layout_marginHorizontal="2dp" />
-                
-                <!-- Right Side: Team B Fouls, Score, and Name -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="2"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical|end">
-                    
-                    <TextView
-                        android:id="@+id/tvTeamBFouls"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:text="5F"
-                        android:textSize="12sp"
-                        android:textColor="#FFFFFF"
-                        android:gravity="center_vertical"
-                        android:layout_marginEnd="8dp" />
-                    
-                    <TextView
-                        android:id="@+id/tvTeamBScore"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:text="38"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF"
-                        android:gravity="center_vertical"
-                        android:layout_marginEnd="8dp" />
-                    
-                    <TextView
-                        android:id="@+id/tvTeamBNameStrip"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:text="Warriors"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF"
-                        android:gravity="center_vertical" />
-                </LinearLayout>
+                    android:layout_marginStart="4dp" />
             </LinearLayout>
             
             <!-- MIDDLE BOTTOM: Maximized Event Buttons and Live Feed -->
@@ -372,7 +329,44 @@
             android:layout_margin="4dp"
             android:elevation="2dp">
             
-            <!-- Team B Players Section -->
+            <!-- Team B Info: Name, Score, Fouls -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+                
+                <TextView
+                    android:id="@+id/tvTeamBFouls"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="5F"
+                    android:textSize="12sp"
+                    android:textColor="#2C3E50"
+                    android:layout_marginEnd="8dp" />
+                
+                <TextView
+                    android:id="@+id/tvTeamBScore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="38"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#2C3E50"
+                    android:layout_marginEnd="8dp" />
+                
+                <TextView
+                    android:id="@+id/tvTeamBName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Warriors"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#2C3E50"
+                    android:gravity="end" />
+            </LinearLayout>
             
             <!-- Team B Players (5 buttons) -->
             <LinearLayout

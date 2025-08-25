@@ -252,12 +252,11 @@ The screen has two distinct modes:
 #### Game Mode (Players Selected)
 ```
 ┌─────────────────────────────────────────────────────┐
-│Lakers 45 3F   │    [PAUSE|8:45] [Q2▼]    5F 38 Warriors│
-│               ├─────────────────────────────────┤           │
-│ Player 1 [3]  │  [1P] [2P] [3P] [AST]          │ [2] Player 6│
-│ Player 2 [0]  │  [1M] [2M] [3M] [OR]           │ [1] Player 7│
-│ Player 3 [1]  │  [DR] [STL][BLK][TO]           │ [4] Player 8│
-│ Player 4 [2]  │                                │ [0] Player 9│
+│Lakers 45 3F   │     [PAUSE|8:45] [Q2▼]     │   5F 38 Warriors│
+│ Player 1 [3]  ├─────────────────────────────────┤ [2] Player 6│
+│ Player 2 [0]  │  [1P] [2P] [3P] [AST]          │ [1] Player 7│
+│ Player 3 [1]  │  [1M] [2M] [3M] [OR]           │ [4] Player 8│
+│ Player 4 [2]  │  [DR] [STL][BLK][TO]           │ [0] Player 9│
 │ Player 5 [0]  │                                │ [3] Player 10│
 │               │  8:45 - #23 LeBron - 2P    [⟲] │           │
 │               │  8:30 - Lakers - TIMEOUT       │           │
@@ -267,10 +266,10 @@ The screen has two distinct modes:
 │[Sub]          │                                │ [Sub]     │
 └─────────────────────────────────────────────────────┘
 ```
-**New 4-Section Layout Structure**:
-- **Left Panel (Team A)**: Full-height team panel extending to top of screen
-- **Right Panel (Team B)**: Full-height team panel extending to top of screen  
-- **Middle Top Panel**: Compact control section (score, timer, quarter, fouls)
+**Corrected 4-Section Layout Structure**:
+- **Left Panel (Team A)**: Full-height team panel with team info header (name, score, fouls) above players
+- **Right Panel (Team B)**: Full-height team panel with team info header (fouls, score, name) above players  
+- **Middle Top Panel**: Clean control section (timer, controls, quarter only)
 - **Middle Bottom Panel**: Maximized event buttons and log area
 - Numbers in brackets [ ] next to players show personal fouls
 - Team fouls color coded (red when ≥5)
@@ -284,33 +283,15 @@ The screen has two distinct modes:
 - Team action buttons (TimeOut, Foul, Sub) at bottom of each team panel
 
 ### Middle Top Panel (Game Control Section) - Blue Strip
-**Description**: Blue strip control panel positioned in the middle-top area between the full-height team panels. Features team names on sides, scores on respective sides, and centralized game controls.
+**Description**: Clean blue strip control panel positioned in the middle-top area between the full-height team panels. Contains only game control elements for focused gameplay management.
 **Location**: Middle-top section of screen, between the left and right team panels, above the event button panel.
 
 #### Layout Structure:
-- **Enhanced Blue Strip Layout**: 
-  - **Left Side**: Team A Name | Team A Score | Team A Fouls (horizontal)
-  - **Center**: Start/Pause Button | Timer Display | Quarter Dropdown
-  - **Right Side**: Team B Fouls | Team B Score | Team B Name (horizontal)
+- **Clean Game Controls Layout**: 
+  - **Center Only**: Start/Pause Button | Timer Display | Quarter Dropdown
+  - **No Team Info**: Team information moved to respective team panels
 
-#### Team Names Display (New)
-- **Description**: Team names displayed on far sides of blue strip
-- **Type**: Text Display  
-- **Location**: Far left (Team A) and far right (Team B) of blue strip
-- **Content**: Team name only (e.g., "Lakers", "Warriors")
-- **Design**: Bold text, white color on blue background
-- **Clickable**: No
 
-#### Team Score Display (Next to Names)
-- **Description**: Live game scores displayed next to team names in blue strip
-- **Type**: Score Display  
-- **Location**: Next to team names in blue strip (Team A: Name | Score, Team B: Score | Name)
-- **Content**: 
-  - **Team A Side**: Team A score next to name (e.g., "Lakers 45")
-  - **Team B Side**: Team B score next to name (e.g., "38 Warriors")
-- **Design**: Large, bold numbers for clear visibility, positioned adjacent to team names
-- **Clickable**: No
-- **Updates**: Automatically when scoring events are recorded
 
 #### Game Control Button (Enhanced Single Toggle)
 - **Description**: Enhanced single toggle button spanning both rows vertically for improved visibility with setup gating
@@ -371,17 +352,7 @@ The screen has two distinct modes:
 - **Auto-Progression**: When timer reaches 0:00, automatically advances to next quarter and stops timer
 - **Reset Behavior**: Selecting new quarter resets clock to 10:00 (stopped state)
 
-#### Team Fouls (Next to Scores)
-- **Description**: Team foul counts displayed next to scores in blue strip
-- **Type**: Team Fouls Display
-- **Location**: Next to scores in blue strip (Team A: Name | Score | Fouls, Team B: Fouls | Score | Name)
-- **Content**: 
-  - **Team A Side**: Team A foul count (e.g., "3F")
-  - **Team B Side**: Team B foul count (e.g., "5F")
-- **Design**: Compact "XF" format, positioned adjacent to scores
-- **Clickable**: No
-- **Visual States**: Foul counts turn Red when ≥5 fouls (penalty situation)
-- **Updates**: Automatically when personal foul events are recorded
+
 
 #### Quarter Selection Behavior
 - **Direct Selection**: Tap dropdown → select quarter → immediate change (no confirmation)
@@ -399,10 +370,21 @@ The screen has two distinct modes:
 
 **Game Mode**: Shows the 5 selected players as buttons distributed vertically across the full height panel, with team action buttons (TimeOut, Sub) at the bottom. Big and clear for easy clicking throughout the game.
 
+#### Team Information Header
+- **Description**: Team information displayed at top of each team panel
+- **Type**: Information Header
+- **Location**: Top of team panel, above players
+- **Content**: 
+  - **Team A Panel**: "Lakers 45 3F" (Name | Score | Fouls)
+  - **Team B Panel**: "5F 38 Warriors" (Fouls | Score | Name) 
+- **Design**: Clear, bold text with proper spacing
+- **Clickable**: No
+- **Updates**: Score and fouls update automatically during gameplay
+
 #### Player Section
 - **Description**: Section for displaying selected players in team panel
 - **Type**: Player List
-- **Location**: Main area of team panel
+- **Location**: Main area of team panel, below team information header
 - **Content**: 5 selected players with spacing between buttons
 - **Design**: Players distributed vertically with proper spacing for easy touch interaction
 - **Clickable**: Yes - each player button is clickable for event recording

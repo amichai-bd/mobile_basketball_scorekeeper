@@ -227,36 +227,40 @@ ConstraintLayout (main container)
 ```
 
 #### Updated Game Activity Layout Structure (4-Section Design) 
-**ENHANCED LAYOUT** - Blue strip with team names on sides, team panels with action row, improved log section:
+**CORRECTED LAYOUT** - Team info in team panels, clean blue strip, improved log section:
 ```xml
-<!-- activity_game.xml layout hierarchy - ENHANCED 4-SECTION LAYOUT -->
+<!-- activity_game.xml layout hierarchy - CORRECTED 4-SECTION LAYOUT -->
 ConstraintLayout (main container)
 | ├── LinearLayout (Team A panel - vertical, FULL-HEIGHT, left side)
+| │   ├── LinearLayout (team info header - horizontal) [CORRECTED LOCATION]
+| │   │   ├── TextView (Team A name)
+| │   │   ├── TextView (Team A score)
+| │   │   └── TextView (Team A fouls)
 | │   ├── RecyclerView (5 player buttons with spacing)
 | │   └── LinearLayout (action row - horizontal)
 | │       ├── Button (timeout)
-| │       ├── Button (team foul) [NEW]
+| │       ├── Button (personal foul) [RENAMED]
 | │       └── Button (substitution)
 | ├── LinearLayout (middle section - vertical, between teams)
-| │   ├── LinearLayout (BLUE STRIP - horizontal, single row)
-| │   │   ├── TextView (Team A name) [MOVED FROM TEAM PANEL]
-| │   │   ├── LinearLayout (Team A score + fouls)
+| │   ├── LinearLayout (CLEAN BLUE STRIP - horizontal, game controls only)
 | │   │   ├── Button (game control)
 | │   │   ├── TextView (game clock)
-| │   │   ├── Spinner (quarter)
-| │   │   ├── LinearLayout (Team B score + fouls)
-| │   │   └── TextView (Team B name) [MOVED FROM TEAM PANEL]
+| │   │   └── Spinner (quarter)
 | │   ├── LinearLayout (event area - vertical)
-| │   │   └── GridLayout (Event buttons - 4x4 grid)
+| │   │   └── GridLayout (Event buttons - 4x3 grid) [REDUCED FROM 4x4]
 | │   └── LinearLayout (log section - horizontal) [ENHANCED]
 | │       ├── LinearLayout (last 2 events) [REDUCED FROM 5, NO TITLE]
 | │       ├── Button (undo) [NEW]
 | │       └── Button (view log)
 | └── LinearLayout (Team B panel - vertical, FULL-HEIGHT, right side)
+|     ├── LinearLayout (team info header - horizontal) [CORRECTED LOCATION]
+|     │   ├── TextView (Team B fouls)
+|     │   ├── TextView (Team B score)
+|     │   └── TextView (Team B name)
 |     ├── RecyclerView (5 player buttons with spacing)
 |     └── LinearLayout (action row - horizontal)
 |         ├── Button (timeout)
-|         ├── Button (team foul) [NEW]
+|         ├── Button (personal foul) [RENAMED]
 |         └── Button (substitution)
 ```
 
@@ -434,11 +438,12 @@ Control panel height: Enhanced 2-row layout for better visibility
 - **Testing Player Management** - Verify complete player management functionality works correctly
 
 ### ⏳ Next Up  
-- **🎨 LAYOUT ENHANCEMENT - Frame 3 (Game Window)** - Enhanced blue strip and UI improvements:
-  - **Blue Strip Reorganization**: Team names on far left/right, scores on sides with fouls below
-  - **Team Panel Updates**: Add Team Foul button, improve player spacing
-  - **Log Section Enhancement**: Show last 2 events, add undo functionality
-  - **Goal**: Better information organization, improved user experience, undo capability
+- **✅ LAYOUT CORRECTION COMPLETE - Frame 3 (Game Window)** - Fixed team info placement:
+  - **✅ Team Info Location**: Corrected - team names, scores, fouls now in team panels (not blue strip)
+  - **✅ Clean Blue Strip**: Game controls only (Start/Pause, Clock, Quarter)
+  - **✅ Personal Foul Buttons**: In team panels, require player selection first
+  - **✅ 4x3 Event Grid**: FOUL button removed from events, cleaner layout
+  - **✅ Enhanced Log**: Last 2 events without title, undo functionality
 - **Event Logging System** - Database storage for recorded events and statistics
 - **Enhanced Pop-up Workflows** - Full assist/rebound/steal pop-ups (if desired)
 - **Statistics Reporting** - Frame 5 & 6 implementation
