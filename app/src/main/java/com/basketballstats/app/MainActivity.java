@@ -116,9 +116,24 @@ public class MainActivity extends Activity {
     
     private void initializeSyncManagerSafely() {
         try {
-            // Initialize sync manager in background
+            // Initialize sync manager in background with delay to ensure Firebase is ready
             new Thread(() -> {
                 try {
+                    // Give Firebase time to initialize
+                    Thread.sleep(1000);
+                    
+                    // Verify Firebase is available before initializing sync
+                    try {
+                        com.google.firebase.FirebaseApp.getInstance();
+                    } catch (Exception e) {
+                        android.util.Log.w("MainActivity", "Firebase not available, using offline mode");
+                        runOnUiThread(() -> {
+                            Toast.makeText(MainActivity.this, "Firebase unavailable - working offline", Toast.LENGTH_SHORT).show();
+                            setSyncButtonState(SyncState.OFFLINE);
+                        });
+                        return;
+                    }
+                    
                     syncManager = SyncManager.getInstance(MainActivity.this);
                     android.util.Log.d("MainActivity", "Sync manager initialized");
                     
@@ -388,6 +403,13 @@ public class MainActivity extends Activity {
      * Implements "last write wins" conflict resolution as specified
      */
     private void performSync() {
+        // Check if sync manager is available
+        if (syncManager == null) {
+            Toast.makeText(this, "Sync not available - initialize first", Toast.LENGTH_SHORT).show();
+            setSyncButtonState(SyncState.OFFLINE);
+            return;
+        }
+        
         // Prevent multiple sync operations
         if (btnSync.getAnimation() != null) {
             Toast.makeText(this, "Sync already in progress...", Toast.LENGTH_SHORT).show();

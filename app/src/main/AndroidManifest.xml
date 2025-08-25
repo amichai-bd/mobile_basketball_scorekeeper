@@ -22,6 +22,7 @@
     -->
     
     <application
+        android:name=".MyApplication"
         android:label="My App"
         android:theme="@style/Theme.AppCompat.Light">
         

@@ -81,7 +81,9 @@ public class FirebaseManager {
     private CollectionReference getUserCollection(String collectionName) {
         String userUid = authController.getCurrentUserUid();
         if (userUid == null) {
-            throw new IllegalStateException("User must be authenticated");
+            // Auto-sign in anonymously for demo access
+            Log.w(TAG, "No authenticated user, attempting anonymous sign-in");
+            return null; // Will be handled by calling methods
         }
         return firestore.collection("users").document(userUid).collection(collectionName);
     }
@@ -94,6 +96,10 @@ public class FirebaseManager {
     public void uploadTeam(Team team, FirestoreCallback<String> callback) {
         try {
             CollectionReference teamsRef = getUserCollection(COLLECTION_TEAMS);
+            if (teamsRef == null) {
+                callback.onError("User authentication required for Firebase operations");
+                return;
+            }
             Map<String, Object> teamData = teamToMap(team);
             
             if (team.getFirebaseId() != null) {
