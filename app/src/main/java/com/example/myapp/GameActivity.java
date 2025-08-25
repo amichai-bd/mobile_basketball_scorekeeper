@@ -54,9 +54,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     private Button btnTeamATimeout, btnTeamASub, btnTeamBTimeout, btnTeamBSub;
     private Button btnTeamAFoul, btnTeamBFoul; // New team foul buttons
     
-    // UI Components - Event Panel (12+ buttons)
+    // UI Components - Event Panel (12 buttons - FOUL moved to team panels)
     private Button btn1P, btn2P, btn3P, btn1M, btn2M, btn3M;
-    private Button btnOR, btnDR, btnAST, btnSTL, btnBLK, btnTO, btnFOUL;
+    private Button btnOR, btnDR, btnAST, btnSTL, btnBLK, btnTO;
     
     // UI Components - Quarter Management
     private Spinner spinnerQuarter;
@@ -174,7 +174,6 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         btnSTL = findViewById(R.id.btnSTL);
         btnBLK = findViewById(R.id.btnBLK);
         btnTO = findViewById(R.id.btnTO);
-        btnFOUL = findViewById(R.id.btnFOUL);
         
         // Quarter management component
         spinnerQuarter = findViewById(R.id.spinnerQuarter);
@@ -341,7 +340,6 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         
         // Violation events
         btnTO.setOnClickListener(v -> recordTurnoverEvent("TO"));
-        btnFOUL.setOnClickListener(v -> recordFoulEvent("FOUL"));
         
         // Team events (timeouts handled by team buttons only)
         btnTeamATimeout.setOnClickListener(v -> recordTeamTimeout("home"));
@@ -703,7 +701,6 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         btnSTL.setEnabled(eventsEnabled);
         btnBLK.setEnabled(eventsEnabled);
         btnTO.setEnabled(eventsEnabled);
-        btnFOUL.setEnabled(eventsEnabled);
         
         // Set colors based on enabled state - preserve original colors when enabled
         int disabledColor = Color.parseColor("#BDC3C7"); // Light grey for disabled
@@ -735,9 +732,7 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         int turnoverColor = eventsEnabled ? Color.parseColor("#E67E22") : disabledColor;
         btnTO.setBackgroundColor(turnoverColor);
         
-        // Foul (dark purple)
-        int foulColor = eventsEnabled ? Color.parseColor("#8E44AD") : disabledColor;
-        btnFOUL.setBackgroundColor(foulColor);
+        // Foul button removed - now handled by team panels
     }
     
     private void setupGameClock() {
@@ -1039,31 +1034,15 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     private void recordTeamFoul(String team) {
-        // Increment team fouls for current quarter
-        if ("home".equals(team)) {
-            teamAFouls++;
-        } else {
-            teamBFouls++;
+        // Team foul buttons now record personal fouls (require player selection)
+        if (selectedPlayer == null) {
+            String teamName = "home".equals(team) ? teamAName : teamBName;
+            Toast.makeText(this, "Select a " + teamName + " player first to record personal foul", Toast.LENGTH_SHORT).show();
+            return;
         }
         
-        String teamName = "home".equals(team) ? teamAName : teamBName;
-        
-        // Update foul display
-        updateTeamFoulsDisplay();
-        
-        // Add team event to live feed
-        addToLiveEventFeed("TEAM FOUL", null, teamName);
-        
-        // Show visual warning if penalty situation
-        int fouls = "home".equals(team) ? teamAFouls : teamBFouls;
-        if (fouls >= 5) {
-            Toast.makeText(this, teamName + " in penalty situation! (" + fouls + " fouls)", Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(this, teamName + " team foul recorded (" + fouls + " fouls)", Toast.LENGTH_SHORT).show();
-        }
-        
-        // Single-event safety: Reset override after event recorded
-        checkAndResetSingleEventOverride();
+        // Record as personal foul (same as old FOUL button functionality)
+        recordFoulEvent("FOUL");
     }
     
     private void undoLastEvent() {
@@ -1249,16 +1228,16 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     // Quarter display now handled by spinner - no separate method needed
     
     private void updateTeamFoulsDisplay() {
-        // Update team foul displays for blue strip layout (fouls count + "fouls")
+        // Update team foul displays for new blue strip layout (fouls count + "F")
         int redColor = Color.parseColor("#F44336");
         int whiteColor = Color.parseColor("#FFFFFF");
         
         // Update Team A fouls
-        tvTeamAFouls.setText(teamAFouls + " fouls");
+        tvTeamAFouls.setText(teamAFouls + "F");
         tvTeamAFouls.setTextColor(teamAFouls >= 5 ? redColor : whiteColor);
         
         // Update Team B fouls  
-        tvTeamBFouls.setText(teamBFouls + " fouls");
+        tvTeamBFouls.setText(teamBFouls + "F");
         tvTeamBFouls.setTextColor(teamBFouls >= 5 ? redColor : whiteColor);
     }
     
@@ -1307,9 +1286,8 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             return Color.parseColor("#9B59B6"); // Purple for defense
         } else if (button == btnTO) {
             return Color.parseColor("#E67E22"); // Orange for turnover
-        } else if (button == btnFOUL) {
-            return Color.parseColor("#8E44AD"); // Purple for foul
         }
+        // FOUL button removed - now handled by team panels
         return Color.parseColor("#BDC3C7"); // Default grey
     }
     
@@ -1418,7 +1396,7 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             case "STL": return btnSTL;
             case "BLK": return btnBLK;
             case "TO": return btnTO;
-            case "FOUL": return btnFOUL;
+            case "FOUL": return null; // FOUL button moved to team panels
             default: return null;
         }
     }

@@ -252,20 +252,19 @@ The screen has two distinct modes:
 #### Game Mode (Players Selected)
 ```
 ┌─────────────────────────────────────────────────────┐
-│Lakers         │ 45  [PAUSE|8:45] [Q2▼]  38     │ Warriors  │
-│               │ 3 fouls         5 fouls        │           │
+│Lakers 45 3F   │    [PAUSE|8:45] [Q2▼]    5F 38 Warriors│
 │               ├─────────────────────────────────┤           │
 │ Player 1 [3]  │  [1P] [2P] [3P] [AST]          │ [2] Player 6│
 │ Player 2 [0]  │  [1M] [2M] [3M] [OR]           │ [1] Player 7│
 │ Player 3 [1]  │  [DR] [STL][BLK][TO]           │ [4] Player 8│
-│ Player 4 [2]  │  [FOUL][ ][ ][ ]               │ [0] Player 9│
+│ Player 4 [2]  │                                │ [0] Player 9│
 │ Player 5 [0]  │                                │ [3] Player 10│
 │               │  Last 2 Events:                │           │
 │               │  8:45 - #23 LeBron - 2P    [⟲] │           │
 │               │  8:30 - Lakers - TIMEOUT       │           │
 │               │  [View Log]                    │           │
 │[TimeOut]      │                                │ [TimeOut] │
-│[TeamFoul]     │                                │ [TeamFoul]│
+│[Foul]         │                                │ [Foul]    │
 │[Sub]          │                                │ [Sub]     │
 └─────────────────────────────────────────────────────┘
 ```
@@ -281,21 +280,19 @@ The screen has two distinct modes:
   - **Row 1**: Scoring & Assists (1P, 2P, 3P, AST) - Natural flow: score → assist
   - **Row 2**: Misses & Offensive Rebound (1M, 2M, 3M, OR) - Natural flow: miss → rebound  
   - **Row 3**: Defensive Plays (DR, STL, BLK, TO) - All defensive actions grouped
-  - **Row 4**: Personal Fouls (FOUL, empty, empty, empty) - Individual player fouls only
-- Player buttons on sides with foul counts, extending full height
-- Team action buttons (TimeOut, Sub) at bottom of each team panel
+  - Personal fouls now handled by team panel buttons (FOUL button removed from event section)
+- Player buttons on sides with foul counts, extending full height  
+- Team action buttons (TimeOut, Foul, Sub) at bottom of each team panel
 
 ### Middle Top Panel (Game Control Section) - Blue Strip
 **Description**: Blue strip control panel positioned in the middle-top area between the full-height team panels. Features team names on sides, scores on respective sides, and centralized game controls.
 **Location**: Middle-top section of screen, between the left and right team panels, above the event button panel.
 
 #### Layout Structure:
-- **Single-Row Blue Strip Layout**: 
-  - **Far Left**: Team A Name
-  - **Left Side**: Team A Score with Team A Fouls below
+- **Enhanced Blue Strip Layout**: 
+  - **Left Side**: Team A Name | Team A Score | Team A Fouls (horizontal)
   - **Center**: Start/Pause Button | Timer Display | Quarter Dropdown
-  - **Right Side**: Team B Score with Team B Fouls below  
-  - **Far Right**: Team B Name
+  - **Right Side**: Team B Fouls | Team B Score | Team B Name (horizontal)
 
 #### Team Names Display (New)
 - **Description**: Team names displayed on far sides of blue strip
@@ -305,14 +302,14 @@ The screen has two distinct modes:
 - **Design**: Bold text, white color on blue background
 - **Clickable**: No
 
-#### Team Score Display (Repositioned)
-- **Description**: Live game scores displayed on respective sides of blue strip
+#### Team Score Display (Next to Names)
+- **Description**: Live game scores displayed next to team names in blue strip
 - **Type**: Score Display  
-- **Location**: Left side (Team A) and right side (Team B) of blue strip
+- **Location**: Next to team names in blue strip (Team A: Name | Score, Team B: Score | Name)
 - **Content**: 
-  - **Team A Side**: Team A score (e.g., "45")
-  - **Team B Side**: Team B score (e.g., "38")
-- **Design**: Large, bold numbers for clear visibility
+  - **Team A Side**: Team A score next to name (e.g., "Lakers 45")
+  - **Team B Side**: Team B score next to name (e.g., "38 Warriors")
+- **Design**: Large, bold numbers for clear visibility, positioned adjacent to team names
 - **Clickable**: No
 - **Updates**: Automatically when scoring events are recorded
 
@@ -375,17 +372,17 @@ The screen has two distinct modes:
 - **Auto-Progression**: When timer reaches 0:00, automatically advances to next quarter and stops timer
 - **Reset Behavior**: Selecting new quarter resets clock to 10:00 (stopped state)
 
-#### Team Fouls (Repositioned Under Scores)
-- **Description**: Team foul counts displayed under respective team scores on blue strip
+#### Team Fouls (Next to Scores)
+- **Description**: Team foul counts displayed next to scores in blue strip
 - **Type**: Team Fouls Display
-- **Location**: Under Team A score (left side) and under Team B score (right side) of blue strip
+- **Location**: Next to scores in blue strip (Team A: Name | Score | Fouls, Team B: Fouls | Score | Name)
 - **Content**: 
-  - **Team A Side**: Team A foul count (e.g., "3 fouls")
-  - **Team B Side**: Team B foul count (e.g., "5 fouls")
-- **Design**: Smaller text under score, positioned clearly below score numbers
+  - **Team A Side**: Team A foul count (e.g., "3F")
+  - **Team B Side**: Team B foul count (e.g., "5F")
+- **Design**: Compact "XF" format, positioned adjacent to scores
 - **Clickable**: No
 - **Visual States**: Foul counts turn Red when ≥5 fouls (penalty situation)
-- **Updates**: Automatically when foul events are recorded
+- **Updates**: Automatically when personal foul events are recorded
 
 #### Quarter Selection Behavior
 - **Direct Selection**: Tap dropdown → select quarter → immediate change (no confirmation)
@@ -444,17 +441,19 @@ The screen has two distinct modes:
   - Game control toggle shows "START" (green)
   - Clock background turns yellow (paused state)
 
-#### Team Foul Button (New)
-- **Description**: Record team fouls for the selected team
+#### Personal Foul Button (Moved from Event Section)
+- **Description**: Record personal fouls for selected player (moved from event section)
 - **Type**: Button
 - **Location**: Bottom of team panel, middle position in action row
-- **Content**: "Team Foul"
+- **Content**: "Foul"
 - **Clickable**: Yes
 - **When clicked**:
-  - Team foul count incremented for current quarter
-  - Event recorded in log
+  - Requires player selection first
+  - Player's personal foul count incremented
+  - Team foul count automatically incremented
+  - Event recorded in log with player details
   - Team foul display updated in blue strip
-  - Visual warning if team reaches 5+ fouls (penalty situation)
+  - Visual warning if player reaches 5 fouls (foul out) or team reaches 5+ fouls (penalty)
 
 #### Quarter Lineup / Sub Button (Context-Aware)
 - **Description**: Smart button that changes context based on quarter timing
