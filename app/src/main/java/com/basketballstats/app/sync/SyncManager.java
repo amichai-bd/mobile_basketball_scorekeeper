@@ -9,7 +9,9 @@ import com.basketballstats.app.models.Game;
 import com.basketballstats.app.models.Team;
 import com.basketballstats.app.models.TeamPlayer;
 import com.basketballstats.app.models.Event;
+import com.basketballstats.app.models.AppSettings;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * SyncManager - Core synchronization logic for SQLite ↔ Firebase Firestore
