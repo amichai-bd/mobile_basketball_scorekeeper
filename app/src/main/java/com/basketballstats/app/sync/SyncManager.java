@@ -207,7 +207,7 @@ public class SyncManager {
                     mergedTeams++;
                 } else {
                     // Conflict resolution: Compare timestamps
-                    boolean localIsNewer = localTeam.getUpdatedAt() > firebaseTeam.getLastSyncTimestamp();
+                    boolean localIsNewer = localTeam.getUpdatedAtLong() > firebaseTeam.getLastSyncTimestampLong();
                     
                     if (localIsNewer) {
                         // User device wins - keep local data, mark for upload
@@ -235,7 +235,7 @@ public class SyncManager {
                     mergedGames++;
                 } else {
                     // Conflict resolution: Compare timestamps
-                    boolean localIsNewer = localGame.getUpdatedAt() > firebaseGame.getLastSyncTimestamp();
+                    boolean localIsNewer = localGame.getUpdatedAtLong() > firebaseGame.getLastSyncTimestampLong();
                     
                     if (localIsNewer) {
                         // User device wins - keep local data, mark for upload
@@ -499,7 +499,7 @@ public class SyncManager {
                     mergedTeams++;
                 } else {
                     // Check if local was modified since last sync
-                    boolean localModifiedSinceSync = localTeam.getUpdatedAt() > lastSyncTimestamp;
+                    boolean localModifiedSinceSync = localTeam.getUpdatedAtLong() > lastSyncTimestamp;
                     
                     if (localModifiedSinceSync) {
                         // Local changes take priority - mark for upload
@@ -527,7 +527,7 @@ public class SyncManager {
                     mergedGames++;
                 } else {
                     // Check if local was modified since last sync
-                    boolean localModifiedSinceSync = localGame.getUpdatedAt() > lastSyncTimestamp;
+                    boolean localModifiedSinceSync = localGame.getUpdatedAtLong() > lastSyncTimestamp;
                     
                     if (localModifiedSinceSync) {
                         // Local changes take priority - mark for upload
@@ -623,7 +623,7 @@ public class SyncManager {
         List<Team> modifiedTeams = new ArrayList<>();
         
         for (Team team : allTeams) {
-            boolean isModified = team.getUpdatedAt() > lastSyncTimestamp;
+            boolean isModified = team.getUpdatedAtLong() > lastSyncTimestamp;
             boolean isPendingUpload = "pending_upload".equals(team.getSyncStatus());
             boolean hasNoFirebaseId = team.getFirebaseId() == null;
             
@@ -643,7 +643,7 @@ public class SyncManager {
         List<Game> modifiedGames = new ArrayList<>();
         
         for (Game game : allGames) {
-            boolean isModified = game.getUpdatedAt() > lastSyncTimestamp;
+            boolean isModified = game.getUpdatedAtLong() > lastSyncTimestamp;
             boolean isPendingUpload = "pending_upload".equals(game.getSyncStatus());
             boolean hasNoFirebaseId = game.getFirebaseId() == null;
             
@@ -663,7 +663,7 @@ public class SyncManager {
         List<Event> modifiedEvents = new ArrayList<>();
         
         for (Event event : allEvents) {
-            boolean isModified = event.getUpdatedAt() > lastSyncTimestamp;
+            boolean isModified = Long.parseLong(event.getUpdatedAt() != null ? event.getUpdatedAt() : "0") > lastSyncTimestamp;
             boolean isPendingUpload = "pending_upload".equals(event.getSyncStatus());
             boolean hasNoFirebaseId = event.getFirebaseId() == null;
             

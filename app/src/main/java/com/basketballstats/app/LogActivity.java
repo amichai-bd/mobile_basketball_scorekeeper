@@ -57,7 +57,8 @@ public class LogActivity extends Activity {
         teamBName = getIntent().getStringExtra("teamBName");
         
         // Get all events from GameActivity's shared storage
-        allEvents = new ArrayList<>(GameActivity.getAllGameEvents());
+        // Load all events from database for this game
+        allEvents = new ArrayList<>(); // TODO: Load from Event.findAll() based on game ID
     }
     
 
@@ -272,7 +273,8 @@ public class LogActivity extends Activity {
     
     private void deleteEvent(String event, int position) {
         // Remove from shared game events (this updates the source)
-        boolean removed = GameActivity.removeGameEvent(event);
+        // TODO: Remove event from database
+        boolean removed = false; // Placeholder - implement Event.delete()
         
         if (removed) {
             // Update local list and refresh adapter

@@ -116,7 +116,7 @@ public class FirebaseManager {
                         // Update SQLite with Firebase ID
                         team.setFirebaseId(firebaseId);
                         team.setSyncStatus("synced");
-                        team.setLastSyncTimestamp(System.currentTimeMillis());
+                        team.setLastSyncTimestamp(String.valueOf(System.currentTimeMillis()));
                         team.save(dbController.getDatabaseHelper());
                         
                         callback.onSuccess("Team created successfully");
@@ -220,7 +220,7 @@ public class FirebaseManager {
                         // Update SQLite with Firebase ID
                         game.setFirebaseId(firebaseId);
                         game.setSyncStatus("synced");
-                        game.setLastSyncTimestamp(System.currentTimeMillis());
+                        game.setLastSyncTimestamp(String.valueOf(System.currentTimeMillis()));
                         game.save(dbController.getDatabaseHelper());
                         
                         callback.onSuccess("Game created successfully");
@@ -475,10 +475,10 @@ public class FirebaseManager {
         Team team = new Team();
         team.setFirebaseId(firebaseId);
         team.setName((String) data.get("name"));
-        team.setCreatedAt((Long) data.get("createdAt"));
-        team.setUpdatedAt((Long) data.get("updatedAt"));
+        team.setCreatedAt(String.valueOf(data.get("createdAt")));
+        team.setUpdatedAt(String.valueOf(data.get("updatedAt")));
         team.setSyncStatus("synced");
-        team.setLastSyncTimestamp((Long) data.get("lastSyncTimestamp"));
+        team.setLastSyncTimestamp(String.valueOf(data.get("lastSyncTimestamp")));
         return team;
     }
     
@@ -521,10 +521,10 @@ public class FirebaseManager {
         game.setCurrentQuarter(((Long) data.get("currentQuarter")).intValue());
         game.setGameClockSeconds(((Long) data.get("gameClockSeconds")).intValue());
         game.setClockRunning((Boolean) data.get("isClockRunning"));
-        game.setCreatedAt((Long) data.get("createdAt"));
-        game.setUpdatedAt((Long) data.get("updatedAt"));
+        game.setCreatedAt(String.valueOf(data.get("createdAt")));
+        game.setUpdatedAt(String.valueOf(data.get("updatedAt")));
         game.setSyncStatus("synced");
-        game.setLastSyncTimestamp((Long) data.get("lastSyncTimestamp"));
+        game.setLastSyncTimestamp(String.valueOf(data.get("lastSyncTimestamp")));
         return game;
     }
     
@@ -554,21 +554,21 @@ public class FirebaseManager {
             // Update teams
             for (Team team : teams) {
                 team.setSyncStatus("synced");
-                team.setLastSyncTimestamp(System.currentTimeMillis());
+                team.setLastSyncTimestamp(String.valueOf(System.currentTimeMillis()));
                 team.save(dbController.getDatabaseHelper());
             }
             
             // Update games
             for (Game game : games) {
                 game.setSyncStatus("synced");
-                game.setLastSyncTimestamp(System.currentTimeMillis());
+                game.setLastSyncTimestamp(String.valueOf(System.currentTimeMillis()));
                 game.save(dbController.getDatabaseHelper());
             }
             
             // Update events
             for (Event event : events) {
                 event.setSyncStatus("synced");
-                event.setLastSyncTimestamp(System.currentTimeMillis());
+                event.setLastSyncTimestamp(String.valueOf(System.currentTimeMillis()));
                 event.save(dbController.getDatabaseHelper());
             }
             

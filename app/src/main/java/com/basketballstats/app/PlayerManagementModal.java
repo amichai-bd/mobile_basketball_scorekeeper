@@ -19,7 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.basketballstats.app.models.Team;
 import com.basketballstats.app.models.TeamPlayer;
-import com.basketballstats.app.data.LeagueDataProvider;
+import com.basketballstats.app.data.DatabaseController;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -285,7 +285,7 @@ public class PlayerManagementModal {
         team.getPlayers().addAll(playersList);
         
         // Save to data provider
-        LeagueDataProvider.updateTeam(team);
+        team.save(DatabaseController.getInstance(getContext()).getDatabaseHelper());
         
         // Notify listener
         if (listener != null) {

@@ -67,6 +67,25 @@ public class Team {
     public String getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
     
+    // Convenience methods for long timestamps
+    public long getUpdatedAtLong() { 
+        try {
+            return updatedAt != null ? Long.parseLong(updatedAt) : 0;
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+    public void setUpdatedAt(long updatedAt) { this.updatedAt = String.valueOf(updatedAt); }
+    
+    public long getCreatedAtLong() { 
+        try {
+            return createdAt != null ? Long.parseLong(createdAt) : 0;
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+    public void setCreatedAt(long createdAt) { this.createdAt = String.valueOf(createdAt); }
+    
     public String getFirebaseId() { return firebaseId; }
     public void setFirebaseId(String firebaseId) { this.firebaseId = firebaseId; }
     
@@ -75,6 +94,16 @@ public class Team {
     
     public String getLastSyncTimestamp() { return lastSyncTimestamp; }
     public void setLastSyncTimestamp(String lastSyncTimestamp) { this.lastSyncTimestamp = lastSyncTimestamp; }
+    
+    // Convenience methods for long timestamps
+    public long getLastSyncTimestampLong() { 
+        try {
+            return lastSyncTimestamp != null ? Long.parseLong(lastSyncTimestamp) : 0;
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+    public void setLastSyncTimestamp(long lastSyncTimestamp) { this.lastSyncTimestamp = String.valueOf(lastSyncTimestamp); }
     
     // ========== BUSINESS LOGIC METHODS ==========
     

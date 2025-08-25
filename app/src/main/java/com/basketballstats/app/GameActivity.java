@@ -16,6 +16,7 @@ import android.widget.Toast;
 import com.basketballstats.app.models.Player;
 import com.basketballstats.app.models.Team;
 import com.basketballstats.app.models.TeamPlayer;
+import com.basketballstats.app.sync.SyncManager;
 import com.basketballstats.app.models.Game;
 import com.basketballstats.app.models.Event;
 import com.basketballstats.app.data.DatabaseController;
@@ -81,6 +82,18 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     // Event Tracking (SQLite-backed)
     private List<Event> gameEvents = new ArrayList<>(); // SQLite Event objects for current game
     private List<String> recentEvents;  // Last 5 events for live feed (derived from gameEvents)
+    
+    // Derived game state (from currentGame)
+    
+    // Derived game state (from currentGame)
+    private int gameId;
+    private String teamAName;
+    private String teamBName;
+    private int currentQuarter;
+    private int gameTimeSeconds;
+    private boolean isClockRunning;
+    private int teamAFouls;
+    private int teamBFouls;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -678,7 +691,15 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
                 String outEvent = String.format("Q%d %s - %s - OUT: #%d %s", 
                                                currentQuarter, formatGameTime(gameTimeSeconds), 
                                                teamName, oldPlayer.getNumber(), oldPlayer.getName());
-                gameEvents.add(outEvent);
+                // Create Event object for substitution out
+                Event outEventObj = new Event();
+                outEventObj.setGameId(gameId);
+                outEventObj.setEventType("SUB_OUT");
+                outEventObj.setTeamSide(currentModalTeamSide);
+                outEventObj.setQuarter(currentQuarter);
+                outEventObj.setGameTimeSeconds(gameTimeSeconds);
+                outEventObj.setEventSequence(gameEvents.size() + 1);
+                gameEvents.add(outEventObj);
             }
         }
         
@@ -688,7 +709,15 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
                 String inEvent = String.format("Q%d %s - %s - IN: #%d %s", 
                                               currentQuarter, formatGameTime(gameTimeSeconds), 
                                               teamName, newPlayer.getNumber(), newPlayer.getName());
-                gameEvents.add(inEvent);
+                // Create Event object for substitution in
+                Event inEventObj = new Event();
+                inEventObj.setGameId(gameId);
+                inEventObj.setEventType("SUB_IN");
+                inEventObj.setTeamSide(currentModalTeamSide);
+                inEventObj.setQuarter(currentQuarter);
+                inEventObj.setGameTimeSeconds(gameTimeSeconds);
+                inEventObj.setEventSequence(gameEvents.size() + 2);
+                gameEvents.add(inEventObj);
             }
         }
         
@@ -750,7 +779,15 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             String eventLogEntry = String.format("Q%d %s - %s - %s", 
                                                 currentQuarter, formatGameTime(gameTimeSeconds), 
                                                 teamName, substitutionEvent);
-            gameEvents.add(eventLogEntry);
+            // Create Event object for substitution
+            Event eventObj = new Event();
+            eventObj.setGameId(gameId);
+            eventObj.setEventType("SUBSTITUTION");
+            eventObj.setTeamSide(currentModalTeamSide);
+            eventObj.setQuarter(currentQuarter);
+            eventObj.setGameTimeSeconds(gameTimeSeconds);
+            eventObj.setEventSequence(gameEvents.size() + 1);
+            gameEvents.add(eventObj);
             
             // Add to live event feed
             addToLiveEventFeed("SUB", null, teamName + ": " + substitutionEvent);
@@ -1190,7 +1227,7 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         }
         
         // Get the last event
-        String lastEvent = gameEvents.get(0); // Most recent is at index 0
+        Event lastEvent = gameEvents.get(0); // Most recent is at index 0
         
         // Remove it from the events list
         gameEvents.remove(0);
@@ -1201,7 +1238,7 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         
         // TODO: Parse the event and undo its effects on scores/fouls
         // For MVP, just show confirmation
-        Toast.makeText(this, "Event undone: " + lastEvent.split(" - ")[2], Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Event undone: " + lastEvent.getEventType(), Toast.LENGTH_SHORT).show();
         
         // NOTE: Full implementation would:
         // 1. Parse the event type and details
@@ -1538,7 +1575,7 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         recentEvents.clear();
         int count = Math.min(2, gameEvents.size());
         for (int i = 0; i < count; i++) {
-            recentEvents.add(gameEvents.get(i));
+            recentEvents.add(gameEvents.get(i).toString());
         }
     }
     
@@ -1656,5 +1693,23 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         if (clockHandler != null) {
             clockHandler.removeCallbacks(clockRunnable);
         }
+    }
+    
+    /**
+     * Update derived game state from currentGame
+     */
+    private void updateDerivedGameState() {
+        if (currentGame == null) return;
+        
+        gameId = currentGame.getId();
+        teamAName = teamA != null ? teamA.getName() : "Team A";
+        teamBName = teamB != null ? teamB.getName() : "Team B";
+        currentQuarter = currentGame.getCurrentQuarter();
+        gameTimeSeconds = currentGame.getGameClockSeconds();
+        isClockRunning = currentGame.isClockRunning();
+        
+        // Calculate team fouls (simplified for now)
+        teamAFouls = 0; // TODO: Query from database
+        teamBFouls = 0; // TODO: Query from database
     }
 }

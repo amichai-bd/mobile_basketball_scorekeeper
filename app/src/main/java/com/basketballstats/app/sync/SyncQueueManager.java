@@ -166,7 +166,7 @@ public class SyncQueueManager {
         
         // Update retry attempt
         operation.setRetryCount(operation.getRetryCount() + 1);
-        operation.setLastAttempt(System.currentTimeMillis());
+        operation.setLastAttempt(String.valueOf(System.currentTimeMillis()));
         operation.save(dbController.getDatabaseHelper());
         
         callback.onOperationRetried(operation.getOperation() + " on " + operation.getTableName(), 
@@ -396,7 +396,13 @@ public class SyncQueueManager {
             }
             
             // Then sort by creation time (oldest first)
-            return Long.compare(a.getCreatedAt(), b.getCreatedAt());
+            try {
+                long aTime = Long.parseLong(a.getCreatedAt() != null ? a.getCreatedAt() : "0");
+                long bTime = Long.parseLong(b.getCreatedAt() != null ? b.getCreatedAt() : "0");
+                return Long.compare(aTime, bTime);
+            } catch (NumberFormatException e) {
+                return 0;
+            }
         });
         
         return prioritized;

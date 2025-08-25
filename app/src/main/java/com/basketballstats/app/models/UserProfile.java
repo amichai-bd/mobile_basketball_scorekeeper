@@ -68,6 +68,9 @@ public class UserProfile {
     public String getLastLogin() { return lastLogin; }
     public void setLastLogin(String lastLogin) { this.lastLogin = lastLogin; }
     
+    // Convenience method for long timestamps
+    public void setLastLogin(long lastLogin) { this.lastLogin = String.valueOf(lastLogin); }
+    
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
     

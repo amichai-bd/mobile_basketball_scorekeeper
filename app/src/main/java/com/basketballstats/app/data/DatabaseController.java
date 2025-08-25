@@ -419,13 +419,15 @@ public class DatabaseController {
             String deleteOrphanedPlayers = "DELETE FROM " + DatabaseHelper.TABLE_TEAM_PLAYERS + 
                                           " WHERE " + DatabaseHelper.TEAM_PLAYERS_COLUMN_TEAM_ID + 
                                           " NOT IN (SELECT " + DatabaseHelper.COLUMN_ID + " FROM " + DatabaseHelper.TABLE_TEAMS + ")";
-            int orphanedPlayers = db.execSQL(deleteOrphanedPlayers);
+            db.execSQL(deleteOrphanedPlayers);
+            int orphanedPlayers = getRowsAffected(db);
             
             // Remove events without games
             String deleteOrphanedEvents = "DELETE FROM " + DatabaseHelper.TABLE_EVENTS + 
                                          " WHERE " + DatabaseHelper.EVENTS_COLUMN_GAME_ID + 
                                          " NOT IN (SELECT " + DatabaseHelper.COLUMN_ID + " FROM " + DatabaseHelper.TABLE_GAMES + ")";
-            int orphanedEvents = db.execSQL(deleteOrphanedEvents);
+            db.execSQL(deleteOrphanedEvents);
+            int orphanedEvents = getRowsAffected(db);
             
             // Remove sync queue items for non-existent records
             // This is more complex and should be done per table
@@ -531,6 +533,19 @@ public class DatabaseController {
         }
         
         return stats;
+    }
+    
+    /**
+     * Helper method to get rows affected by last operation
+     */
+    private int getRowsAffected(SQLiteDatabase db) {
+        Cursor cursor = db.rawQuery("SELECT changes()", null);
+        int changes = 0;
+        if (cursor.moveToFirst()) {
+            changes = cursor.getInt(0);
+        }
+        cursor.close();
+        return changes;
     }
     
     /**

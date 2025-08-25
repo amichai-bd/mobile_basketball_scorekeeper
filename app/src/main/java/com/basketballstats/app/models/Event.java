@@ -565,4 +565,30 @@ public class Event {
         result = 31 * result + (eventType != null ? eventType.hashCode() : 0);
         return result;
     }
+    
+    /**
+     * Find all events
+     */
+    public static List<Event> findAll(DatabaseHelper dbHelper) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        List<Event> events = new ArrayList<>();
+        
+        Cursor cursor = db.query(
+            DatabaseHelper.TABLE_EVENTS,
+            null,
+            null,
+            null,
+            null,
+            null,
+            DatabaseHelper.EVENTS_COLUMN_EVENT_SEQUENCE + " ASC"
+        );
+        
+        while (cursor.moveToNext()) {
+            events.add(fromCursor(cursor));
+        }
+        cursor.close();
+        
+        Log.d(TAG, "Loaded " + events.size() + " events");
+        return events;
+    }
 }
