@@ -80,6 +80,9 @@ public class DatabaseController {
             // Set up initial league teams if none exist
             initializeDefaultTeams();
             
+            // Set up initial scheduled games if none exist
+            initializeDefaultGames();
+            
             Log.d(TAG, "Database initialization completed successfully");
         } catch (Exception e) {
             Log.e(TAG, "Database initialization failed", e);
@@ -87,20 +90,140 @@ public class DatabaseController {
     }
     
     /**
-     * Create default teams if database is empty
+     * Create default teams with players if database is empty
      */
     private void initializeDefaultTeams() {
         if (Team.getCount(dbHelper) == 0) {
-            Log.d(TAG, "Creating default teams...");
+            Log.d(TAG, "Creating default teams with players...");
             
-            // Create default NBA teams
-            String[] teamNames = {"Lakers", "Warriors", "Bulls", "Heat"};
-            for (String teamName : teamNames) {
-                Team team = new Team(teamName);
-                team.save(dbHelper);
-                Log.d(TAG, "Created default team: " + teamName);
+            // Create default NBA teams with 5+ players each
+            createTeamWithPlayers("Lakers", new String[][]{
+                {"23", "LeBron James"}, {"3", "Anthony Davis"}, {"15", "Austin Reaves"}, 
+                {"1", "D'Angelo Russell"}, {"28", "Rui Hachimura"}, {"5", "Malik Beasley"}, 
+                {"55", "Jarred Vanderbilt"}
+            });
+            
+            createTeamWithPlayers("Warriors", new String[][]{
+                {"30", "Stephen Curry"}, {"23", "Draymond Green"}, {"11", "Klay Thompson"}, 
+                {"22", "Andrew Wiggins"}, {"00", "Jonathan Kuminga"}, {"5", "Kevon Looney"}, 
+                {"3", "Jordan Poole"}
+            });
+            
+            createTeamWithPlayers("Bulls", new String[][]{
+                {"11", "DeMar DeRozan"}, {"8", "Zach LaVine"}, {"6", "Alex Caruso"}, 
+                {"21", "Nikola Vucevic"}, {"24", "Lauri Markkanen"}, {"2", "Lonzo Ball"}, 
+                {"9", "Andre Drummond"}
+            });
+            
+            createTeamWithPlayers("Heat", new String[][]{
+                {"22", "Jimmy Butler"}, {"13", "Bam Adebayo"}, {"14", "Tyler Herro"}, 
+                {"7", "Kyle Lowry"}, {"55", "Duncan Robinson"}, {"2", "Gabe Vincent"}, 
+                {"40", "Udonis Haslem"}
+            });
+            
+            Log.d(TAG, "Default teams and players created successfully");
+        }
+    }
+    
+    /**
+     * Helper method to create a team with multiple players
+     */
+    private void createTeamWithPlayers(String teamName, String[][] players) {
+        try {
+            // Create the team
+            Team team = new Team(teamName);
+            team.save(dbHelper);
+            Log.d(TAG, "Created team: " + teamName);
+            
+            // Add players to the team
+            for (String[] playerData : players) {
+                int jerseyNumber = Integer.parseInt(playerData[0]);
+                String playerName = playerData[1];
+                
+                TeamPlayer player = new TeamPlayer();
+                player.setTeamId(team.getId());
+                player.setJerseyNumber(jerseyNumber);
+                player.setName(playerName);
+                player.save(dbHelper);
+                
+                Log.d(TAG, "Added player #" + jerseyNumber + " " + playerName + " to " + teamName);
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error creating team " + teamName + " with players", e);
+        }
+    }
+    
+    /**
+     * Create default scheduled games if database is empty
+     */
+    private void initializeDefaultGames() {
+        if (Game.getCount(dbHelper) == 0) {
+            Log.d(TAG, "Creating default scheduled games...");
+            
+            try {
+                // Get the created teams
+                List<Team> teams = Team.findAll(dbHelper);
+                if (teams.size() >= 4) {
+                    // Game 1: Lakers vs Warriors - Today
+                    String today = getCurrentDateString();
+                    createScheduledGame(today, "19:00", teams.get(0), teams.get(1)); // Lakers vs Warriors
+                    
+                    // Game 2: Bulls vs Heat - Tomorrow
+                    String tomorrow = getTomorrowDateString();
+                    createScheduledGame(tomorrow, "20:30", teams.get(2), teams.get(3)); // Bulls vs Heat
+                    
+                    Log.d(TAG, "Default scheduled games created successfully");
+                } else {
+                    Log.w(TAG, "Not enough teams to create default games");
+                }
+                
+            } catch (Exception e) {
+                Log.e(TAG, "Error creating default games", e);
             }
         }
+    }
+    
+    /**
+     * Helper method to create a scheduled game
+     */
+    private void createScheduledGame(String date, String time, Team homeTeam, Team awayTeam) {
+        try {
+            Game game = new Game(date, time, homeTeam.getId(), awayTeam.getId());
+            game.setStatus("scheduled");
+            game.save(dbHelper);
+            
+            Log.d(TAG, "Created game: " + homeTeam.getName() + " vs " + awayTeam.getName() + " on " + date + " at " + time);
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error creating game between " + homeTeam.getName() + " and " + awayTeam.getName(), e);
+        }
+    }
+    
+    /**
+     * Get current date in DD/MM/YYYY format
+     */
+    private String getCurrentDateString() {
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        int day = calendar.get(java.util.Calendar.DAY_OF_MONTH);
+        int month = calendar.get(java.util.Calendar.MONTH) + 1; // Calendar.MONTH is 0-based
+        int year = calendar.get(java.util.Calendar.YEAR);
+        
+        return String.format("%02d/%02d/%04d", day, month, year);
+    }
+    
+    /**
+     * Get tomorrow's date in DD/MM/YYYY format
+     */
+    private String getTomorrowDateString() {
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        calendar.add(java.util.Calendar.DAY_OF_MONTH, 1); // Add one day
+        
+        int day = calendar.get(java.util.Calendar.DAY_OF_MONTH);
+        int month = calendar.get(java.util.Calendar.MONTH) + 1; // Calendar.MONTH is 0-based
+        int year = calendar.get(java.util.Calendar.YEAR);
+        
+        return String.format("%02d/%02d/%04d", day, month, year);
     }
     
     // ========== TRANSACTION MANAGEMENT ==========
