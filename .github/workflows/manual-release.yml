@@ -1,8 +1,12 @@
-name: Auto Release APK (Push to Main)
+name: Manual Release APK (Stable Versions)
 
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.1)'
+        required: true
+        default: '1.0.0'
 
 permissions:
   contents: write
@@ -24,7 +28,6 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          # space-separated list prevents parsing error
           packages: "platform-tools platforms;android-34 build-tools;34.0.0"
 
       - name: Build debug APK
@@ -32,20 +35,15 @@ jobs:
           chmod +x gradlew
           ./gradlew --no-daemon clean assembleDebug
       
-      - name: Check APK was built
-        run: |
-          ls -la app/build/outputs/apk/debug/
-          file app/build/outputs/apk/debug/app-debug.apk
-      
       - name: Rename APK for release
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk basketball-stats-v1.0.${{ github.run_number }}.apk
+          cp app/build/outputs/apk/debug/app-debug.apk basketball-stats-v${{ github.event.inputs.version }}.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: Basketball Stats v1.0.${{ github.run_number }}
+          tag_name: v${{ github.event.inputs.version }}
+          name: Basketball Stats v${{ github.event.inputs.version }}
           body: |
             🏀 Basketball Statistics App - Debug Build
             
@@ -55,6 +53,6 @@ jobs:
             3. Install and enjoy!
             
             Built from commit: ${{ github.sha }}
-          files: basketball-stats-v1.0.${{ github.run_number }}.apk
+          files: basketball-stats-v${{ github.event.inputs.version }}.apk
           draft: false
           prerelease: false
