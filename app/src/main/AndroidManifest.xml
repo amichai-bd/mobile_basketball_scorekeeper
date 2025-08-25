@@ -41,7 +41,8 @@
         <!-- Game Activity (Frame 3) - Live Statistics Recording -->
         <activity android:name=".GameActivity"
             android:exported="false"
-            android:screenOrientation="landscape" />
+            android:screenOrientation="landscape"
+            android:configChanges="screenSize|orientation|screenLayout|smallestScreenSize|density" />
         
         <!-- Log Activity (Frame 5) - Event Log Viewer -->
         <activity android:name=".LogActivity"
