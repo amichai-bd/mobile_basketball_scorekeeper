@@ -13,8 +13,11 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import com.basketballstats.app.models.Game;
 import com.basketballstats.app.data.DatabaseController;
+import com.basketballstats.app.sync.SyncManager;
 import java.util.List;
 
 /**
@@ -43,6 +46,10 @@ public class MainActivity extends Activity {
     private List<Game> gamesList;
     private GameCardAdapter gameAdapter;
     
+    // Sync infrastructure
+    private SyncManager syncManager;
+    private RotateAnimation syncRotationAnimation;
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,13 +70,33 @@ public class MainActivity extends Activity {
         btnSync = findViewById(R.id.btnSync);
         lvGames = findViewById(R.id.lvGames);
         
+        // Initialize sync rotation animation
+        setupSyncAnimation();
+        
         // Initialize sync button to default state
         setSyncButtonState(SyncState.DEFAULT);
+    }
+    
+    /**
+     * Setup rotation animation for sync button
+     */
+    private void setupSyncAnimation() {
+        syncRotationAnimation = new RotateAnimation(
+            0f, 360f,
+            Animation.RELATIVE_TO_SELF, 0.5f,
+            Animation.RELATIVE_TO_SELF, 0.5f
+        );
+        syncRotationAnimation.setDuration(1000); // 1 second per rotation
+        syncRotationAnimation.setRepeatCount(Animation.INFINITE);
+        syncRotationAnimation.setRepeatMode(Animation.RESTART);
     }
     
     private void initializeData() {
         // Initialize database controller
         dbController = DatabaseController.getInstance(this);
+        
+        // Initialize sync manager
+        syncManager = SyncManager.getInstance(this);
         
         // Load games from SQLite database
         refreshGamesList();
@@ -115,6 +142,15 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 performSync();
+            }
+        });
+        
+        // Sync button long-press - demonstrate all visual states (for testing)
+        btnSync.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                demonstrateSyncStates();
+                return true; // Consume the long click event
             }
         });
         
@@ -258,6 +294,8 @@ public class MainActivity extends Activity {
                 btnSync.setBackgroundColor(android.graphics.Color.parseColor("#FFFFFF"));
                 btnSync.setTextColor(android.graphics.Color.parseColor("#7F8C8D"));
                 btnSync.setEnabled(true);
+                // Stop any animation
+                btnSync.clearAnimation();
                 break;
                 
             case SYNCING:
@@ -265,14 +303,17 @@ public class MainActivity extends Activity {
                 btnSync.setBackgroundColor(android.graphics.Color.parseColor("#3498DB"));
                 btnSync.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
                 btnSync.setEnabled(false);
-                // TODO: Add rotation animation in Task 3.2
+                // Start rotation animation
+                btnSync.startAnimation(syncRotationAnimation);
                 break;
                 
             case SUCCESS:
-                btnSync.setText("✓");
+                btnSync.setText("✅");
                 btnSync.setBackgroundColor(android.graphics.Color.parseColor("#27AE60"));
                 btnSync.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
                 btnSync.setEnabled(true);
+                // Stop any animation
+                btnSync.clearAnimation();
                 
                 // Auto-reset to default after 2 seconds
                 new android.os.Handler().postDelayed(new Runnable() {
@@ -284,52 +325,91 @@ public class MainActivity extends Activity {
                 break;
                 
             case ERROR:
-                btnSync.setText("⚠");
+                btnSync.setText("⚠️");
                 btnSync.setBackgroundColor(android.graphics.Color.parseColor("#E74C3C"));
                 btnSync.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
                 btnSync.setEnabled(true);
+                // Stop any animation
+                btnSync.clearAnimation();
                 break;
                 
             case OFFLINE:
-                btnSync.setText("🔄");
+                btnSync.setText("📴");
                 btnSync.setBackgroundColor(android.graphics.Color.parseColor("#BDC3C7"));
                 btnSync.setTextColor(android.graphics.Color.parseColor("#95A5A6"));
                 btnSync.setEnabled(false);
+                // Stop any animation
+                btnSync.clearAnimation();
                 break;
         }
     }
     
     /**
-     * Perform manual sync operation with visual feedback
+     * Perform manual sync operation using SyncManager with visual feedback
      * Implements "last write wins" conflict resolution as specified
      */
     private void performSync() {
-        // Set syncing state
-        setSyncButtonState(SyncState.SYNCING);
-        Toast.makeText(this, "Starting sync...", Toast.LENGTH_SHORT).show();
+        // Prevent multiple sync operations
+        if (btnSync.getAnimation() != null) {
+            Toast.makeText(this, "Sync already in progress...", Toast.LENGTH_SHORT).show();
+            return;
+        }
         
-        // Simulate sync operation (placeholder for future Firebase integration)
-        new android.os.Handler().postDelayed(new Runnable() {
+        // Use SyncManager with callback interface for comprehensive feedback
+        syncManager.performManualSync(new SyncManager.SyncCallback() {
             @Override
-            public void run() {
-                try {
-                    // TODO: Implement actual Firebase sync in Phase 4
-                    // For now, simulate successful sync
-                    
-                    // Refresh games list from SQLite database
-                    refreshGamesList();
-                    
-                    // Show success state
-                    setSyncButtonState(SyncState.SUCCESS);
-                    Toast.makeText(MainActivity.this, "Sync completed successfully", Toast.LENGTH_SHORT).show();
-                    
-                } catch (Exception e) {
-                    // Handle sync errors
-                    setSyncButtonState(SyncState.ERROR);
-                    Toast.makeText(MainActivity.this, "Sync failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                    android.util.Log.e("MainActivity", "Sync error", e);
-                }
+            public void onSyncStarted() {
+                setSyncButtonState(SyncState.SYNCING);
+                Toast.makeText(MainActivity.this, "🔄 Starting sync with Firebase...", Toast.LENGTH_SHORT).show();
             }
-        }, 1500); // 1.5 second delay to simulate sync operation
+
+            @Override
+            public void onSyncProgress(String message) {
+                // Update UI with progress (can add progress indicator in Phase 8)
+                Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onSyncSuccess(String message) {
+                setSyncButtonState(SyncState.SUCCESS);
+                Toast.makeText(MainActivity.this, "✅ " + message, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onSyncError(String errorMessage) {
+                setSyncButtonState(SyncState.ERROR);
+                Toast.makeText(MainActivity.this, "❌ " + errorMessage, Toast.LENGTH_LONG).show();
+                android.util.Log.e("MainActivity", "Sync error: " + errorMessage);
+            }
+
+            @Override
+            public void onSyncComplete() {
+                // Refresh games list from SQLite database after sync
+                refreshGamesList();
+            }
+        });
+    }
+    
+    /**
+     * Demo method to showcase all sync button states (for testing)
+     * Long-press the sync button to trigger this demo
+     */
+    private void demonstrateSyncStates() {
+        Toast.makeText(this, "🎨 Demonstrating sync button states...", Toast.LENGTH_SHORT).show();
+        
+        // Show each state for 1.5 seconds
+        final SyncState[] states = {SyncState.SYNCING, SyncState.SUCCESS, SyncState.ERROR, SyncState.OFFLINE, SyncState.DEFAULT};
+        final String[] stateNames = {"SYNCING (with rotation)", "SUCCESS (auto-reset)", "ERROR", "OFFLINE", "DEFAULT"};
+        
+        for (int i = 0; i < states.length; i++) {
+            final int index = i;
+            new android.os.Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    setSyncButtonState(states[index]);
+                    Toast.makeText(MainActivity.this, "State: " + stateNames[index], Toast.LENGTH_SHORT).show();
+                }
+            }, i * 1500);
+        }
     }
 }
