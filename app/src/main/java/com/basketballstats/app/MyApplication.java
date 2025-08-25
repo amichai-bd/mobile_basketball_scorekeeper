@@ -13,13 +13,16 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d("DEBUG", "MyApplication.onCreate() - START");
         
         try {
             // Initialize Firebase first
             FirebaseApp.initializeApp(this);
-            Log.d(TAG, "Firebase initialized successfully");
+            Log.d("DEBUG", "MyApplication - Firebase initialized successfully");
         } catch (Exception e) {
-            Log.e(TAG, "Firebase initialization failed", e);
+            Log.e("DEBUG", "MyApplication - Firebase initialization failed", e);
         }
+        
+        Log.d("DEBUG", "MyApplication.onCreate() - COMPLETE");
     }
 }

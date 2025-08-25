@@ -53,16 +53,34 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        android.util.Log.d("DEBUG", "MainActivity.onCreate() - START");
         
-        // Initialize UI components
-        initializeViews();
-        
-        // Initialize data
-        initializeData();
-        
-        // Set up event listeners
-        setupEventListeners();
+        try {
+            setContentView(R.layout.activity_main);
+            android.util.Log.d("DEBUG", "MainActivity.onCreate() - setContentView OK");
+            Toast.makeText(this, "Step 1: setContentView OK", Toast.LENGTH_SHORT).show();
+            
+            // Initialize UI components
+            initializeViews();
+            android.util.Log.d("DEBUG", "MainActivity.onCreate() - initializeViews OK");
+            Toast.makeText(this, "Step 2: initializeViews OK", Toast.LENGTH_SHORT).show();
+            
+            // Initialize data
+            initializeData();
+            android.util.Log.d("DEBUG", "MainActivity.onCreate() - initializeData OK");
+            Toast.makeText(this, "Step 3: initializeData OK", Toast.LENGTH_SHORT).show();
+            
+            // Set up event listeners
+            setupEventListeners();
+            android.util.Log.d("DEBUG", "MainActivity.onCreate() - setupEventListeners OK");
+            Toast.makeText(this, "Step 4: setupEventListeners OK", Toast.LENGTH_SHORT).show();
+            
+            android.util.Log.d("DEBUG", "MainActivity.onCreate() - COMPLETE SUCCESS");
+            Toast.makeText(this, "✅ App Started Successfully!", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            android.util.Log.e("DEBUG", "MainActivity.onCreate() - CRASH", e);
+            throw e;
+        }
     }
     
     private void initializeViews() {
@@ -93,18 +111,22 @@ public class MainActivity extends Activity {
     
     private void initializeData() {
         try {
+            android.util.Log.d("DEBUG", "initializeData() - START");
+            
             // Initialize database controller
             dbController = DatabaseController.getInstance(this);
-            android.util.Log.d("MainActivity", "Database controller initialized");
+            android.util.Log.d("DEBUG", "initializeData() - Database controller OK");
             
             // Load games from SQLite database first (core functionality)
             refreshGamesList();
+            android.util.Log.d("DEBUG", "initializeData() - refreshGamesList OK");
             
             // Initialize sync manager in background (optional for core functionality)
             initializeSyncManagerSafely();
+            android.util.Log.d("DEBUG", "initializeData() - initializeSyncManagerSafely OK");
             
         } catch (Exception e) {
-            android.util.Log.e("MainActivity", "Error initializing data", e);
+            android.util.Log.e("DEBUG", "initializeData() - ERROR", e);
             Toast.makeText(this, "Starting in offline mode", Toast.LENGTH_SHORT).show();
             
             // Ensure we have empty lists as fallback
@@ -158,23 +180,30 @@ public class MainActivity extends Activity {
     
     private void refreshGamesList() {
         try {
+            android.util.Log.d("DEBUG", "refreshGamesList() - START");
+            
             // Reload games from SQLite database (in case they were modified in League Management)
             gamesList = Game.findAll(dbController.getDatabaseHelper());
+            android.util.Log.d("DEBUG", "refreshGamesList() - Game.findAll OK, count: " + gamesList.size());
             
             // Debug output to verify games are loaded
             Toast.makeText(this, "Loaded " + gamesList.size() + " games from SQLite", Toast.LENGTH_SHORT).show();
             
             // Create or update adapter
             if (gameAdapter == null) {
+                android.util.Log.d("DEBUG", "refreshGamesList() - Creating new adapter");
                 gameAdapter = new GameCardAdapter(this, gamesList);
                 lvGames.setAdapter(gameAdapter);
+                android.util.Log.d("DEBUG", "refreshGamesList() - Adapter set OK");
             } else {
+                android.util.Log.d("DEBUG", "refreshGamesList() - Updating existing adapter");
                 // Update existing adapter with new data
                 gameAdapter.updateGames(gamesList);
+                android.util.Log.d("DEBUG", "refreshGamesList() - Adapter updated OK");
             }
         } catch (Exception e) {
+            android.util.Log.e("DEBUG", "refreshGamesList() - ERROR", e);
             Toast.makeText(this, "Error loading games from database", Toast.LENGTH_LONG).show();
-            android.util.Log.e("MainActivity", "Error loading games", e);
             
             // Initialize empty list as fallback
             if (gamesList == null) {

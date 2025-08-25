@@ -30,6 +30,7 @@ public class NetworkManager {
     private Context context;
     private ConnectivityManager connectivityManager;
     private DatabaseController dbController;
+    // Lazy initialization to avoid circular dependency
     private SyncManager syncManager;
     private SyncQueueManager syncQueueManager;
     
@@ -71,13 +72,34 @@ public class NetworkManager {
         this.context = context;
         this.connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         this.dbController = DatabaseController.getInstance(context);
-        this.syncManager = SyncManager.getInstance(context);
-        this.syncQueueManager = SyncQueueManager.getInstance(context);
+        // Note: syncManager and syncQueueManager initialized lazily to avoid circular dependency
         
         initializeNetworkMonitoring();
         updateNetworkState();
         
         Log.d(TAG, "NetworkManager initialized");
+    }
+    
+    // ===== LAZY INITIALIZATION (to avoid circular dependency) =====
+    
+    /**
+     * Get SyncManager instance (lazy initialization)
+     */
+    private SyncManager getSyncManager() {
+        if (syncManager == null) {
+            syncManager = SyncManager.getInstance(context);
+        }
+        return syncManager;
+    }
+    
+    /**
+     * Get SyncQueueManager instance (lazy initialization)
+     */
+    private SyncQueueManager getSyncQueueManager() {
+        if (syncQueueManager == null) {
+            syncQueueManager = SyncQueueManager.getInstance(context);
+        }
+        return syncQueueManager;
     }
     
     // ===== NETWORK MONITORING =====
@@ -261,7 +283,7 @@ public class NetworkManager {
      * Perform actual background sync operation
      */
     private void performBackgroundSync(String reason) {
-        syncManager.performIncrementalSync(new SyncManager.SyncCallback() {
+        getSyncManager().performIncrementalSync(new SyncManager.SyncCallback() {
             @Override
             public void onSyncStarted() {
                 Log.d(TAG, "Background sync started: " + reason);
@@ -294,12 +316,12 @@ public class NetworkManager {
      */
     private void processQueueWhenConnected() {
         try {
-            SyncQueueManager.QueueStatistics stats = syncQueueManager.getQueueStatistics();
+            SyncQueueManager.QueueStatistics stats = getSyncQueueManager().getQueueStatistics();
             
             if (stats.pendingOperations > 0) {
                 Log.d(TAG, "Processing " + stats.pendingOperations + " queued operations");
                 
-                syncQueueManager.processQueue(new SyncQueueManager.QueueCallback() {
+                getSyncQueueManager().processQueue(new SyncQueueManager.QueueCallback() {
                     @Override
                     public void onQueueProcessingStarted(int totalOperations) {
                         Log.d(TAG, "Queue processing started: " + totalOperations + " operations");
