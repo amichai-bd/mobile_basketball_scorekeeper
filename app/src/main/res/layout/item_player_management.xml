@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="12dp"
+    android:padding="10dp"
     android:background="#FFFFFF">
     
     <!-- Player Info -->
@@ -44,66 +44,84 @@
             android:layout_gravity="center_vertical" />
     </LinearLayout>
     
-    <!-- Edit Form (Hidden by default) -->
+    <!-- Edit Form (Hidden by default) - Narrow Screen Optimized -->
     <LinearLayout
         android:id="@+id/layoutEditForm"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:visibility="gone">
         
-        <!-- Edit Jersey Number -->
-        <EditText
-            android:id="@+id/etEditNumber"
-            android:layout_width="60dp"
-            android:layout_height="40dp"
-            android:hint="#"
-            android:inputType="number"
-            android:maxLength="2"
-            android:background="#F8F9FA"
-            android:textAlignment="center"
-            android:textSize="12sp"
-            android:layout_marginEnd="8dp" />
+        <!-- Input Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="6dp">
             
-        <!-- Edit Player Name -->
-        <EditText
-            android:id="@+id/etEditName"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:hint="Name"
-            android:inputType="textPersonName"
-            android:background="#F8F9FA"
-            android:textSize="12sp"
-            android:paddingHorizontal="8dp"
-            android:layout_marginEnd="8dp" />
+            <!-- Edit Jersey Number -->
+            <EditText
+                android:id="@+id/etEditNumber"
+                android:layout_width="50dp"
+                android:layout_height="36dp"
+                android:hint="#"
+                android:inputType="number"
+                android:maxLength="2"
+                android:background="#F8F9FA"
+                android:textAlignment="center"
+                android:textSize="12sp"
+                android:layout_marginEnd="6dp" />
+                
+            <!-- Edit Player Name -->
+            <EditText
+                android:id="@+id/etEditName"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:hint="Name"
+                android:inputType="textPersonName"
+                android:background="#F8F9FA"
+                android:textSize="12sp"
+                android:paddingHorizontal="8dp" />
+        </LinearLayout>
+        
+        <!-- Action Buttons Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
             
-        <!-- Save Edit Button -->
-        <Button
-            android:id="@+id/btnSaveEdit"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:text="Save"
-            android:textSize="10sp"
-            android:background="#27AE60"
-            android:textColor="#FFFFFF"
-            android:paddingHorizontal="8dp"
-            android:layout_marginEnd="4dp" />
-            
-        <!-- Cancel Edit Button -->
-        <Button
-            android:id="@+id/btnCancelEdit"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:text="Cancel"
-            android:textSize="10sp"
-            android:background="#95A5A6"
-            android:textColor="#FFFFFF"
-            android:paddingHorizontal="8dp" />
+            <!-- Save Edit Button -->
+            <Button
+                android:id="@+id/btnSaveEdit"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:text="Save"
+                android:textSize="10sp"
+                android:background="#27AE60"
+                android:textColor="#FFFFFF"
+                android:paddingHorizontal="6dp"
+                android:layout_marginEnd="4dp"
+                android:minWidth="0dp" />
+                
+            <!-- Cancel Edit Button -->
+            <Button
+                android:id="@+id/btnCancelEdit"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:text="Cancel"
+                android:textSize="10sp"
+                android:background="#95A5A6"
+                android:textColor="#FFFFFF"
+                android:paddingHorizontal="6dp"
+                android:minWidth="0dp" />
+        </LinearLayout>
     </LinearLayout>
     
-    <!-- Action Buttons (Visible by default) -->
+    <!-- Action Buttons (Visible by default) - Compact for Narrow Screens -->
     <LinearLayout
         android:id="@+id/layoutActionButtons"
         android:layout_width="wrap_content"
@@ -114,24 +132,26 @@
         <Button
             android:id="@+id/btnEditPlayer"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
+            android:layout_height="32dp"
             android:text="Edit"
             android:textSize="10sp"
             android:background="#3498DB"
             android:textColor="#FFFFFF"
-            android:layout_marginEnd="4dp"
-            android:paddingHorizontal="8dp" />
+            android:layout_marginEnd="3dp"
+            android:paddingHorizontal="6dp"
+            android:minWidth="0dp" />
         
         <!-- Delete Button -->
         <Button
             android:id="@+id/btnDeletePlayer"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
+            android:layout_height="32dp"
             android:text="Delete"
             android:textSize="10sp"
             android:background="#E74C3C"
             android:textColor="#FFFFFF"
-            android:paddingHorizontal="8dp" />
+            android:paddingHorizontal="6dp"
+            android:minWidth="0dp" />
     </LinearLayout>
 
 </LinearLayout>

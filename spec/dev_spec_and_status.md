@@ -227,33 +227,37 @@ ConstraintLayout (main container)
 ```
 
 #### Updated Game Activity Layout Structure (4-Section Design) 
-**NEW LAYOUT** - Team panels extend to full height, middle section split vertically:
+**ENHANCED LAYOUT** - Blue strip with team names on sides, team panels with action row, improved log section:
 ```xml
-<!-- activity_game.xml layout hierarchy - UPDATED 4-SECTION LAYOUT -->
+<!-- activity_game.xml layout hierarchy - ENHANCED 4-SECTION LAYOUT -->
 ConstraintLayout (main container)
 | ├── LinearLayout (Team A panel - vertical, FULL-HEIGHT, left side)
-| │   ├── TextView (team name)
-| │   ├── RecyclerView (5 player buttons distributed vertically across full height)
-| │   ├── Button (timeout)
-| │   └── Button (substitution)
+| │   ├── RecyclerView (5 player buttons with spacing)
+| │   └── LinearLayout (action row - horizontal)
+| │       ├── Button (timeout)
+| │       ├── Button (team foul) [NEW]
+| │       └── Button (substitution)
 | ├── LinearLayout (middle section - vertical, between teams)
-| │   ├── LinearLayout (COMPACT top controls - horizontal, minimal height)
-| │   │   ├── TextView (score display)
+| │   ├── LinearLayout (BLUE STRIP - horizontal, single row)
+| │   │   ├── TextView (Team A name) [MOVED FROM TEAM PANEL]
+| │   │   ├── LinearLayout (Team A score + fouls)
+| │   │   ├── Button (game control)
 | │   │   ├── TextView (game clock)
-| │   │   ├── TextView (current quarter)
-| │   │   └── TextView (team fouls display)
-| │   └── LinearLayout (MAXIMIZED event area - vertical, maximum space)
-| │       ├── GridLayout (Event buttons - 4x4 grid with MORE SPACE)
-| │       │   ├── Button (1P, 2P, 3P, AST in row 1 - SCORING & ASSISTS)
-| │       │   ├── Button (1M, 2M, 3M, OR in row 2 - MISSES & OFFENSIVE REBOUND)
-| │       │   ├── Button (DR, STL, BLK, TO in row 3 - DEFENSIVE PLAYS)
-| │       │   └── Button (FOUL, [space], [space], [space] in row 4 - PERSONAL FOULS ONLY)
-| │       └── ScrollView (Live event feed)
+| │   │   ├── Spinner (quarter)
+| │   │   ├── LinearLayout (Team B score + fouls)
+| │   │   └── TextView (Team B name) [MOVED FROM TEAM PANEL]
+| │   ├── LinearLayout (event area - vertical)
+| │   │   └── GridLayout (Event buttons - 4x4 grid)
+| │   └── LinearLayout (log section - horizontal) [ENHANCED]
+| │       ├── LinearLayout (last 2 events) [REDUCED FROM 5]
+| │       ├── Button (undo) [NEW]
+| │       └── Button (view log)
 | └── LinearLayout (Team B panel - vertical, FULL-HEIGHT, right side)
-|     ├── TextView (team name)
-|     ├── RecyclerView (5 player buttons distributed vertically across full height)
-|     ├── Button (timeout)
-|     └── Button (substitution)
+|     ├── RecyclerView (5 player buttons with spacing)
+|     └── LinearLayout (action row - horizontal)
+|         ├── Button (timeout)
+|         ├── Button (team foul) [NEW]
+|         └── Button (substitution)
 ```
 
 #### Typography & Spacing Standards (Mobile-Optimized)
@@ -430,12 +434,11 @@ Control panel height: Enhanced 2-row layout for better visibility
 - **Testing Player Management** - Verify complete player management functionality works correctly
 
 ### ⏳ Next Up  
-- **🎨 LAYOUT RESTRUCTURE - Frame 3 (Game Window)** - Updated 4-section layout structure:
-  - **Left Panel (Team A)**: Full-height extending to top of screen
-  - **Right Panel (Team B)**: Full-height extending to top of screen  
-  - **Middle Top**: Compact game controls (score, timer, quarter, fouls)
-  - **Middle Bottom**: Maximized event buttons and live event feed area
-  - **Goal**: More space for event buttons, better visual organization
+- **🎨 LAYOUT ENHANCEMENT - Frame 3 (Game Window)** - Enhanced blue strip and UI improvements:
+  - **Blue Strip Reorganization**: Team names on far left/right, scores on sides with fouls below
+  - **Team Panel Updates**: Add Team Foul button, improve player spacing
+  - **Log Section Enhancement**: Show last 2 events, add undo functionality
+  - **Goal**: Better information organization, improved user experience, undo capability
 - **Event Logging System** - Database storage for recorded events and statistics
 - **Enhanced Pop-up Workflows** - Full assist/rebound/steal pop-ups (if desired)
 - **Statistics Reporting** - Frame 5 & 6 implementation

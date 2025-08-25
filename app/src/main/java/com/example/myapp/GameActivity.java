@@ -43,15 +43,16 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     private Button btnSelectTeamAPlayers, btnSelectTeamBPlayers; // Setup mode buttons
     private String currentModalTeamSide; // Track which team's modal is currently open
     
-    // UI Components - Top Panel (Enhanced 2-Row Layout)
+    // UI Components - Blue Strip (Enhanced Layout)
+    private TextView tvTeamANameStrip, tvTeamBNameStrip; // Team names on blue strip
     private TextView tvTeamAScore, tvTeamBScore, tvGameClock;
     private TextView tvTeamAFouls, tvTeamBFouls;
     private Button btnGameToggle;
     
     // UI Components - Team Panels
-    private TextView tvTeamAName, tvTeamBName;
     private LinearLayout llTeamAPlayers, llTeamBPlayers;
     private Button btnTeamATimeout, btnTeamASub, btnTeamBTimeout, btnTeamBSub;
+    private Button btnTeamAFoul, btnTeamBFoul; // New team foul buttons
     
     // UI Components - Event Panel (12+ buttons)
     private Button btn1P, btn2P, btn3P, btn1M, btn2M, btn3M;
@@ -60,10 +61,11 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     // UI Components - Quarter Management
     private Spinner spinnerQuarter;
     
-    // UI Components - Live Event Feed
+    // UI Components - Live Event Feed (Updated for 2 events and undo)
     private LinearLayout llLiveEventFeed;
     private Button btnViewLog;
     private Button btnAllowEvents; // Override toggle for events when timer stopped
+    private Button btnUndo; // New undo button
     
     // Game Management
     private Handler clockHandler = new Handler();
@@ -139,7 +141,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
 
     
     private void initializeViews() {
-        // Top panel components (Enhanced 2-Row Layout)
+        // Blue strip components (Enhanced Layout)
+        tvTeamANameStrip = findViewById(R.id.tvTeamANameStrip);
+        tvTeamBNameStrip = findViewById(R.id.tvTeamBNameStrip);
         tvTeamAScore = findViewById(R.id.tvTeamAScore);
         tvTeamBScore = findViewById(R.id.tvTeamBScore);
         tvGameClock = findViewById(R.id.tvGameClock);
@@ -148,14 +152,14 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         btnGameToggle = findViewById(R.id.btnGameToggle);
         
         // Team panel components
-        tvTeamAName = findViewById(R.id.tvTeamAName);
-        tvTeamBName = findViewById(R.id.tvTeamBName);
         llTeamAPlayers = findViewById(R.id.llTeamAPlayers);
         llTeamBPlayers = findViewById(R.id.llTeamBPlayers);
         btnTeamATimeout = findViewById(R.id.btnTeamATimeout);
         btnTeamASub = findViewById(R.id.btnTeamASub);
         btnTeamBTimeout = findViewById(R.id.btnTeamBTimeout);
         btnTeamBSub = findViewById(R.id.btnTeamBSub);
+        btnTeamAFoul = findViewById(R.id.btnTeamAFoul);
+        btnTeamBFoul = findViewById(R.id.btnTeamBFoul);
         
         // Event panel components
         btn1P = findViewById(R.id.btn1P);
@@ -179,12 +183,13 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         llLiveEventFeed = findViewById(R.id.llLiveEventFeed);
         btnViewLog = findViewById(R.id.btnViewLog);
         btnAllowEvents = findViewById(R.id.btnAllowEvents);
+        btnUndo = findViewById(R.id.btnUndo);
     }
     
     private void initializeGameState() {
-        // Initialize team names
-        tvTeamAName.setText(teamAName);
-        tvTeamBName.setText(teamBName);
+        // Initialize team names in blue strip
+        tvTeamANameStrip.setText(teamAName);
+        tvTeamBNameStrip.setText(teamBName);
         
         // Initialize player button lists
         teamAPlayerButtons = new ArrayList<>();
@@ -197,6 +202,8 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         // TODO: In full implementation, load from database
         gameEvents.clear();
     }
+    
+
     
     private void createPlayerButtons() {
         // Clear existing buttons
@@ -286,11 +293,11 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         btn.setTextColor(Color.parseColor("#2C3E50"));
         btn.setPadding(8, 8, 8, 8);
         
-        // Set layout parameters
+        // Set layout parameters with increased spacing
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, 
             0, 1.0f);
-        params.setMargins(4, 4, 4, 4);
+        params.setMargins(8, 6, 8, 6); // Increased spacing between players
         btn.setLayoutParams(params);
         
         // Set click listener for player selection
@@ -344,11 +351,18 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         btnTeamASub.setOnClickListener(v -> openContextAwareLineupModal(teamA, "home", teamAPlayers));
         btnTeamBSub.setOnClickListener(v -> openContextAwareLineupModal(teamB, "away", teamBPlayers));
         
+        // New team foul buttons
+        btnTeamAFoul.setOnClickListener(v -> recordTeamFoul("home"));
+        btnTeamBFoul.setOnClickListener(v -> recordTeamFoul("away"));
+        
         // View Log button
         btnViewLog.setOnClickListener(v -> openEventLog());
         
         // Allow Events override toggle
         btnAllowEvents.setOnClickListener(v -> toggleAllowEventsOverride());
+        
+        // Undo button
+        btnUndo.setOnClickListener(v -> undoLastEvent());
     }
     
     // Player Selection Modal Methods
@@ -1024,6 +1038,61 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         checkAndResetSingleEventOverride();
     }
     
+    private void recordTeamFoul(String team) {
+        // Increment team fouls for current quarter
+        if ("home".equals(team)) {
+            teamAFouls++;
+        } else {
+            teamBFouls++;
+        }
+        
+        String teamName = "home".equals(team) ? teamAName : teamBName;
+        
+        // Update foul display
+        updateTeamFoulsDisplay();
+        
+        // Add team event to live feed
+        addToLiveEventFeed("TEAM FOUL", null, teamName);
+        
+        // Show visual warning if penalty situation
+        int fouls = "home".equals(team) ? teamAFouls : teamBFouls;
+        if (fouls >= 5) {
+            Toast.makeText(this, teamName + " in penalty situation! (" + fouls + " fouls)", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this, teamName + " team foul recorded (" + fouls + " fouls)", Toast.LENGTH_SHORT).show();
+        }
+        
+        // Single-event safety: Reset override after event recorded
+        checkAndResetSingleEventOverride();
+    }
+    
+    private void undoLastEvent() {
+        if (gameEvents.isEmpty()) {
+            Toast.makeText(this, "No events to undo", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Get the last event
+        String lastEvent = gameEvents.get(0); // Most recent is at index 0
+        
+        // Remove it from the events list
+        gameEvents.remove(0);
+        
+        // Update recent events list and display
+        updateRecentEventsList();
+        updateLiveEventFeedDisplay();
+        
+        // TODO: Parse the event and undo its effects on scores/fouls
+        // For MVP, just show confirmation
+        Toast.makeText(this, "Event undone: " + lastEvent.split(" - ")[2], Toast.LENGTH_SHORT).show();
+        
+        // NOTE: Full implementation would:
+        // 1. Parse the event type and details
+        // 2. Reverse score changes (subtract points)
+        // 3. Reverse foul changes (decrement fouls)
+        // 4. Update all displays accordingly
+    }
+    
         private void toggleGameTimer() {
         if (isClockRunning) {
             // Currently running, so pause it
@@ -1166,9 +1235,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     private void updateScoreDisplay() {
-        // Update separate team score displays for enhanced visibility with clear titles
-        tvTeamAScore.setText(String.format("Score: %s %d", teamAName, teamAScore));
-        tvTeamBScore.setText(String.format("Score: %s %d", teamBName, teamBScore));
+        // Update team scores for blue strip layout (just numbers)
+        tvTeamAScore.setText(String.valueOf(teamAScore));
+        tvTeamBScore.setText(String.valueOf(teamBScore));
     }
     
     private void updateGameClockDisplay() {
@@ -1180,16 +1249,16 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     // Quarter display now handled by spinner - no separate method needed
     
     private void updateTeamFoulsDisplay() {
-        // Update separate team foul displays with enhanced visibility and color coding with clear titles
+        // Update team foul displays for blue strip layout (fouls count + "fouls")
         int redColor = Color.parseColor("#F44336");
         int whiteColor = Color.parseColor("#FFFFFF");
         
         // Update Team A fouls
-        tvTeamAFouls.setText(String.format("Fouls: %s %d", teamAName, teamAFouls));
+        tvTeamAFouls.setText(teamAFouls + " fouls");
         tvTeamAFouls.setTextColor(teamAFouls >= 5 ? redColor : whiteColor);
         
         // Update Team B fouls  
-        tvTeamBFouls.setText(String.format("Fouls: %s %d", teamBName, teamBFouls));
+        tvTeamBFouls.setText(teamBFouls + " fouls");
         tvTeamBFouls.setTextColor(teamBFouls >= 5 ? redColor : whiteColor);
     }
     
@@ -1308,9 +1377,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     private void updateRecentEventsList() {
-        // Update recent events from gameEvents (last 5)
+        // Update recent events from gameEvents (last 2)
         recentEvents.clear();
-        int count = Math.min(5, gameEvents.size());
+        int count = Math.min(2, gameEvents.size());
         for (int i = 0; i < count; i++) {
             recentEvents.add(gameEvents.get(i));
         }

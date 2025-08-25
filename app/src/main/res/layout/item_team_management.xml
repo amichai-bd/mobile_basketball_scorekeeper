@@ -1,59 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 
-    Team Management Item Layout
-    Professional list item with edit/delete actions
+    Team Management Item Layout - Narrow Screen Optimized
+    Responsive layout that stacks buttons vertically on narrow screens
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="16dp"
+    android:orientation="vertical"
+    android:padding="12dp"
     android:background="#FFFFFF">
     
-    <!-- Team Info -->
-    <TextView
-        android:id="@+id/tvTeamInfo"
-        android:layout_width="0dp"
+    <!-- Main Content Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="Lakers (12 players)"
-        android:textSize="14sp"
-        android:textColor="#2C3E50"
-        android:layout_gravity="center_vertical" />
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+        
+        <!-- Team Info -->
+        <TextView
+            android:id="@+id/tvTeamInfo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Lakers (12 players)"
+            android:textSize="14sp"
+            android:textColor="#2C3E50"
+            android:layout_gravity="center_vertical"
+            android:paddingEnd="8dp" />
+        
+        <!-- Quick Action - Players Button (most important) -->
+        <Button
+            android:id="@+id/btnManagePlayers"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:text="Players"
+            android:textSize="10sp"
+            android:background="#27AE60"
+            android:textColor="#FFFFFF"
+            android:paddingHorizontal="10dp"
+            android:minWidth="0dp" />
+    </LinearLayout>
     
-    <!-- Edit Button -->
-    <Button
-        android:id="@+id/btnEditTeam"
-        android:layout_width="wrap_content"
-        android:layout_height="36dp"
-        android:text="Edit"
-        android:textSize="12sp"
-        android:background="#3498DB"
-        android:textColor="#FFFFFF"
-        android:layout_marginEnd="8dp"
-        android:paddingHorizontal="12dp" />
-    
-    <!-- Players Button -->
-    <Button
-        android:id="@+id/btnManagePlayers"
-        android:layout_width="wrap_content"
-        android:layout_height="36dp"
-        android:text="Players"
-        android:textSize="12sp"
-        android:background="#27AE60"
-        android:textColor="#FFFFFF"
-        android:layout_marginEnd="8dp"
-        android:paddingHorizontal="12dp" />
-    
-    <!-- Delete Button -->
-    <Button
-        android:id="@+id/btnDeleteTeam"
-        android:layout_width="wrap_content"
-        android:layout_height="36dp"
-        android:text="Delete"
-        android:textSize="12sp"
-        android:background="#E74C3C"
-        android:textColor="#FFFFFF"
-        android:paddingHorizontal="12dp" />
+    <!-- Action Buttons Row - Compact Layout -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+        
+        <!-- Edit Button -->
+        <Button
+            android:id="@+id/btnEditTeam"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:text="Edit"
+            android:textSize="10sp"
+            android:background="#3498DB"
+            android:textColor="#FFFFFF"
+            android:layout_marginEnd="4dp"
+            android:paddingHorizontal="8dp"
+            android:minWidth="0dp" />
+        
+        <!-- Delete Button -->
+        <Button
+            android:id="@+id/btnDeleteTeam"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:text="Delete"
+            android:textSize="10sp"
+            android:background="#E74C3C"
+            android:textColor="#FFFFFF"
+            android:paddingHorizontal="8dp"
+            android:minWidth="0dp" />
+    </LinearLayout>
     
 </LinearLayout>

@@ -252,21 +252,21 @@ The screen has two distinct modes:
 #### Game Mode (Players Selected)
 ```
 ┌─────────────────────────────────────────────────────┐
-│ Team A        │ [Score: A-45 B-38] [PAUSE|8:45] │ Team B    │
-│               │ [Q2▼] [Fouls: A-3 B-5]         │           │
-│ Player 1 [3]  ├─────────────────────────────────┤ [2] Player 6│
-│ Player 2 [0]  │  [1P] [2P] [3P] [AST]          │ [1] Player 7│
-│ Player 3 [1]  │  [1M] [2M] [3M] [OR]           │ [4] Player 8│
-│ Player 4 [2]  │  [DR] [STL][BLK][TO]           │ [0] Player 9│
-│ Player 5 [0]  │  [FOUL][ ][ ][ ]               │ [3] Player 10│
-│               │                                │           │
-│               │  Last 5 Events:                │           │
-│               │  8:45 - #23 LeBron - 2P        │           │
+│Lakers         │ 45  [PAUSE|8:45] [Q2▼]  38     │ Warriors  │
+│               │ 3 fouls         5 fouls        │           │
+│               ├─────────────────────────────────┤           │
+│ Player 1 [3]  │  [1P] [2P] [3P] [AST]          │ [2] Player 6│
+│ Player 2 [0]  │  [1M] [2M] [3M] [OR]           │ [1] Player 7│
+│ Player 3 [1]  │  [DR] [STL][BLK][TO]           │ [4] Player 8│
+│ Player 4 [2]  │  [FOUL][ ][ ][ ]               │ [0] Player 9│
+│ Player 5 [0]  │                                │ [3] Player 10│
+│               │  Last 2 Events:                │           │
+│               │  8:45 - #23 LeBron - 2P    [⟲] │           │
 │               │  8:30 - Lakers - TIMEOUT       │           │
-│               │  8:15 - #30 Curry - 3P         │           │
-│               │                                │           │
-│ [TimeOut]     │  [View Full Log]               │ [TimeOut] │
-│ [Sub]         │                                │ [Sub]     │
+│               │  [View Log]                    │           │
+│[TimeOut]      │                                │ [TimeOut] │
+│[TeamFoul]     │                                │ [TeamFoul]│
+│[Sub]          │                                │ [Sub]     │
 └─────────────────────────────────────────────────────┘
 ```
 **New 4-Section Layout Structure**:
@@ -285,23 +285,34 @@ The screen has two distinct modes:
 - Player buttons on sides with foul counts, extending full height
 - Team action buttons (TimeOut, Sub) at bottom of each team panel
 
-### Middle Top Panel (Game Control Section)
-**Description**: Enhanced 2-row control panel positioned in the middle-top area between the full-height team panels. Features improved visibility with vertically separated team information and centralized game controls.
+### Middle Top Panel (Game Control Section) - Blue Strip
+**Description**: Blue strip control panel positioned in the middle-top area between the full-height team panels. Features team names on sides, scores on respective sides, and centralized game controls.
 **Location**: Middle-top section of screen, between the left and right team panels, above the event button panel.
 
 #### Layout Structure:
-- **2-Row Layout**: 
-  - **Row 1**: Team A Score | Start/Pause Button | Timer Display | Quarter Dropdown | Team A Fouls
-  - **Row 2**: Team B Score | (Button continues) | (Timer continues) | (Dropdown continues) | Team B Fouls
+- **Single-Row Blue Strip Layout**: 
+  - **Far Left**: Team A Name
+  - **Left Side**: Team A Score with Team A Fouls below
+  - **Center**: Start/Pause Button | Timer Display | Quarter Dropdown
+  - **Right Side**: Team B Score with Team B Fouls below  
+  - **Far Right**: Team B Name
 
-#### Team Score Display (Enhanced)
-- **Description**: Live game scores displayed vertically for better visibility with clear titles
-- **Type**: Vertical Score Display  
-- **Location**: Left section of control panel (2 rows)
+#### Team Names Display (New)
+- **Description**: Team names displayed on far sides of blue strip
+- **Type**: Text Display  
+- **Location**: Far left (Team A) and far right (Team B) of blue strip
+- **Content**: Team name only (e.g., "Lakers", "Warriors")
+- **Design**: Bold text, white color on blue background
+- **Clickable**: No
+
+#### Team Score Display (Repositioned)
+- **Description**: Live game scores displayed on respective sides of blue strip
+- **Type**: Score Display  
+- **Location**: Left side (Team A) and right side (Team B) of blue strip
 - **Content**: 
-  - **Row 1**: "Score: TEAM_A <score>" (e.g., "Score: Lakers 45")
-  - **Row 2**: "Score: TEAM_B <score>" (e.g., "Score: Warriors 38")
-- **Design**: Each team's score on separate line with "Score:" prefix for clarity
+  - **Team A Side**: Team A score (e.g., "45")
+  - **Team B Side**: Team B score (e.g., "38")
+- **Design**: Large, bold numbers for clear visibility
 - **Clickable**: No
 - **Updates**: Automatically when scoring events are recorded
 
@@ -364,14 +375,14 @@ The screen has two distinct modes:
 - **Auto-Progression**: When timer reaches 0:00, automatically advances to next quarter and stops timer
 - **Reset Behavior**: Selecting new quarter resets clock to 10:00 (stopped state)
 
-#### Team Fouls (Enhanced Vertical Display)
-- **Description**: Enhanced display showing team fouls vertically separated for better clarity with clear titles
-- **Type**: Vertical Team Fouls Display
-- **Location**: Right section of control panel (2 rows)
+#### Team Fouls (Repositioned Under Scores)
+- **Description**: Team foul counts displayed under respective team scores on blue strip
+- **Type**: Team Fouls Display
+- **Location**: Under Team A score (left side) and under Team B score (right side) of blue strip
 - **Content**: 
-  - **Row 1**: "Fouls: TEAM_A <foul_count>" (e.g., "Fouls: Lakers 3")
-  - **Row 2**: "Fouls: TEAM_B <foul_count>" (e.g., "Fouls: Warriors 5")
-- **Design**: Each team's fouls on separate line with "Fouls:" prefix for clarity
+  - **Team A Side**: Team A foul count (e.g., "3 fouls")
+  - **Team B Side**: Team B foul count (e.g., "5 fouls")
+- **Design**: Smaller text under score, positioned clearly below score numbers
 - **Clickable**: No
 - **Visual States**: Foul counts turn Red when ≥5 fouls (penalty situation)
 - **Updates**: Automatically when foul events are recorded
@@ -392,12 +403,13 @@ The screen has two distinct modes:
 
 **Game Mode**: Shows the 5 selected players as buttons distributed vertically across the full height panel, with team action buttons (TimeOut, Sub) at the bottom. Big and clear for easy clicking throughout the game.
 
-#### Player Title
-- **Description**: Title of team panel
-- **Type**: Text
-- **Location**: Top left corner
-- **Content**: Team name
-- **Clickable**: No
+#### Player Section
+- **Description**: Section for displaying selected players in team panel
+- **Type**: Player List
+- **Location**: Main area of team panel
+- **Content**: 5 selected players with spacing between buttons
+- **Design**: Players distributed vertically with proper spacing for easy touch interaction
+- **Clickable**: Yes - each player button is clickable for event recording
 
 
 #### Select Players Button (Setup Mode Only)
@@ -423,8 +435,8 @@ The screen has two distinct modes:
 #### Time Out Button
 - **Description**: When a time out is called the user will click the button of the team that called the timeout
 - **Type**: Button
-- **Location**: Side panel, on top of players
-- **Content**: "Time Out"
+- **Location**: Bottom of team panel, left position in action row
+- **Content**: "TimeOut"
 - **Clickable**: Yes
 - **When clicked**:
   - Event recorded in log
@@ -432,10 +444,22 @@ The screen has two distinct modes:
   - Game control toggle shows "START" (green)
   - Clock background turns yellow (paused state)
 
+#### Team Foul Button (New)
+- **Description**: Record team fouls for the selected team
+- **Type**: Button
+- **Location**: Bottom of team panel, middle position in action row
+- **Content**: "Team Foul"
+- **Clickable**: Yes
+- **When clicked**:
+  - Team foul count incremented for current quarter
+  - Event recorded in log
+  - Team foul display updated in blue strip
+  - Visual warning if team reaches 5+ fouls (penalty situation)
+
 #### Quarter Lineup / Sub Button (Context-Aware)
 - **Description**: Smart button that changes context based on quarter timing
 - **Type**: Context-Aware Button
-- **Location**: Side panel, bottom of team section
+- **Location**: Bottom of team panel, right position in action row
 - **Content & Behavior**:
   - **When Timer = 10:00** (Quarter not started):
     - Content: "Quarter Lineup"
@@ -505,13 +529,26 @@ The screen has two distinct modes:
   - **Controlled Recording**: Perfect for free throws, late fouls, timeout decisions
 - **Purpose**: Safe, controlled recording of rare dead-ball events with automatic safety reset
 
-#### Live Event Feed
-- **Description**: Shows the last 5 recorded events for immediate feedback and context
-- **Location**: Bottom of Event Panel, below event buttons
+#### Live Event Feed (Updated)
+- **Description**: Shows the last 2 recorded events for immediate feedback and context
+- **Location**: Bottom center between Team A and Team B panels, under event buttons
 - **Content**: List showing "Time - Player - Event" format (e.g., "8:45 - #23 LeBron - 2P")
 - **Updates**: Automatically when events are recorded
-- **Format**: Most recent event at top, scrolls down
+- **Format**: Most recent event at top, maximum 2 events shown
 - **Team Events**: Shows team name instead of player (e.g., "8:30 - Lakers - TIMEOUT")
+
+#### Undo Button (New)
+- **Description**: Allows undoing the last recorded event(s)
+- **Type**: Button with Icon
+- **Location**: Right side of Live Event Feed section
+- **Content**: Undo icon (⟲ or similar)
+- **Clickable**: Yes
+- **When clicked**: 
+  - Removes the most recent event from log
+  - Updates scores, fouls, and statistics accordingly
+  - Multiple clicks undo multiple events in reverse order
+  - Shows brief confirmation of undone event
+- **Visual State**: Disabled when no events to undo
 
 #### View Full Log Button
 - **Description**: Button to access complete game event log

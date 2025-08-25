@@ -22,17 +22,7 @@
         android:layout_margin="4dp"
         android:elevation="2dp">
             
-            <!-- Team A Title -->
-            <TextView
-                android:id="@+id/tvTeamAName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Lakers"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="#2C3E50"
-                android:gravity="center"
-                android:layout_marginBottom="8dp" />
+            <!-- Team A Players Section -->
             
             <!-- Team A Players (5 buttons) -->
             <LinearLayout
@@ -58,7 +48,18 @@
                     android:textSize="10sp"
                     android:background="#F39C12"
                     android:textColor="#FFFFFF"
-                    android:layout_marginEnd="4dp" />
+                    android:layout_marginEnd="2dp" />
+                
+                <Button
+                    android:id="@+id/btnTeamAFoul"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:text="Team Foul"
+                    android:textSize="9sp"
+                    android:background="#E74C3C"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginHorizontal="2dp" />
                 
                 <Button
                     android:id="@+id/btnTeamASub"
@@ -69,7 +70,7 @@
                     android:textSize="10sp"
                     android:background="#9B59B6"
                     android:textColor="#FFFFFF"
-                    android:layout_marginStart="4dp" />
+                    android:layout_marginStart="2dp" />
             </LinearLayout>
         </LinearLayout>
         
@@ -83,7 +84,7 @@
             android:layout_margin="4dp"
             android:elevation="2dp">
             
-            <!-- MIDDLE TOP: Enhanced 2-Row Game Controls -->
+            <!-- MIDDLE TOP: Blue Strip with Team Names on Sides -->
             <LinearLayout
                 android:id="@+id/middleTopPanel"
                 android:layout_width="match_parent"
@@ -94,37 +95,47 @@
                 android:paddingHorizontal="4dp"
                 android:paddingVertical="2dp">
                 
-                <!-- Left Section: Team Scores (Vertical) -->
+                <!-- Far Left: Team A Name -->
+                <TextView
+                    android:id="@+id/tvTeamANameStrip"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="Lakers"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:gravity="center_vertical|start"
+                    android:layout_marginEnd="4dp" />
+                
+                <!-- Left Side: Team A Score and Fouls -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="1.8"
+                    android:layout_weight="0.8"
                     android:orientation="vertical"
-                    android:gravity="center_vertical">
+                    android:gravity="center">
                     
                     <TextView
                         android:id="@+id/tvTeamAScore"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_weight="1"
-                        android:text="Lakers 45"
-                        android:textSize="12sp"
+                        android:text="45"
+                        android:textSize="14sp"
                         android:textStyle="bold"
                         android:textColor="#FFFFFF"
-                        android:gravity="center"
-                        android:layout_marginBottom="1dp" />
+                        android:gravity="center" />
                     
                     <TextView
-                        android:id="@+id/tvTeamBScore"
+                        android:id="@+id/tvTeamAFouls"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_weight="1"
-                        android:text="Warriors 38"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
+                        android:text="3 fouls"
+                        android:textSize="10sp"
                         android:textColor="#FFFFFF"
-                        android:gravity="center"
-                        android:layout_marginTop="1dp" />
+                        android:gravity="center" />
                 </LinearLayout>
                 
                 <!-- Middle-Left: Start/Pause Button (Spanning both rows) -->
@@ -163,36 +174,48 @@
                     android:background="@android:color/white"
                     android:layout_marginHorizontal="2dp" />
                 
-                <!-- Right Section: Team Fouls (Vertical) -->
+                <!-- Right Side: Team B Score and Fouls -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="1.2"
+                    android:layout_weight="0.8"
                     android:orientation="vertical"
-                    android:gravity="center_vertical">
+                    android:gravity="center">
                     
                     <TextView
-                        android:id="@+id/tvTeamAFouls"
+                        android:id="@+id/tvTeamBScore"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_weight="1"
-                        android:text="Lakers 3"
-                        android:textSize="11sp"
+                        android:text="38"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
                         android:textColor="#FFFFFF"
-                        android:gravity="center"
-                        android:layout_marginBottom="1dp" />
+                        android:gravity="center" />
                     
                     <TextView
                         android:id="@+id/tvTeamBFouls"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_weight="1"
-                        android:text="Warriors 5"
-                        android:textSize="11sp"
+                        android:text="5 fouls"
+                        android:textSize="10sp"
                         android:textColor="#FFFFFF"
-                        android:gravity="center"
-                        android:layout_marginTop="1dp" />
+                        android:gravity="center" />
                 </LinearLayout>
+                
+                <!-- Far Right: Team B Name -->
+                <TextView
+                    android:id="@+id/tvTeamBNameStrip"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="Warriors"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:gravity="center_vertical|end"
+                    android:layout_marginStart="4dp" />
             </LinearLayout>
             
             <!-- MIDDLE BOTTOM: Maximized Event Buttons and Live Feed -->
@@ -284,7 +307,7 @@
                     android:padding="8dp"
                     android:layout_marginTop="8dp">
                     
-                    <!-- Live Feed Header: [Allow Events] ... [Recent Events - Centered] ... [View Log] -->
+                    <!-- Live Feed Header: [Allow Events] ... [Last 2 Events - Centered] ... [Undo] [View Log] -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -311,11 +334,11 @@
                             android:layout_height="1dp"
                             android:layout_weight="1" />
                         
-                        <!-- Recent Events Title (Centered) -->
+                        <!-- Last 2 Events Title (Centered) -->
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Recent Events"
+                            android:text="Last 2 Events"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             android:textColor="#7F8C8D"
@@ -327,6 +350,18 @@
                             android:layout_height="1dp"
                             android:layout_weight="1" />
                         
+                        <!-- Undo Button -->
+                        <Button
+                            android:id="@+id/btnUndo"
+                            android:layout_width="wrap_content"
+                            android:layout_height="28dp"
+                            android:text="⟲"
+                            android:textSize="14sp"
+                            android:background="#FF9800"
+                            android:textColor="#FFFFFF"
+                            android:paddingHorizontal="8dp"
+                            android:layout_marginEnd="4dp" />
+                        
                         <!-- View Log Button -->
                         <Button
                             android:id="@+id/btnViewLog"
@@ -337,10 +372,10 @@
                             android:background="#34495E"
                             android:textColor="#FFFFFF"
                             android:paddingHorizontal="12dp"
-                            android:layout_marginStart="8dp" />
+                            android:layout_marginStart="4dp" />
                     </LinearLayout>
                     
-                    <!-- Live Event Feed (Last 5 Events) -->
+                    <!-- Live Event Feed (Last 2 Events) -->
                     <LinearLayout
                         android:id="@+id/llLiveEventFeed"
                         android:layout_width="match_parent"
@@ -364,17 +399,7 @@
             android:layout_margin="4dp"
             android:elevation="2dp">
             
-            <!-- Team B Title -->
-            <TextView
-                android:id="@+id/tvTeamBName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Warriors"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="#2C3E50"
-                android:gravity="center"
-                android:layout_marginBottom="8dp" />
+            <!-- Team B Players Section -->
             
             <!-- Team B Players (5 buttons) -->
             <LinearLayout
@@ -400,7 +425,18 @@
                     android:textSize="10sp"
                     android:background="#F39C12"
                     android:textColor="#FFFFFF"
-                    android:layout_marginEnd="4dp" />
+                    android:layout_marginEnd="2dp" />
+                
+                <Button
+                    android:id="@+id/btnTeamBFoul"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:text="Team Foul"
+                    android:textSize="9sp"
+                    android:background="#E74C3C"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginHorizontal="2dp" />
                 
                 <Button
                     android:id="@+id/btnTeamBSub"
@@ -411,7 +447,7 @@
                     android:textSize="10sp"
                     android:background="#9B59B6"
                     android:textColor="#FFFFFF"
-                    android:layout_marginStart="4dp" />
+                    android:layout_marginStart="2dp" />
             </LinearLayout>
         </LinearLayout>
     

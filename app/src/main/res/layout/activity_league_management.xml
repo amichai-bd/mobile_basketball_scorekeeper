@@ -9,12 +9,12 @@
     android:orientation="vertical"
     android:background="#F8F9FA">
 
-    <!-- Header -->
+    <!-- Header - Compact for Narrow Screens -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp"
+        android:padding="16dp"
         android:background="#FFFFFF"
         android:elevation="2dp">
         
@@ -179,12 +179,12 @@
                     </LinearLayout>
                 </ScrollView>
 
-                <!-- Teams Tab Content -->
+                <!-- Teams Tab Content - Narrow Screen Optimized -->
                 <ScrollView
                     android:id="@+id/tab_teams"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:padding="20dp">
+                    android:padding="12dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -201,6 +201,7 @@
                             android:textColor="#2C3E50"
                             android:layout_marginBottom="16dp" />
 
+                        <!-- Add Team Input Row - Narrow Screen Optimized -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -210,18 +211,24 @@
                             <EditText
                                 android:id="@+id/etTeamName"
                                 android:layout_width="0dp"
-                                android:layout_height="wrap_content"
+                                android:layout_height="44dp"
                                 android:layout_weight="1"
                                 android:hint="Team Name"
-                                android:layout_marginEnd="8dp" />
+                                android:layout_marginEnd="8dp"
+                                android:paddingHorizontal="12dp"
+                                android:background="#FFFFFF"
+                                android:elevation="1dp" />
 
                             <Button
                                 android:id="@+id/btnAddTeam"
                                 android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
+                                android:layout_height="44dp"
                                 android:text="Add Team"
+                                android:textSize="11sp"
                                 android:background="#27AE60"
-                                android:textColor="#FFFFFF" />
+                                android:textColor="#FFFFFF"
+                                android:paddingHorizontal="12dp"
+                                android:minWidth="0dp" />
                         </LinearLayout>
 
                         <!-- Teams List Section -->
