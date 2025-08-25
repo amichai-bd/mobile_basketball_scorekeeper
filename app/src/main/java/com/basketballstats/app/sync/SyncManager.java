@@ -192,9 +192,9 @@ public class SyncManager {
             List<Team> localTeams = Team.findAll(dbController.getDatabaseHelper());
             List<Game> localGames = Game.findAll(dbController.getDatabaseHelper());
             
-            int mergedTeams = 0;
-            int mergedGames = 0;
-            int conflictsResolved = 0;
+            final int[] mergedTeams = {0};
+            final int[] mergedGames = {0};
+            final int[] conflictsResolved = {0};
             
             // Merge Teams with conflict resolution
             for (Team firebaseTeam : firebaseTeams) {
@@ -484,9 +484,9 @@ public class SyncManager {
     private void mergeIncrementalData(List<Team> modifiedTeams, List<Game> modifiedGames, 
                                     long lastSyncTimestamp, SyncCallback callback) {
         try {
-            int mergedTeams = 0;
-            int mergedGames = 0;
-            int conflictsResolved = 0;
+            final int[] mergedTeams = {0};
+            final int[] mergedGames = {0};
+            final int[] conflictsResolved = {0};
             
             // Process modified teams
             for (Team firebaseTeam : modifiedTeams) {
