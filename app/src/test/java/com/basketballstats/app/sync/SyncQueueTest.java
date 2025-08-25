@@ -146,7 +146,7 @@ public class SyncQueueTest {
         // Simulate retry attempts
         for (int attempt = 1; attempt <= 5; attempt++) {
             queueItem.setRetryCount(attempt);
-            queueItem.setLastAttempt(System.currentTimeMillis());
+            queueItem.setLastAttempt(String.valueOf(System.currentTimeMillis()));
             queueItem.save(dbHelper);
             
             boolean shouldRetry = queueItem.getRetryCount() < queueItem.getMaxRetries();
@@ -166,21 +166,21 @@ public class SyncQueueTest {
         criticalOp.setTableName("user_profile");
         criticalOp.setRecordId(1);
         criticalOp.setOperation("update");
-        criticalOp.setCreatedAt(System.currentTimeMillis() - 1000);
+        criticalOp.setCreatedAt(String.valueOf(System.currentTimeMillis() - 1000));
         criticalOp.save(dbHelper);
         
         SyncQueue normalOp = new SyncQueue();
         normalOp.setTableName("teams");
         normalOp.setRecordId(2);
         normalOp.setOperation("create");
-        normalOp.setCreatedAt(System.currentTimeMillis() - 500);
+        normalOp.setCreatedAt(String.valueOf(System.currentTimeMillis() - 500));
         normalOp.save(dbHelper);
         
         SyncQueue lowPriorityOp = new SyncQueue();
         lowPriorityOp.setTableName("events");
         lowPriorityOp.setRecordId(3);
         lowPriorityOp.setOperation("create");
-        lowPriorityOp.setCreatedAt(System.currentTimeMillis());
+        lowPriorityOp.setCreatedAt(String.valueOf(System.currentTimeMillis()));
         lowPriorityOp.save(dbHelper);
         
         // Test priority classification (would be used by SyncQueueManager)
