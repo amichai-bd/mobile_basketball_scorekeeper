@@ -61,6 +61,24 @@ Simple, clean interface for selecting a game to start recording statistics. User
 - **Content**: "Basketball Stats"
 - **Clickable**: No
 
+#### Sync Button
+- **Description**: Manual synchronization button for Firebase data sync
+- **Type**: Modern Icon Button
+- **Location**: Top left corner
+- **Content**: Sync/refresh icon with subtle styling
+- **Design**: Round background, proper elevation, professional appearance
+- **Clickable**: Yes
+- **Visual States**:
+  - **Default**: Grey sync icon (sync available)
+  - **Syncing**: Blue rotating icon with loading animation
+  - **Success**: Green checkmark icon (briefly, 2 seconds)
+  - **Error**: Red warning icon (network/sync issues)
+- **When clicked**: 
+  - Pull all changes from Firebase server
+  - Push all local changes to Firebase server
+  - Use "last write wins" - user's device data overrides server conflicts
+  - Show sync status with visual feedback
+
 #### Edit League Button
 - **Description**: Professional settings button to access league management
 - **Type**: Modern Icon Button  

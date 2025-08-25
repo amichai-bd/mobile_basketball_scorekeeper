@@ -19,17 +19,20 @@ import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.basketballstats.app.models.Team;
-import com.basketballstats.app.models.SimpleGame;
-import com.basketballstats.app.data.LeagueDataProvider;
+import com.basketballstats.app.models.TeamPlayer;
+import com.basketballstats.app.models.Game;
+import com.basketballstats.app.data.DatabaseController;
 import com.basketballstats.app.utils.InputFormatHelper;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * League Management Activity - FULL IMPLEMENTATION
- * Complete interface for managing games and teams:
+ * League Management Activity - SQLite Database Implementation
+ * Complete interface for managing games and teams with persistent storage:
  * - Games Tab: Add/edit scheduled games with teams, dates, and times
  * - Teams Tab: Add/edit teams and manage each team's player roster
+ * - Uses SQLite database for persistent data storage
+ * - Supports team/player relationships and data integrity
  */
 public class LeagueManagementActivity extends Activity {
     
@@ -48,9 +51,10 @@ public class LeagueManagementActivity extends Activity {
     private Button btnAddTeam;
     private ListView lvTeams;
     
-    // Data
+    // Database and Data
+    private DatabaseController dbController;
     private List<Team> teamsList;
-    private List<SimpleGame> gamesList;
+    private List<Game> gamesList;
     private ArrayAdapter<Team> homeTeamAdapter, awayTeamAdapter;
     private GameManagementAdapter gamesAdapter;
     private TeamManagementAdapter teamsAdapter;
@@ -75,7 +79,7 @@ public class LeagueManagementActivity extends Activity {
         // Add smart input formatting
         setupInputFormatting();
         
-        Toast.makeText(this, "League Management loaded!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "League Management with SQLite ready!", Toast.LENGTH_SHORT).show();
     }
     
     private void initializeViews() {
@@ -97,25 +101,40 @@ public class LeagueManagementActivity extends Activity {
     }
     
     private void initializeData() {
-        // Load teams and games from league data - create new lists to avoid reference issues
-        teamsList = new ArrayList<>(LeagueDataProvider.getTeams());
-        gamesList = new ArrayList<>(LeagueDataProvider.getAvailableGames());
+        // Initialize database controller
+        dbController = DatabaseController.getInstance(this);
         
-        // Setup adapters for Games Tab
-        homeTeamAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, teamsList);
-        homeTeamAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerHomeTeam.setAdapter(homeTeamAdapter);
-        
-        awayTeamAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, teamsList);
-        awayTeamAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerAwayTeam.setAdapter(awayTeamAdapter);
-        
-        gamesAdapter = new GameManagementAdapter(this, gamesList);
-        lvScheduledGames.setAdapter(gamesAdapter);
-        
-        // Setup adapter for Teams Tab
-        teamsAdapter = new TeamManagementAdapter(this, teamsList);
-        lvTeams.setAdapter(teamsAdapter);
+        try {
+            // Load teams and games from SQLite database
+            teamsList = new ArrayList<>(Team.findAll(dbController.getDatabaseHelper()));
+            gamesList = new ArrayList<>(Game.findAll(dbController.getDatabaseHelper()));
+            
+            // Setup adapters for Games Tab
+            homeTeamAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, teamsList);
+            homeTeamAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerHomeTeam.setAdapter(homeTeamAdapter);
+            
+            awayTeamAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, teamsList);
+            awayTeamAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerAwayTeam.setAdapter(awayTeamAdapter);
+            
+            gamesAdapter = new GameManagementAdapter(this, gamesList);
+            lvScheduledGames.setAdapter(gamesAdapter);
+            
+            // Setup adapter for Teams Tab
+            teamsAdapter = new TeamManagementAdapter(this, teamsList);
+            lvTeams.setAdapter(teamsAdapter);
+            
+            Toast.makeText(this, "Loaded " + teamsList.size() + " teams, " + gamesList.size() + " games", Toast.LENGTH_SHORT).show();
+            
+        } catch (Exception e) {
+            Toast.makeText(this, "Error loading data from database", Toast.LENGTH_LONG).show();
+            android.util.Log.e("LeagueManagement", "Database initialization failed", e);
+            
+            // Initialize empty lists as fallback
+            teamsList = new ArrayList<>();
+            gamesList = new ArrayList<>();
+        }
     }
     
     private void setupTabHost() {
@@ -175,28 +194,34 @@ public class LeagueManagementActivity extends Activity {
             return;
         }
         
-        // Check for duplicate team names
-        for (Team team : teamsList) {
-            if (team.getName().equalsIgnoreCase(teamName)) {
-                Toast.makeText(this, "Team already exists", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        // Check for duplicate team names using SQLite
+        if (Team.exists(dbController.getDatabaseHelper(), teamName)) {
+            Toast.makeText(this, "Team already exists", Toast.LENGTH_SHORT).show();
+            return;
         }
         
-        // Success - create and save the team
-        int newTeamId = LeagueDataProvider.getNextTeamId();
-        Team newTeam = new Team(newTeamId, teamName);
-        
-        // Add to data provider (this updates the central data)
-        LeagueDataProvider.addTeam(newTeam);
-        
-        // Refresh local lists from data provider to avoid duplicates
-        refreshTeamsData();
-        
-        Toast.makeText(this, "✅ Team saved: " + teamName + "\n(Player management coming soon!)", Toast.LENGTH_LONG).show();
-        
-        // Clear field
-        etTeamName.setText("");
+        try {
+            // Create and save the team to SQLite
+            Team newTeam = new Team(teamName);
+            long result = newTeam.save(dbController.getDatabaseHelper());
+            
+            if (result > 0) {
+                // Refresh local lists from database
+                refreshTeamsData();
+                
+                Toast.makeText(this, "✅ Team saved: " + teamName + 
+                              "\nID: " + newTeam.getId() + " (Tap 'Players' to add roster)", 
+                              Toast.LENGTH_LONG).show();
+                
+                // Clear field
+                etTeamName.setText("");
+            } else {
+                Toast.makeText(this, "Error: Failed to save team", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "Database error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            android.util.Log.e("LeagueManagement", "Error saving team", e);
+        }
     }
     
     private void setupInputFormatting() {
@@ -244,22 +269,29 @@ public class LeagueManagementActivity extends Activity {
             return;
         }
         
-        // Success - create and save the game
-        int newGameId = LeagueDataProvider.getNextGameId();
-        SimpleGame newGame = new SimpleGame(newGameId, date, homeTeam, awayTeam);
-        
-        // Add to data provider (this updates the central data)
-        LeagueDataProvider.addGame(newGame);
-        
-        // Refresh local list from data provider to avoid duplicates
-        refreshGamesData();
-        
-        String gameInfo = String.format("%s %s - %s vs %s", date, time, homeTeam.getName(), awayTeam.getName());
-        Toast.makeText(this, "✅ Game saved: " + gameInfo, Toast.LENGTH_LONG).show();
-        
-        // Clear fields
-        etGameDate.setText("");
-        etGameTime.setText("");
+        try {
+            // Create and save the game to SQLite
+            Game newGame = new Game(date, time, homeTeam.getId(), awayTeam.getId());
+            long result = newGame.save(dbController.getDatabaseHelper());
+            
+            if (result > 0) {
+                // Refresh local list from database
+                refreshGamesData();
+                
+                String gameInfo = String.format("%s %s - %s vs %s", date, time, homeTeam.getName(), awayTeam.getName());
+                Toast.makeText(this, "✅ Game saved: " + gameInfo + 
+                              "\nID: " + newGame.getId(), Toast.LENGTH_LONG).show();
+                
+                // Clear fields
+                etGameDate.setText("");
+                etGameTime.setText("");
+            } else {
+                Toast.makeText(this, "Error: Failed to save game", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "Database error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            android.util.Log.e("LeagueManagement", "Error saving game", e);
+        }
     }
     
     /**
@@ -267,10 +299,10 @@ public class LeagueManagementActivity extends Activity {
      */
     private class GameManagementAdapter extends BaseAdapter {
         private Context context;
-        private List<SimpleGame> games;
+        private List<Game> games;
         private LayoutInflater inflater;
         
-        public GameManagementAdapter(Context context, List<SimpleGame> games) {
+        public GameManagementAdapter(Context context, List<Game> games) {
             this.context = context;
             this.games = games;
             this.inflater = LayoutInflater.from(context);
@@ -291,14 +323,22 @@ public class LeagueManagementActivity extends Activity {
                 convertView = inflater.inflate(R.layout.item_game_management, parent, false);
             }
             
-            SimpleGame game = games.get(position);
+            Game game = games.get(position);
             TextView tvGameInfo = convertView.findViewById(R.id.tvGameInfo);
             Button btnEdit = convertView.findViewById(R.id.btnEditGame);
             Button btnDelete = convertView.findViewById(R.id.btnDeleteGame);
             
-            // Display game info (will include time when database is implemented)
-            tvGameInfo.setText(String.format("%s - %s vs %s", 
-                game.getDateText(), game.getHomeTeam().getName(), game.getAwayTeam().getName()));
+            // Display game info with time and status
+            String homeTeamName = game.getHomeTeam() != null ? game.getHomeTeam().getName() : "Team " + game.getHomeTeamId();
+            String awayTeamName = game.getAwayTeam() != null ? game.getAwayTeam().getName() : "Team " + game.getAwayTeamId();
+            
+            String gameInfo = String.format("%s %s - %s vs %s [%s]", 
+                game.getDate(), 
+                game.getTime() != null ? game.getTime() : "TBD",
+                homeTeamName, 
+                awayTeamName,
+                game.getStatus().toUpperCase());
+            tvGameInfo.setText(gameInfo);
             
             // Edit button
             btnEdit.setOnClickListener(new View.OnClickListener() {
@@ -355,9 +395,10 @@ public class LeagueManagementActivity extends Activity {
             Button btnPlayers = convertView.findViewById(R.id.btnManagePlayers);
             Button btnDelete = convertView.findViewById(R.id.btnDeleteTeam);
             
-            // Display team info
+            // Display team info with player count from database
+            int playerCount = TeamPlayer.getCountForTeam(dbController.getDatabaseHelper(), team.getId());
             tvTeamInfo.setText(String.format("%s (%d players)", 
-                team.getName(), team.getPlayers().size()));
+                team.getName(), playerCount));
             
             // Edit button
             btnEdit.setOnClickListener(new View.OnClickListener() {
@@ -387,13 +428,13 @@ public class LeagueManagementActivity extends Activity {
         }
     }
     
-    private void editGame(SimpleGame game) {
+    private void editGame(Game game) {
         // For MVP, show placeholder (full implementation with form population later)
-        Toast.makeText(this, "Edit game: " + game.getMatchupText() + "\n(Coming soon!)", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Edit game: " + game.toString() + "\n(Coming soon!)", Toast.LENGTH_SHORT).show();
         // TODO: Populate form fields with game data for editing
     }
     
-    private void confirmDeleteGame(SimpleGame game, int position) {
+    private void confirmDeleteGame(Game game, int position) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Delete Game")
                .setMessage("Are you sure you want to delete this game?\n" + game.toString())
@@ -407,17 +448,22 @@ public class LeagueManagementActivity extends Activity {
                .show();
     }
     
-    private void deleteGame(SimpleGame game, int position) {
-        // Remove from data provider (this updates the source data)
-        boolean removed = LeagueDataProvider.removeGame(game.getId());
-        
-        if (removed) {
-            // Update local list and refresh adapter
-            gamesList.remove(position);
-            gamesAdapter.notifyDataSetChanged();
-            Toast.makeText(this, "✅ Game deleted: " + game.getMatchupText(), Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, "Error: Could not delete game", Toast.LENGTH_SHORT).show();
+    private void deleteGame(Game game, int position) {
+        try {
+            // Delete from SQLite database
+            boolean removed = game.delete(dbController.getDatabaseHelper());
+            
+            if (removed) {
+                // Update local list and refresh adapter
+                gamesList.remove(position);
+                gamesAdapter.notifyDataSetChanged();
+                Toast.makeText(this, "✅ Game deleted: " + game.toString(), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Error: Could not delete game", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "Database error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            android.util.Log.e("LeagueManagement", "Error deleting game", e);
         }
     }
     
@@ -442,21 +488,41 @@ public class LeagueManagementActivity extends Activity {
     }
     
     private void deleteTeam(Team team, int position) {
-        // Try to remove from data provider (this checks dependencies automatically)
-        boolean removed = LeagueDataProvider.removeTeam(team.getId());
-        
-        if (removed) {
-            // Update local list and refresh all adapters
-            teamsList.remove(position);
-            teamsAdapter.notifyDataSetChanged();
+        try {
+            // Check if team is used in any games first
+            List<Game> gamesWithTeam = Game.findAll(dbController.getDatabaseHelper());
+            boolean teamInUse = false;
+            for (Game game : gamesWithTeam) {
+                if (game.getHomeTeamId() == team.getId() || game.getAwayTeamId() == team.getId()) {
+                    teamInUse = true;
+                    break;
+                }
+            }
             
-            // Also update the spinner adapters
-            homeTeamAdapter.notifyDataSetChanged();
-            awayTeamAdapter.notifyDataSetChanged();
+            if (teamInUse) {
+                Toast.makeText(this, "Cannot delete team - used in scheduled games", Toast.LENGTH_LONG).show();
+                return;
+            }
             
-            Toast.makeText(this, "✅ Team deleted: " + team.getName(), Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, "Cannot delete team - used in scheduled games", Toast.LENGTH_LONG).show();
+            // Delete from SQLite database (will CASCADE delete players due to foreign key)
+            boolean removed = team.delete(dbController.getDatabaseHelper());
+            
+            if (removed) {
+                // Update local list and refresh all adapters
+                teamsList.remove(position);
+                teamsAdapter.notifyDataSetChanged();
+                
+                // Also update the spinner adapters
+                homeTeamAdapter.notifyDataSetChanged();
+                awayTeamAdapter.notifyDataSetChanged();
+                
+                Toast.makeText(this, "✅ Team deleted: " + team.getName(), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Error: Could not delete team", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "Database error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            android.util.Log.e("LeagueManagement", "Error deleting team", e);
         }
     }
     
@@ -472,30 +538,40 @@ public class LeagueManagementActivity extends Activity {
     }
     
     private void refreshGamesData() {
-        // Safely reload games from data provider
-        List<SimpleGame> currentGames = LeagueDataProvider.getAvailableGames();
-        gamesList.clear();
-        gamesList.addAll(currentGames);
-        if (gamesAdapter != null) {
-            gamesAdapter.notifyDataSetChanged();
+        try {
+            // Safely reload games from SQLite database
+            List<Game> currentGames = Game.findAll(dbController.getDatabaseHelper());
+            gamesList.clear();
+            gamesList.addAll(currentGames);
+            if (gamesAdapter != null) {
+                gamesAdapter.notifyDataSetChanged();
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "Error refreshing games data", Toast.LENGTH_SHORT).show();
+            android.util.Log.e("LeagueManagement", "Error refreshing games", e);
         }
     }
     
     private void refreshTeamsData() {
-        // Safely reload teams from data provider
-        List<Team> currentTeams = LeagueDataProvider.getTeams();
-        teamsList.clear();
-        teamsList.addAll(currentTeams);
-        
-        // Safely refresh all adapters that use teams
-        if (teamsAdapter != null) {
-            teamsAdapter.notifyDataSetChanged();
-        }
-        if (homeTeamAdapter != null) {
-            homeTeamAdapter.notifyDataSetChanged();
-        }
-        if (awayTeamAdapter != null) {
-            awayTeamAdapter.notifyDataSetChanged();
+        try {
+            // Safely reload teams from SQLite database
+            List<Team> currentTeams = Team.findAll(dbController.getDatabaseHelper());
+            teamsList.clear();
+            teamsList.addAll(currentTeams);
+            
+            // Safely refresh all adapters that use teams
+            if (teamsAdapter != null) {
+                teamsAdapter.notifyDataSetChanged();
+            }
+            if (homeTeamAdapter != null) {
+                homeTeamAdapter.notifyDataSetChanged();
+            }
+            if (awayTeamAdapter != null) {
+                awayTeamAdapter.notifyDataSetChanged();
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "Error refreshing teams data", Toast.LENGTH_SHORT).show();
+            android.util.Log.e("LeagueManagement", "Error refreshing teams", e);
         }
     }
     

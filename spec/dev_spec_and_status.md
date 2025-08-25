@@ -11,110 +11,246 @@
 
 ### Technology Stack
 - **Frontend**: Android (Java/Kotlin)
-- **Backend**: Firebase Firestore (Cloud Database)
+- **Primary Database**: SQLite Database (local storage for all operations)
+- **Cloud Backup/Sync**: Firebase Firestore (multi-device sync and backup)
 - **Authentication**: Firebase Authentication
-- **Local Storage**: SQLite Database (offline caching/backup)
 - **UI Framework**: Native Android XML layouts
 - **Development Environment**: Android Studio
-- **Cloud Platform**: Google Firebase
+- **Cloud Platform**: Google Firebase (sync and authentication only)
+- **Offline Support**: Full offline functionality with SQLite primary storage
 
 ### Database Schema
 
-#### Cloud Storage (Firebase Firestore)
-**Primary Data Storage**: All data is stored in Firebase Firestore collections for real-time synchronization, cloud backup, and multi-device access.
+#### Cloud Backup/Sync (Firebase Firestore)
+**Backup & Sync Storage**: Firebase Firestore mirrors SQLite data for cloud backup, multi-device synchronization, and data recovery.
 
-**Firestore Collections Structure:**
-- **`users`**: User authentication and profile data
-- **`teams`**: League teams data 
-- **`players`**: Team player rosters (sub-collection under teams)
-- **`games`**: Scheduled and completed games
-- **`game_events`**: Real-time game events and statistics
-- **`user_leagues`**: User-specific league memberships and permissions
+**Firestore Collections Structure (Mirror of SQLite):**
+- **`users`**: User authentication and profile data (synced from user_profile table)
+- **`teams`**: League teams data (synced from teams table)
+- **`team_players`**: Team player rosters (synced from team_players table)
+- **`games`**: Scheduled and completed games (synced from games table)
+- **`events`**: Game events and statistics (synced from events table)
+- **`team_fouls`**: Team foul tracking (synced from team_fouls table)
+- **`app_settings`**: User preferences (synced from app_settings table)
 
 **Authentication**: Firebase Authentication handles user login, registration, and security.
 
-**Real-time Updates**: Firestore listeners provide live updates for multi-device synchronization.
+**Sync Strategy**: SQLite primary → Firebase mirror for backup and multi-device access.
 
-#### Local Storage (SQLite - Offline Cache)
+#### Primary Storage (SQLite Database)
+**Storage Strategy**: SQLite as primary data store with Firebase sync for backup and multi-device access
 
-#### Games Table (With Time Support)
+#### Core Data Tables
+
+##### Teams Table
+```sql
+CREATE TABLE teams (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE, -- 'Lakers', 'Warriors', etc.
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    firebase_id TEXT, -- Firebase document ID for sync
+    sync_status TEXT DEFAULT 'local', -- 'local', 'synced', 'pending', 'conflict'
+    last_sync_timestamp TIMESTAMP
+);
+```
+
+##### Team Players Table (Team Rosters)
+```sql
+CREATE TABLE team_players (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    team_id INTEGER NOT NULL,
+    jersey_number INTEGER NOT NULL, -- 0-99
+    name TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    firebase_id TEXT, -- Firebase document ID for sync
+    sync_status TEXT DEFAULT 'local', -- 'local', 'synced', 'pending', 'conflict'
+    last_sync_timestamp TIMESTAMP,
+    UNIQUE(team_id, jersey_number), -- No duplicate numbers per team
+    FOREIGN KEY (team_id) REFERENCES teams (id) ON DELETE CASCADE
+);
+```
+
+##### Games Table (Scheduled & Completed Games)
 ```sql
 CREATE TABLE games (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date TEXT NOT NULL, -- DD/MM/YYYY format
     time TEXT NOT NULL, -- HH:MM format (24-hour)
-    home_team_id INTEGER NOT NULL, -- Reference to teams table
-    away_team_id INTEGER NOT NULL, -- Reference to teams table
+    home_team_id INTEGER NOT NULL,
+    away_team_id INTEGER NOT NULL,
+    status TEXT DEFAULT 'scheduled', -- 'scheduled', 'in_progress', 'completed', 'cancelled'
+    home_score INTEGER DEFAULT 0,
+    away_score INTEGER DEFAULT 0,
+    current_quarter INTEGER DEFAULT 1, -- 1-4
+    game_clock_seconds INTEGER DEFAULT 600, -- 10 minutes = 600 seconds
+    is_clock_running BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    firebase_id TEXT, -- Firebase document ID for sync
+    sync_status TEXT DEFAULT 'local', -- 'local', 'synced', 'pending', 'conflict'
+    last_sync_timestamp TIMESTAMP,
     FOREIGN KEY (home_team_id) REFERENCES teams (id),
     FOREIGN KEY (away_team_id) REFERENCES teams (id)
 );
 ```
 
-#### Teams Table (League Teams)
-```sql
-CREATE TABLE teams (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE, -- 'Lakers', 'Warriors', etc.
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-#### Team Players Table (Team Rosters)
-```sql
-CREATE TABLE team_players (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    team_id INTEGER NOT NULL,
-    number INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    UNIQUE(team_id, number), -- No duplicate numbers per team
-    FOREIGN KEY (team_id) REFERENCES teams (id)
-);
-```
-
-#### Game Players Table (Selected for specific game)
+##### Game Players Table (Selected lineups for specific games)
 ```sql
 CREATE TABLE game_players (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     game_id INTEGER NOT NULL,
     team_player_id INTEGER NOT NULL,
     team_side TEXT NOT NULL, -- 'home' or 'away'
-    is_on_court BOOLEAN DEFAULT TRUE, -- MVP: always true (5 players each)
+    is_on_court BOOLEAN DEFAULT TRUE, -- Currently on court
+    is_starter BOOLEAN DEFAULT FALSE, -- Was in starting lineup
     personal_fouls INTEGER DEFAULT 0,
-    FOREIGN KEY (game_id) REFERENCES games (id),
+    minutes_played INTEGER DEFAULT 0, -- For future stats
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    firebase_id TEXT, -- Firebase document ID for sync
+    sync_status TEXT DEFAULT 'local',
+    last_sync_timestamp TIMESTAMP,
+    FOREIGN KEY (game_id) REFERENCES games (id) ON DELETE CASCADE,
     FOREIGN KEY (team_player_id) REFERENCES team_players (id)
 );
 ```
 
-#### Events Table
+##### Events Table (Game Statistics & Actions)
 ```sql
 CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     game_id INTEGER NOT NULL,
-    player_id INTEGER, -- NULL for team events like timeouts
-    team TEXT, -- 'home' or 'away' - for team events or player team reference
-    quarter INTEGER NOT NULL,
-    game_time INTEGER NOT NULL, -- seconds remaining
+    player_id INTEGER, -- team_players.id, NULL for team events
+    team_side TEXT NOT NULL, -- 'home' or 'away'
+    quarter INTEGER NOT NULL, -- 1-4
+    game_time_seconds INTEGER NOT NULL, -- Seconds remaining when event occurred
     event_type TEXT NOT NULL, -- '1P', '2P', '3P', '1M', '2M', '3M', 'OR', 'DR', 'AST', 'STL', 'BLK', 'TO', 'FOUL', 'TIMEOUT', 'SUB_IN', 'SUB_OUT'
-    sub_player_out_id INTEGER, -- for substitution events
-    sub_player_in_id INTEGER, -- for substitution events
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (game_id) REFERENCES games (id),
-    FOREIGN KEY (player_id) REFERENCES players (id)
+    sub_player_out_id INTEGER, -- For substitution events
+    sub_player_in_id INTEGER, -- For substitution events
+    points_value INTEGER DEFAULT 0, -- Points awarded (1, 2, 3, or 0)
+    event_sequence INTEGER NOT NULL, -- Order of events in game (1, 2, 3...)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    firebase_id TEXT, -- Firebase document ID for sync
+    sync_status TEXT DEFAULT 'local',
+    last_sync_timestamp TIMESTAMP,
+    FOREIGN KEY (game_id) REFERENCES games (id) ON DELETE CASCADE,
+    FOREIGN KEY (player_id) REFERENCES team_players (id),
+    FOREIGN KEY (sub_player_out_id) REFERENCES team_players (id),
+    FOREIGN KEY (sub_player_in_id) REFERENCES team_players (id)
 );
 ```
 
-#### Team Fouls Table
+##### Team Fouls Table (Quarter-by-quarter team foul tracking)
 ```sql
 CREATE TABLE team_fouls (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     game_id INTEGER NOT NULL,
-    team TEXT NOT NULL, -- 'home' or 'away'
-    quarter INTEGER NOT NULL,
+    team_side TEXT NOT NULL, -- 'home' or 'away'
+    quarter INTEGER NOT NULL, -- 1-4
     foul_count INTEGER DEFAULT 0,
-    UNIQUE(game_id, team, quarter),
-    FOREIGN KEY (game_id) REFERENCES games (id)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    firebase_id TEXT, -- Firebase document ID for sync
+    sync_status TEXT DEFAULT 'local',
+    last_sync_timestamp TIMESTAMP,
+    UNIQUE(game_id, team_side, quarter),
+    FOREIGN KEY (game_id) REFERENCES games (id) ON DELETE CASCADE
 );
+```
+
+#### App Configuration Tables
+
+##### App Settings Table (User preferences and app configuration)
+```sql
+CREATE TABLE app_settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    setting_key TEXT NOT NULL UNIQUE, -- 'quarter_length_minutes', 'auto_sync_enabled', etc.
+    setting_value TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    firebase_id TEXT,
+    sync_status TEXT DEFAULT 'local',
+    last_sync_timestamp TIMESTAMP
+);
+```
+
+##### User Profile Table (Firebase user information)
+```sql
+CREATE TABLE user_profile (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    firebase_uid TEXT NOT NULL UNIQUE, -- Firebase Authentication UID
+    email TEXT,
+    display_name TEXT,
+    league_name TEXT, -- User's league name
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### Sync Management Tables
+
+##### Sync Queue Table (Tracks pending Firebase operations)
+```sql
+CREATE TABLE sync_queue (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    table_name TEXT NOT NULL, -- 'teams', 'team_players', 'games', 'events', etc.
+    record_id INTEGER NOT NULL, -- Local record ID
+    operation TEXT NOT NULL, -- 'create', 'update', 'delete'
+    firebase_id TEXT, -- Firebase document ID (for updates/deletes)
+    data_json TEXT, -- JSON representation of record data
+    retry_count INTEGER DEFAULT 0,
+    max_retries INTEGER DEFAULT 3,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_attempt TIMESTAMP,
+    error_message TEXT
+);
+```
+
+##### Sync Log Table (History of sync operations)
+```sql
+CREATE TABLE sync_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    operation_type TEXT NOT NULL, -- 'manual_sync', 'auto_sync', 'conflict_resolution'
+    status TEXT NOT NULL, -- 'started', 'completed', 'failed', 'partial'
+    records_processed INTEGER DEFAULT 0,
+    records_successful INTEGER DEFAULT 0,
+    records_failed INTEGER DEFAULT 0,
+    error_details TEXT,
+    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP,
+    duration_seconds INTEGER
+);
+```
+
+#### Database Indexes (Performance Optimization)
+```sql
+-- Game performance indexes
+CREATE INDEX idx_games_date ON games(date);
+CREATE INDEX idx_games_status ON games(status);
+CREATE INDEX idx_games_teams ON games(home_team_id, away_team_id);
+
+-- Event performance indexes  
+CREATE INDEX idx_events_game ON events(game_id);
+CREATE INDEX idx_events_player ON events(player_id);
+CREATE INDEX idx_events_type ON events(event_type);
+CREATE INDEX idx_events_sequence ON events(game_id, event_sequence);
+
+-- Player performance indexes
+CREATE INDEX idx_team_players_team ON team_players(team_id);
+CREATE INDEX idx_team_players_number ON team_players(team_id, jersey_number);
+
+-- Game players performance indexes
+CREATE INDEX idx_game_players_game ON game_players(game_id);
+CREATE INDEX idx_game_players_team ON game_players(game_id, team_side);
+
+-- Sync performance indexes
+CREATE INDEX idx_sync_status ON teams(sync_status);
+CREATE INDEX idx_sync_queue_table ON sync_queue(table_name, operation);
+CREATE INDEX idx_sync_timestamp ON teams(last_sync_timestamp);
 ```
 
 ### Firebase Integration Architecture
@@ -126,10 +262,13 @@ CREATE TABLE team_fouls (
 4. **Guest Mode**: Optional anonymous authentication for demo purposes
 
 #### Data Synchronization Strategy
-1. **Online-First**: Primary operations use Firestore with real-time listeners
-2. **Offline Cache**: SQLite mirrors Firestore data for offline functionality
-3. **Automatic Sync**: Background synchronization when network connectivity resumes
-4. **Conflict Resolution**: Last-write-wins with timestamp-based conflict resolution
+1. **SQLite-Primary**: SQLite database as primary data store for all operations
+2. **Firebase Backup/Sync**: Firebase Firestore as cloud backup and multi-device synchronization
+3. **Offline-First**: App fully functional without internet connection
+4. **Automatic Background Sync**: Background synchronization when network connectivity available
+5. **Manual Sync**: User-triggered sync button on home screen for immediate synchronization
+6. **Conflict Resolution**: Last-write-wins with timestamp-based conflict resolution (manual sync: user device wins)
+7. **Sync Queue**: Failed operations queued for retry when connectivity resumes
 
 #### Real-Time Features
 1. **Live Game Updates**: Firestore listeners for real-time score and event updates
@@ -143,6 +282,56 @@ CREATE TABLE team_fouls (
 3. **Data Validation**: Firebase security rules validate all data writes
 4. **API Security**: All Firebase operations secured through authentication tokens
 
+#### Manual Sync Implementation
+**Location**: Sync button in top-left corner of home screen (Frame 1)
+**Purpose**: User-controlled synchronization for offline-first workflow and conflict resolution
+
+##### Sync Process Flow
+1. **Initiate Sync**: User taps sync button → Visual feedback (rotating icon)
+2. **Pull Phase**: Download all server changes from Firebase Firestore collections
+3. **Merge Phase**: Compare server data with local SQLite cache timestamps
+4. **Conflict Resolution**: **User Device Wins** - Local data overwrites server conflicts
+5. **Push Phase**: Upload all local changes to Firebase Firestore
+6. **Complete**: Visual feedback (green checkmark) and refresh UI with latest data
+
+##### Conflict Resolution Strategy: "User Device Wins"
+- **Philosophy**: Manual sync = user's intentional action to sync their current work
+- **Implementation**: User's device timestamp always wins in conflicts
+- **Benefits**: 
+  - User has full control over their data
+  - No data loss from user's current session
+  - Clear, predictable behavior
+- **Edge Cases**: 
+  - Deleted items on server: Restore from user device if locally present
+  - New items on server: Merge with local data (no conflicts)
+  - Modified items: User device version overwrites server version
+
+##### Sync Data Scope
+- **Teams**: Add/edit/delete team information
+- **Players**: Team roster changes (add/remove/edit players)
+- **Games**: Schedule changes (add/edit/delete scheduled games) 
+- **Game Events**: Live game statistics and event logs
+- **User Preferences**: Settings and league configurations
+
+##### Error Handling
+- **Network Offline**: Show error state, queue sync for later
+- **Firebase Authentication Failed**: Redirect to login
+- **Partial Sync Failure**: Retry failed operations, show progress
+- **Data Corruption**: Validate and restore from local cache
+
+##### Performance Considerations
+- **Incremental Sync**: Only sync data changed since last sync (timestamp-based)
+- **Batch Operations**: Group related writes for efficiency
+- **Background Processing**: Sync operations don't block UI
+- **Progress Indication**: Show sync progress for large data sets
+
+##### Visual Feedback States
+- **Default**: Grey sync icon (ready to sync)
+- **Syncing**: Blue rotating animation
+- **Success**: Green checkmark (2 seconds)
+- **Error**: Red warning icon with error message
+- **Offline**: Greyed out with "offline" indicator
+
 ### App Architecture (MVC Pattern)
 
 #### Activities (Views)
@@ -155,23 +344,29 @@ CREATE TABLE team_fouls (
 7. **~~SubstitutionActivity~~** - *DEPRECATED: Functionality integrated into Unified Player Selection Modal*
 
 #### Models
-1. **Game.java** - Game data model with Firebase integration
-2. **Team.java** - League team data model (Lakers, Warriors, etc.) with Firestore mapping
-3. **TeamPlayer.java** - Team roster player data model with cloud sync
+1. **Game.java** - Game data model with SQLite primary storage and sync metadata
+2. **Team.java** - League team data model with SQLite persistence
+3. **TeamPlayer.java** - Team roster player data model with local storage
 4. **GamePlayer.java** - Selected players for specific game (5 per side)
-5. **Event.java** - Game event data model with real-time Firestore updates
+5. **Event.java** - Game event data model with SQLite storage and event sequencing
 6. **User.java** - User authentication and profile data model
-7. **DatabaseHelper.java** - SQLite operations (offline cache)
-8. **FirebaseManager.java** - Firebase Firestore operations and authentication
-9. **StatsCalculator.java** - Statistics calculation utilities (basic counts only for MVP)
-10. **TeamFoulTracker.java** - Team foul management
+7. **AppSettings.java** - App configuration and user preferences model
+8. **SyncMetadata.java** - Sync status and timestamp tracking model
+9. **DatabaseHelper.java** - SQLite operations and schema management (PRIMARY DATABASE)
+10. **FirebaseManager.java** - Firebase sync operations and authentication
+11. **SyncManager.java** - Handles SQLite-Firebase synchronization and conflict resolution
+12. **SyncQueue.java** - Manages pending sync operations and retry logic
+13. **StatsCalculator.java** - Statistics calculation utilities from SQLite data
+14. **TeamFoulTracker.java** - Team foul management with SQLite persistence
 
 #### Controllers
-1. **GameController.java** - Game state management with Firebase sync
-2. **EventController.java** - Event logging logic with real-time Firestore updates
-3. **StatsController.java** - Statistics generation from cloud data
+1. **GameController.java** - Game state management with SQLite primary storage
+2. **EventController.java** - Event logging logic with SQLite storage and sync queue
+3. **StatsController.java** - Statistics generation from SQLite data
 4. **AuthController.java** - Firebase Authentication management
-5. **SyncController.java** - Online/offline data synchronization
+5. **SyncController.java** - SQLite-Firebase synchronization orchestration
+6. **DatabaseController.java** - SQLite database operations and transaction management
+7. **LeagueController.java** - Team and player management with local storage
 
 ---
 
@@ -190,15 +385,27 @@ my_first_app/
 │   │   │   ├── LogActivity.java          # Event log viewing
 │   │   │   ├── StatsActivity.java        # Statistics reports
 │   │   │   ├── models/
-│   │   │   │   ├── Game.java             # Game data model
-│   │   │   │   ├── Player.java           # Player data model
-│   │   │   │   └── Event.java            # Event data model
+│   │   │   │   ├── Game.java             # Game data model with SQLite
+│   │   │   │   ├── Team.java             # Team data model
+│   │   │   │   ├── TeamPlayer.java       # Player data model
+│   │   │   │   ├── GamePlayer.java       # Game lineup model
+│   │   │   │   ├── Event.java            # Event data model
+│   │   │   │   ├── User.java             # User profile model
+│   │   │   │   ├── AppSettings.java      # App configuration model
+│   │   │   │   └── SyncMetadata.java     # Sync tracking model
 │   │   │   ├── database/
-│   │   │   │   └── DatabaseHelper.java   # SQLite operations
+│   │   │   │   ├── DatabaseHelper.java   # SQLite primary database
+│   │   │   │   ├── SyncManager.java      # SQLite-Firebase sync
+│   │   │   │   ├── SyncQueue.java        # Sync operation queue
+│   │   │   │   └── FirebaseManager.java  # Firebase operations
 │   │   │   ├── controllers/
 │   │   │   │   ├── GameController.java   # Game state management
 │   │   │   │   ├── EventController.java  # Event logging
-│   │   │   │   └── StatsController.java  # Statistics calculation
+│   │   │   │   ├── StatsController.java  # Statistics calculation
+│   │   │   │   ├── AuthController.java   # Authentication
+│   │   │   │   ├── SyncController.java   # Sync orchestration
+│   │   │   │   ├── DatabaseController.java # SQLite operations
+│   │   │   │   └── LeagueController.java # Team/player management
 │   │   │   └── utils/
 │   │   │       ├── StatsCalculator.java  # Statistics utilities
 │   │   │       └── TeamFoulTracker.java  # Team foul management
@@ -517,10 +724,21 @@ Control panel height: Enhanced 2-row layout for better visibility
   - **✅ Personal Foul Buttons**: In team panels, require player selection first
   - **✅ 4x3 Event Grid**: FOUL button removed from events, cleaner layout
   - **✅ Enhanced Log**: Last 3 events without title, undo functionality
-- **Event Logging System** - Database storage for recorded events and statistics
+- **✅ MANUAL SYNC SPECIFICATION COMPLETE** - Added comprehensive sync button specification:
+  - **✅ Frame 1 Sync Button**: Top-left corner sync button with visual feedback states
+  - **✅ "User Device Wins" Strategy**: Manual sync gives priority to user's current device data
+  - **✅ Detailed Implementation**: Pull/merge/push workflow with error handling and performance considerations
+  - **✅ Conflict Resolution**: Clear strategy for handling data conflicts during sync operations
+- **✅ SQLITE DATABASE SCHEMA COMPLETE** - Comprehensive SQLite schema with sync metadata:
+  - **✅ Core Tables**: Teams, players, games, events with full basketball statistics tracking
+  - **✅ Sync Infrastructure**: Sync metadata, queue, and log tables for Firebase synchronization
+  - **✅ Performance Optimization**: Indexes for all key queries and operations
+  - **✅ Data Integrity**: Foreign keys, constraints, and CASCADE deletes
+- **🔄 READY FOR IMPLEMENTATION: SQLite Database** - Replace in-memory storage with SQLite primary database
+- **🔄 READY FOR IMPLEMENTATION: Manual Sync Button** - Implement Firebase sync functionality on home screen
+- **Firebase Integration Setup** - Initial Firebase project configuration and authentication
 - **Enhanced Pop-up Workflows** - Full assist/rebound/steal pop-ups (if desired)
-- **Statistics Reporting** - Frame 5 & 6 implementation
-- Database implementation to replace in-memory storage
+- **Statistics Reporting** - Frame 5 & 6 implementation with SQLite data queries
 
 ### 📋 **Latest Changes - UX Improvements & Enhanced Game Control**
 - ✅ **LIVE EVENT FEED ENHANCEMENT**: Expanded event log visibility for better user experience
@@ -727,11 +945,12 @@ Control panel height: Enhanced 2-row layout for better visibility
 ## Key Assumptions & Decisions
 
 ### Technical Decisions
-1. **Cloud-First with Offline Cache**: Firebase Firestore as primary database with SQLite for offline functionality
-2. **Firebase Authentication**: Secure user management and data isolation
-3. **Real-Time Synchronization**: Firebase listeners for live game updates and multi-device sync
-4. **Single Platform**: Android only initially (Firebase supports easy expansion to iOS/Web)
-5. **Native Development**: Android Java/XML with Firebase SDK integration (not cross-platform)
+1. **SQLite-Primary with Cloud Sync**: SQLite as primary database with Firebase for backup and multi-device sync
+2. **Offline-First Architecture**: Full app functionality without internet connection
+3. **Firebase Authentication**: Secure user management and data isolation
+4. **Manual + Automatic Sync**: User-controlled sync button plus background sync when online
+5. **Single Platform**: Android only initially (SQLite + Firebase supports easy expansion to iOS/Web)
+6. **Native Development**: Android Java/XML with SQLite primary storage and Firebase sync integration
 
 ### Business Logic Decisions  
 1. **League Teams**: 4 predefined teams (Lakers, Warriors, Bulls, Heat) with 12 players each
@@ -842,14 +1061,202 @@ Control panel height: Enhanced 2-row layout for better visibility
     - **Game Dependencies**: Prevent deletion of players used in games
 14. **READY**: Mobile device testing and deployment verification of complete app flow
 
-### Upcoming Tasks
-1. **Event Logging & Database** - Persistent storage for recorded game events and statistics
-2. **Enhanced Pop-up Workflows** - Full assist/rebound/steal pop-ups (currently simplified for MVP)
-3. **Frame 5 (Event Log)** - View and edit recorded game events
-4. **Frame 6 (Statistics)** - Game and season statistics reporting
-5. **Enhanced Player Management** - Complete roster management within Teams tab
-6. **Performance Optimization** - Database queries, UI responsiveness, memory management
-7. **Unified Modal Polish** - Advanced features like preset lineups, formation templates
+### 📋 **COMPREHENSIVE IMPLEMENTATION PLAN: SQLite + Firebase Sync**
+
+#### **PHASE 1: SQLite Database Foundation** 🗄️
+**Goal**: Establish SQLite as primary database with complete schema
+- **1.1: Enhanced DatabaseHelper Implementation** 
+  - Create DatabaseHelper.java with 9-table schema (teams, team_players, games, game_players, events, team_fouls, app_settings, user_profile, sync_queue, sync_log)
+  - Implement database versioning and migration logic
+  - Add all performance indexes for optimal query speed
+  - Include foreign key constraints and CASCADE deletes
+- **1.2: Core Models with SQLite CRUD**
+  - Update Team.java, TeamPlayer.java, Game.java, Event.java with full CRUD operations
+  - Add SQLite persistence methods (create, read, update, delete, list)
+  - Implement model validation and data sanitization
+  - Add toString(), equals(), hashCode() for proper object handling
+- **1.3: Sync Infrastructure Models**
+  - Create SyncMetadata.java for tracking sync status and timestamps
+  - Implement SyncQueue.java for managing pending operations
+  - Create AppSettings.java for user preferences and configuration
+  - Add UserProfile.java for Firebase authentication integration
+- **1.4: DatabaseController Implementation**
+  - Create DatabaseController.java for centralized SQLite operations
+  - Implement transaction management for data integrity
+  - Add connection pooling and query optimization
+  - Create database utility methods for common operations
+
+#### **PHASE 2: Data Migration from In-Memory to SQLite** 🔄
+**Goal**: Replace all in-memory storage with SQLite persistence
+- **2.1: League Management Migration**
+  - Update LeagueManagementActivity to use SQLite for all team/player operations
+  - Replace static lists with database queries
+  - Implement real-time UI updates from database changes
+  - Add input validation with SQLite constraint checking
+- **2.2: Main Activity Game List Migration**
+  - Update MainActivity to load games from SQLite games table
+  - Implement game status tracking in database
+  - Add real-time refresh from database when returning from other activities
+  - Replace ScheduledGame static list with SQLite queries
+- **2.3: Game Activity State Persistence**
+  - Update GameActivity to persist all game state to SQLite
+  - Store selected players, scores, quarter, clock state in database
+  - Implement real-time event logging to events table
+  - Add game resume functionality from stored state
+- **2.4: Remove In-Memory Storage**
+  - Delete LeagueDataProvider class and all static storage
+  - Remove hardcoded sample data (replace with database seed data)
+  - Update all activities to use DatabaseController instead of static lists
+  - Verify no memory leaks or static references remain
+
+#### **PHASE 3: Sync Button UI Implementation** 🔄
+**Goal**: Add manual sync button with comprehensive visual feedback
+- **3.1: Sync Button Layout Integration**
+  - Add sync button to activity_main.xml in top-left corner
+  - Create proper styling with elevation and touch feedback
+  - Implement responsive layout that works on all screen sizes
+  - Add accessibility labels and descriptions
+- **3.2: Visual State System**
+  - Implement 5 visual states: Default (grey), Syncing (blue rotating), Success (green checkmark), Error (red warning), Offline (greyed out)
+  - Create smooth state transition animations
+  - Add rotation animation for syncing state
+  - Implement automatic state transitions (success → default after 2 seconds)
+- **3.3: Sync Trigger Implementation**
+  - Create sync button click handler in MainActivity
+  - Integrate with SyncManager for actual sync operations
+  - Add loading indicators and prevent double-clicks during sync
+  - Implement user feedback with toast messages for sync results
+
+#### **PHASE 4: Firebase Integration Core** ☁️
+**Goal**: Setup Firebase authentication and Firestore connection
+- **4.1: Firebase Project Configuration**
+  - Create Firebase project in Google Console
+  - Download and integrate google-services.json
+  - Update app/build.gradle with Firebase dependencies
+  - Configure Firebase security rules for user data isolation
+- **4.2: Authentication Controller**
+  - Implement AuthController.java with email/password authentication
+  - Add anonymous authentication for guest mode
+  - Create user registration and login flows
+  - Implement persistent authentication sessions
+- **4.3: Firebase Manager for Firestore**
+  - Create FirebaseManager.java for all Firestore operations
+  - Implement CRUD operations for 7 Firestore collections (mirror SQLite tables)
+  - Add batch operations for efficient multi-document writes
+  - Implement Firestore listeners for real-time updates
+- **4.4: User Profile Integration**
+  - Create user_profile table linking SQLite data to Firebase UID
+  - Implement user registration flow with profile creation
+  - Add user isolation logic to ensure data privacy
+  - Create user league membership tracking
+
+#### **PHASE 5: Sync Manager Core Logic** ⚙️
+**Goal**: Implement robust bidirectional synchronization
+- **5.1: SyncManager Class Implementation**
+  - Create SyncManager.java with complete pull/merge/push workflow
+  - Implement manual sync method called by sync button
+  - Add automatic background sync triggers
+  - Create sync operation status tracking and reporting
+- **5.2: Conflict Resolution Logic**
+  - Implement "user device wins" conflict resolution strategy
+  - Add timestamp comparison for determining conflict scenarios
+  - Create conflict logging for debugging and user awareness
+  - Implement data validation before conflict resolution
+- **5.3: Incremental Sync Optimization**
+  - Use last_sync_timestamp to sync only changed records
+  - Implement efficient Firestore queries with timestamp filters
+  - Add sync delta calculation to minimize data transfer
+  - Create sync performance metrics and logging
+- **5.4: Batch Operation Implementation**
+  - Group related operations into Firestore batch writes
+  - Implement transaction rollback for failed batch operations
+  - Add progress tracking for large sync operations
+  - Optimize network usage with intelligent batching
+
+#### **PHASE 6: Sync Queue & Offline Support** 📱
+**Goal**: Handle network failures and offline scenarios gracefully
+- **6.1: Sync Queue Implementation**
+  - Create SyncQueue.java for managing failed operations
+  - Implement retry logic with exponential backoff
+  - Add operation prioritization (critical vs normal operations)
+  - Create queue persistence across app restarts
+- **6.2: Network Connectivity Management**
+  - Add NetworkManager.java for connectivity detection
+  - Implement background sync triggers when network returns
+  - Create WiFi vs mobile data sync preferences
+  - Add network status indicators in UI
+- **6.3: Comprehensive Error Handling**
+  - Implement error handling for network failures, auth errors, Firestore limits
+  - Create user-friendly error messages and recovery suggestions
+  - Add error logging with detailed context for debugging
+  - Implement graceful degradation when sync is unavailable
+- **6.4: Sync Status Tracking**
+  - Update sync_status fields in all SQLite tables based on operation results
+  - Implement sync status indicators in UI (show which data is synced/pending)
+  - Add sync history tracking for troubleshooting
+  - Create sync metrics and performance monitoring
+
+#### **PHASE 7: Integration Testing & Validation** 🧪
+**Goal**: Ensure robust functionality across all scenarios
+- **7.1: Unit Test Suite**
+  - Create comprehensive unit tests for all SQLite operations
+  - Test sync logic components in isolation
+  - Add conflict resolution scenario testing
+  - Implement model validation and constraint testing
+- **7.2: Integration Testing**
+  - Test complete workflows: data creation → sync → modification → conflict resolution
+  - Validate data integrity across SQLite ↔ Firebase sync cycles
+  - Test user authentication flows and data isolation
+  - Verify multi-step operations (game recording + sync)
+- **7.3: Offline Functionality Testing**
+  - Test complete app functionality without internet connection
+  - Validate sync queue behavior when connectivity returns
+  - Test data persistence across app kills and restarts
+  - Verify graceful handling of partial sync failures
+- **7.4: Multi-Device Sync Testing**
+  - Test real-time sync between multiple devices
+  - Validate conflict resolution in concurrent editing scenarios
+  - Test spectator mode with live game updates
+  - Verify user data isolation across different accounts
+
+#### **PHASE 8: Performance Optimization & Polish** ✨
+**Goal**: Optimize performance and enhance user experience
+- **8.1: Database Query Optimization**
+  - Analyze slow queries using SQLite EXPLAIN QUERY PLAN
+  - Optimize indexes for common query patterns
+  - Implement query result caching for frequently accessed data
+  - Add database vacuum and maintenance routines
+- **8.2: User Experience Enhancement**
+  - Add detailed progress indicators for sync operations
+  - Implement sync status messages with clear user guidance
+  - Create smooth loading animations and state transitions
+  - Add haptic feedback for sync button interactions
+- **8.3: Sync History & Debugging**
+  - Create sync history view showing past operations and results
+  - Add sync troubleshooting tools for users
+  - Implement sync log export for technical support
+  - Create developer debugging tools for sync analysis
+- **8.4: Error Recovery & User Support**
+  - Implement user-friendly error recovery workflows
+  - Add manual conflict resolution UI for complex scenarios
+  - Create data export/import functionality for backup/restore
+  - Add help documentation and troubleshooting guides
+
+### **📊 Implementation Metrics & Success Criteria**
+- **Database Performance**: SQLite queries complete in <100ms for normal operations
+- **Sync Performance**: Manual sync completes in <10 seconds for typical league data
+- **Offline Functionality**: 100% app functionality available without internet
+- **Data Integrity**: Zero data loss during sync operations and conflict resolution
+- **User Experience**: Sync button provides clear feedback within 500ms of interaction
+- **Error Handling**: All error scenarios handled gracefully with user guidance
+- **Testing Coverage**: >90% code coverage for database and sync operations
+
+### **🔧 Technical Dependencies & Prerequisites**
+- **Firebase Project**: Configured with Firestore and Authentication enabled
+- **Android Permissions**: Internet, network state detection
+- **Build Configuration**: Firebase SDK integration and ProGuard rules
+- **Development Tools**: Android Studio with SQLite debugging extensions
+- **Testing Environment**: Firebase Emulator Suite for local development
 
 ### Partner Input Needed
 - Validation of basketball rules implementation

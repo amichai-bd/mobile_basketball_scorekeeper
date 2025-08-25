@@ -16,26 +16,31 @@ import android.widget.Toast;
 import com.basketballstats.app.models.Player;
 import com.basketballstats.app.models.Team;
 import com.basketballstats.app.models.TeamPlayer;
-import com.basketballstats.app.data.LeagueDataProvider;
+import com.basketballstats.app.models.Game;
+import com.basketballstats.app.models.Event;
+import com.basketballstats.app.data.DatabaseController;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Game Activity - Live Basketball Statistics Recording (Frame 3)
+ * Game Activity - Live Basketball Statistics Recording with SQLite Persistence (Frame 3)
  * THE CORE FUNCTIONALITY - Real-time game statistics recording interface
- * Now supports dual modes: Setup Mode (player selection) and Game Mode (live recording)
+ * 
+ * Features:
+ * - SQLite database integration for persistent game state and events
+ * - Dual modes: Setup Mode (player selection) and Game Mode (live recording)
+ * - Real-time event tracking with automatic database saving
+ * - Live score updates and game clock management
+ * - Complete event history with sequential ordering
  */
 public class GameActivity extends Activity implements PlayerSelectionModal.PlayerSelectionListener {
     
-    // Game State
-    private int gameId;
-    private String teamAName, teamBName;
+    // Database and Game State
+    private DatabaseController dbController;
+    private Game currentGame; // SQLite game object with persistent state
     private List<Player> teamAPlayers, teamBPlayers;
-    private int teamAScore = 0, teamBScore = 0;
-    private int currentQuarter = 1;
-    private int gameTimeSeconds = 600; // 10 minutes
-    private boolean isClockRunning = false;
     private Player selectedPlayer = null;
+    private int eventSequenceCounter = 1; // For tracking event order
     
     // Dual Mode Support (Setup Mode vs Game Mode)
     private boolean isInSetupMode = true; // Start in setup mode
@@ -71,11 +76,10 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     private Handler clockHandler = new Handler();
     private Runnable clockRunnable;
     private List<Button> teamAPlayerButtons, teamBPlayerButtons;
-    private int teamAFouls = 0, teamBFouls = 0;
     private boolean allowEventsOverride = false; // Override to allow events when timer stopped
     
-    // Event Tracking
-    private static List<String> gameEvents = new ArrayList<>(); // Shared event storage for entire game
+    // Event Tracking (SQLite-backed)
+    private List<Event> gameEvents = new ArrayList<>(); // SQLite Event objects for current game
     private List<String> recentEvents;  // Last 5 events for live feed (derived from gameEvents)
     
     @Override
@@ -109,32 +113,94 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     private void getGameDataFromIntent() {
-        gameId = getIntent().getIntExtra("gameId", 1);
+        // Initialize database controller
+        dbController = DatabaseController.getInstance(this);
         
-        // Try to get team names from different intent sources
-        teamAName = getIntent().getStringExtra("teamAName");
-        teamBName = getIntent().getStringExtra("teamBName");
-        
-        // If not found, try alternative keys (for compatibility with MainActivity)
-        if (teamAName == null) teamAName = getIntent().getStringExtra("homeTeam");
-        if (teamBName == null) teamBName = getIntent().getStringExtra("awayTeam");
-        
-        // Load full team rosters for player selection
-        teamA = LeagueDataProvider.getTeamByName(teamAName);
-        teamB = LeagueDataProvider.getTeamByName(teamBName);
-        
-        // Initialize empty player lists (will be populated when players are selected)
-        teamAPlayers = new ArrayList<>();
-        teamBPlayers = new ArrayList<>();
-        
-        // Check if we have pre-selected players from previous activities
-        // For MVP, we start in Setup Mode
-        isInSetupMode = teamAPlayers.isEmpty() || teamBPlayers.isEmpty();
-        
-        if (!isInSetupMode) {
-            // If we somehow got pre-selected players, use them (future enhancement)
-            // For now, we always start in Setup Mode
-            isInSetupMode = true;
+        try {
+            // Get game ID from intent
+            int gameId = getIntent().getIntExtra("gameId", -1);
+            
+            if (gameId > 0) {
+                // Load game from SQLite database
+                currentGame = Game.findById(dbController.getDatabaseHelper(), gameId);
+                
+                if (currentGame == null) {
+                    Toast.makeText(this, "Error: Game not found in database", Toast.LENGTH_LONG).show();
+                    finish();
+                    return;
+                }
+                
+                // Load teams with rosters
+                currentGame.loadTeams(dbController.getDatabaseHelper());
+                teamA = currentGame.getHomeTeam();
+                teamB = currentGame.getAwayTeam();
+                
+                if (teamA != null) {
+                    teamA.loadPlayers(dbController.getDatabaseHelper());
+                }
+                if (teamB != null) {
+                    teamB.loadPlayers(dbController.getDatabaseHelper());
+                }
+                
+            } else {
+                // Fallback: Try to get team names from intent (backward compatibility)
+                String homeTeamName = getIntent().getStringExtra("homeTeam");
+                String awayTeamName = getIntent().getStringExtra("awayTeam");
+                
+                if (homeTeamName != null && awayTeamName != null) {
+                    teamA = Team.findByName(dbController.getDatabaseHelper(), homeTeamName);
+                    teamB = Team.findByName(dbController.getDatabaseHelper(), awayTeamName);
+                    
+                    if (teamA != null && teamB != null) {
+                        teamA.loadPlayers(dbController.getDatabaseHelper());
+                        teamB.loadPlayers(dbController.getDatabaseHelper());
+                        
+                        // Create new game in database for this session
+                        currentGame = new Game();
+                        currentGame.setHomeTeamId(teamA.getId());
+                        currentGame.setAwayTeamId(teamB.getId());
+                        currentGame.setDate(java.text.DateFormat.getDateInstance().format(new java.util.Date()));
+                        currentGame.setTime(java.text.DateFormat.getTimeInstance().format(new java.util.Date()));
+                        currentGame.setStatus("in_progress");
+                        currentGame.setHomeTeam(teamA);
+                        currentGame.setAwayTeam(teamB);
+                        
+                        long result = currentGame.save(dbController.getDatabaseHelper());
+                        if (result <= 0) {
+                            Toast.makeText(this, "Error: Could not create game in database", Toast.LENGTH_LONG).show();
+                            finish();
+                            return;
+                        }
+                    }
+                }
+            }
+            
+            // Verify we have valid teams
+            if (teamA == null || teamB == null) {
+                Toast.makeText(this, "Error: Could not load team data", Toast.LENGTH_LONG).show();
+                finish();
+                return;
+            }
+            
+            // Initialize empty player lists (will be populated when players are selected)
+            teamAPlayers = new ArrayList<>();
+            teamBPlayers = new ArrayList<>();
+            
+            // Load existing game events from database
+            loadGameEvents();
+            
+            // Update event sequence counter
+            updateEventSequenceCounter();
+            
+            // Check if we're resuming a game or starting fresh
+            isInSetupMode = teamAPlayers.isEmpty() || teamBPlayers.isEmpty();
+            
+            Toast.makeText(this, "Loaded game: " + teamA.getName() + " vs " + teamB.getName(), Toast.LENGTH_SHORT).show();
+            
+        } catch (Exception e) {
+            Toast.makeText(this, "Database error loading game: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            android.util.Log.e("GameActivity", "Error loading game data", e);
+            finish();
         }
     }
     
@@ -186,9 +252,11 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     private void initializeGameState() {
-        // Initialize team names in team panels
-        tvTeamAName.setText(teamAName);
-        tvTeamBName.setText(teamBName);
+        // Initialize team names in team panels from loaded teams
+        if (teamA != null && teamB != null) {
+            tvTeamAName.setText(teamA.getName());
+            tvTeamBName.setText(teamB.getName());
+        }
         
         // Initialize player button lists
         teamAPlayerButtons = new ArrayList<>();
@@ -197,11 +265,59 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         // Initialize event tracking
         recentEvents = new ArrayList<>();
         
-        // Clear game events when starting new game (for MVP)
+                // Clear game events when starting new game (for MVP)
         // TODO: In full implementation, load from database
         gameEvents.clear();
     }
     
+    /**
+     * Load existing game events from SQLite database
+     */
+    private void loadGameEvents() {
+        try {
+            if (currentGame != null && currentGame.getId() > 0) {
+                gameEvents = Event.findByGameId(dbController.getDatabaseHelper(), currentGame.getId());
+                
+                // Update recent events for live feed
+                updateRecentEventsFeed();
+                
+                android.util.Log.d("GameActivity", "Loaded " + gameEvents.size() + " events from database");
+            }
+        } catch (Exception e) {
+            android.util.Log.e("GameActivity", "Error loading game events", e);
+            gameEvents = new ArrayList<>();
+        }
+    }
+    
+    /**
+     * Update the event sequence counter based on existing events
+     */
+    private void updateEventSequenceCounter() {
+        eventSequenceCounter = 1;
+        if (!gameEvents.isEmpty()) {
+            int maxSequence = 0;
+            for (Event event : gameEvents) {
+                if (event.getEventSequence() > maxSequence) {
+                    maxSequence = event.getEventSequence();
+                }
+            }
+            eventSequenceCounter = maxSequence + 1;
+        }
+    }
+    
+    /**
+     * Save current game state to SQLite database
+     */
+    private void saveGameState() {
+        try {
+            if (currentGame != null) {
+                currentGame.save(dbController.getDatabaseHelper());
+            }
+        } catch (Exception e) {
+            android.util.Log.e("GameActivity", "Error saving game state", e);
+            Toast.makeText(this, "Error saving game state", Toast.LENGTH_SHORT).show();
+        }
+    }
 
     
     private void createPlayerButtons() {
@@ -881,25 +997,43 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             return;
         }
         
-        // Record scoring event
-        String playerTeam = selectedPlayer.getTeam();
-        if ("home".equals(playerTeam)) {
-            teamAScore += points;
-        } else {
-            teamBScore += points;
+        try {
+            // Record scoring event to SQLite database
+            String playerTeam = selectedPlayer.getTeam();
+            if ("home".equals(playerTeam)) {
+                currentGame.setHomeScore(currentGame.getHomeScore() + points);
+            } else {
+                currentGame.setAwayScore(currentGame.getAwayScore() + points);
+            }
+            
+            // Create and save Event to database
+            Event event = new Event(currentGame.getId(), selectedPlayer.getId(), playerTeam, 
+                                   currentGame.getCurrentQuarter(), currentGame.getGameClockSeconds(), eventType);
+            event.setEventSequence(eventSequenceCounter++);
+            event.save(dbController.getDatabaseHelper());
+            
+            // Add to local event list
+            gameEvents.add(event);
+            
+            // Save updated game state
+            saveGameState();
+            
+            // Visual feedback - flash button blue for 3 seconds
+            flashEventButton(getEventButton(eventType));
+            
+            // Show feedback
+            Toast.makeText(this, String.format("%s recorded for %s (+%d points)", 
+                eventType, selectedPlayer.getName(), points), Toast.LENGTH_SHORT).show();
+            
+            // Update displays and deselect
+            updateScoreDisplay();
+            addToLiveEventFeedSQLite(event);
+            deselectAllPlayers();
+            
+        } catch (Exception e) {
+            Toast.makeText(this, "Error saving event: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            android.util.Log.e("GameActivity", "Error recording scoring event", e);
         }
-        
-        // Visual feedback - flash button blue for 3 seconds
-        flashEventButton(getEventButton(eventType));
-        
-        // Show feedback
-        Toast.makeText(this, String.format("%s recorded for %s (+%d points)", 
-            eventType, selectedPlayer.getName(), points), Toast.LENGTH_SHORT).show();
-        
-        // Update displays and deselect
-        updateScoreDisplay();
-        addToLiveEventFeed(eventType, selectedPlayer);
-        deselectAllPlayers();
         
         // Single-event safety: Reset override after event recorded
         checkAndResetSingleEventOverride();
@@ -1218,15 +1352,19 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     private void updateScoreDisplay() {
-        // Update team scores for blue strip layout (just numbers)
-        tvTeamAScore.setText(String.valueOf(teamAScore));
-        tvTeamBScore.setText(String.valueOf(teamBScore));
+        // Update team scores for blue strip layout using SQLite currentGame
+        if (currentGame != null) {
+            tvTeamAScore.setText(String.valueOf(currentGame.getHomeScore()));
+            tvTeamBScore.setText(String.valueOf(currentGame.getAwayScore()));
+        }
     }
     
     private void updateGameClockDisplay() {
-        int minutes = gameTimeSeconds / 60;
-        int seconds = gameTimeSeconds % 60;
-        tvGameClock.setText(String.format("%d:%02d", minutes, seconds));
+        if (currentGame != null) {
+            int minutes = currentGame.getGameClockSeconds() / 60;
+            int seconds = currentGame.getGameClockSeconds() % 60;
+            tvGameClock.setText(String.format("%d:%02d", minutes, seconds));
+        }
     }
     
     // Quarter display now handled by spinner - no separate method needed
@@ -1301,29 +1439,66 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     private void addToLiveEventFeed(String eventType, Player player, String teamName) {
+        // Legacy method for backward compatibility
         // Create event description
-        String timeStr = String.format("%d:%02d", gameTimeSeconds / 60, gameTimeSeconds % 60);
+        String timeStr = String.format("%d:%02d", currentGame.getGameClockSeconds() / 60, currentGame.getGameClockSeconds() % 60);
         String eventDescription;
         
         if (player != null) {
             // Player event - include quarter info
             eventDescription = String.format("Q%d %s - #%d %s - %s", 
-                currentQuarter, timeStr, player.getNumber(), player.getName(), eventType);
+                currentGame.getCurrentQuarter(), timeStr, player.getNumber(), player.getName(), eventType);
         } else {
             // Team event - include quarter info
             eventDescription = String.format("Q%d %s - %s - %s", 
-                currentQuarter, timeStr, teamName, eventType);
+                currentGame.getCurrentQuarter(), timeStr, teamName, eventType);
         }
         
-        // Add to complete game events list
-        gameEvents.add(0, eventDescription); // Add at beginning (most recent first)
-        
-        // Update recent events list (last 5 from gameEvents)
-        updateRecentEventsList();
+        // Update recent events display
+        updateRecentEventsFeed();
+    }
+    
+    /**
+     * Add SQLite Event to live feed
+     */
+    private void addToLiveEventFeedSQLite(Event event) {
+        // Update recent events from database
+        updateRecentEventsFeed();
         
         // Update live feed display
         updateLiveEventFeedDisplay();
     }
+    
+    /**
+     * Update recent events from SQLite gameEvents list
+     */
+    private void updateRecentEventsFeed() {
+        recentEvents.clear();
+        int count = Math.min(2, gameEvents.size());
+        for (int i = gameEvents.size() - count; i < gameEvents.size(); i++) {
+            Event event = gameEvents.get(i);
+            String timeStr = String.format("%d:%02d", event.getGameTimeSeconds() / 60, event.getGameTimeSeconds() % 60);
+            String eventDescription;
+            
+            if (event.getPlayer() != null) {
+                eventDescription = String.format("Q%d %s - #%d %s - %s", 
+                    event.getQuarter(), timeStr, event.getPlayer().getJerseyNumber(), 
+                    event.getPlayer().getName(), event.getEventType());
+            } else {
+                eventDescription = String.format("Q%d %s - %s - %s", 
+                    event.getQuarter(), timeStr, event.getTeamSide().toUpperCase(), event.getEventType());
+            }
+            
+            recentEvents.add(0, eventDescription); // Add at beginning (most recent first)
+        }
+        
+        // Update display
+        updateLiveEventFeedDisplay();
+    }
+    
+
+    
+
     
     private void updateLiveEventFeedDisplay() {
         // Clear current feed display
@@ -1375,15 +1550,8 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         updateLiveEventFeedDisplay();
     }
     
-    // Static method to get all game events (for LogActivity)
-    public static List<String> getAllGameEvents() {
-        return gameEvents;
-    }
-    
-    // Static method to remove event (for LogActivity)
-    public static boolean removeGameEvent(String event) {
-        return gameEvents.remove(event);
-    }
+    // Note: Static methods removed - LogActivity should access events via SQLite database
+    // Use Event.findByGameId(dbHelper, gameId) to get events for a specific game
     
     // Helper to get event button by type
     private Button getEventButton(String eventType) {
