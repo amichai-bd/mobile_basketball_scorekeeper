@@ -92,14 +92,53 @@ public class MainActivity extends Activity {
     }
     
     private void initializeData() {
-        // Initialize database controller
-        dbController = DatabaseController.getInstance(this);
-        
-        // Initialize sync manager
-        syncManager = SyncManager.getInstance(this);
-        
-        // Load games from SQLite database
-        refreshGamesList();
+        try {
+            // Initialize database controller
+            dbController = DatabaseController.getInstance(this);
+            android.util.Log.d("MainActivity", "Database controller initialized");
+            
+            // Load games from SQLite database first (core functionality)
+            refreshGamesList();
+            
+            // Initialize sync manager in background (optional for core functionality)
+            initializeSyncManagerSafely();
+            
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Error initializing data", e);
+            Toast.makeText(this, "Starting in offline mode", Toast.LENGTH_SHORT).show();
+            
+            // Ensure we have empty lists as fallback
+            if (gamesList == null) {
+                gamesList = new java.util.ArrayList<>();
+            }
+        }
+    }
+    
+    private void initializeSyncManagerSafely() {
+        try {
+            // Initialize sync manager in background
+            new Thread(() -> {
+                try {
+                    syncManager = SyncManager.getInstance(MainActivity.this);
+                    android.util.Log.d("MainActivity", "Sync manager initialized");
+                    
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, "Sync ready", Toast.LENGTH_SHORT).show();
+                    });
+                    
+                } catch (Exception e) {
+                    android.util.Log.e("MainActivity", "Sync manager initialization failed", e);
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, "Sync unavailable - working offline", Toast.LENGTH_SHORT).show();
+                        setSyncButtonState(SyncState.OFFLINE);
+                    });
+                }
+            }).start();
+            
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Failed to start sync initialization", e);
+            setSyncButtonState(SyncState.OFFLINE);
+        }
     }
     
     private void refreshGamesList() {
