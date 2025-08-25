@@ -43,8 +43,8 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     private Button btnSelectTeamAPlayers, btnSelectTeamBPlayers; // Setup mode buttons
     private String currentModalTeamSide; // Track which team's modal is currently open
     
-    // UI Components - Blue Strip (Enhanced Layout)
-    private TextView tvTeamANameStrip, tvTeamBNameStrip; // Team names on blue strip
+    // UI Components - Team Panels (Team names now in team panels, not blue strip)
+    private TextView tvTeamAName, tvTeamBName; // Team names in team panels
     private TextView tvTeamAScore, tvTeamBScore, tvGameClock;
     private TextView tvTeamAFouls, tvTeamBFouls;
     private Button btnGameToggle;
@@ -142,8 +142,8 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     
     private void initializeViews() {
         // Blue strip components (Enhanced Layout)
-        tvTeamANameStrip = findViewById(R.id.tvTeamANameStrip);
-        tvTeamBNameStrip = findViewById(R.id.tvTeamBNameStrip);
+        tvTeamAName = findViewById(R.id.tvTeamAName);
+        tvTeamBName = findViewById(R.id.tvTeamBName);
         tvTeamAScore = findViewById(R.id.tvTeamAScore);
         tvTeamBScore = findViewById(R.id.tvTeamBScore);
         tvGameClock = findViewById(R.id.tvGameClock);
@@ -186,9 +186,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     private void initializeGameState() {
-        // Initialize team names in blue strip
-        tvTeamANameStrip.setText(teamAName);
-        tvTeamBNameStrip.setText(teamBName);
+        // Initialize team names in team panels
+        tvTeamAName.setText(teamAName);
+        tvTeamBName.setText(teamBName);
         
         // Initialize player button lists
         teamAPlayerButtons = new ArrayList<>();
