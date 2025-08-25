@@ -260,6 +260,7 @@ The screen has two distinct modes:
 │ Player 5 [0]  │                                │ [3] Player 10│
 │               │  8:45 - #23 LeBron - 2P    [⟲] │           │
 │               │  8:30 - Lakers - TIMEOUT       │           │
+│               │  8:15 - #12 Davis - DR         │           │
 │               │              [View Log]        │           │
 │[TimeOut]      │                                │ [TimeOut] │
 │[Foul]         │                                │ [Foul]    │
@@ -510,13 +511,13 @@ The screen has two distinct modes:
 - **Purpose**: Safe, controlled recording of rare dead-ball events with automatic safety reset
 
 #### Live Event Feed (Updated)
-- **Description**: Shows the last 2 recorded events for immediate feedback and context  
+- **Description**: Shows the last 3 recorded events for immediate feedback and context  
 - **Location**: Bottom center between Team A and Team B panels, under event buttons
 - **Content**: List showing "Time - Player - Event" format (e.g., "8:45 - #23 LeBron - 2P")
 - **Updates**: Automatically when events are recorded
-- **Format**: Most recent event at top, maximum 2 events shown, no title header
+- **Format**: Most recent event at top, maximum 3 events shown, no title header
 - **Team Events**: Shows team name instead of player (e.g., "8:30 - Lakers - TIMEOUT")
-- **Design**: Clean list without unnecessary "Last 2 Events" title for minimal clutter
+- **Design**: Clean list without unnecessary title for minimal clutter, enhanced space allocation for better visibility
 
 #### Undo Button (New)
 - **Description**: Allows undoing the last recorded event(s)
@@ -760,7 +761,7 @@ The screen has two distinct modes:
 2. When an event happens the user clicks on the player and then on the event
 3. Event is recorded with quick 0.3-second button flash and appears in live event feed
 4. If there is a follow up event like rebound or steal the user clicks on the player for follow up
-5. The system records the event in the log and live feed shows last 5 events
+5. The system records the event in the log and live feed shows last 3 events
 6. User can tap "View Log" to see complete event history
 7. User will apply substitutions and time outs when they happen
 
@@ -781,7 +782,7 @@ The screen has two distinct modes:
 
 ### Enhanced UX Principles
 - **Quick Visual Feedback**: 0.3-second button flash for immediate confirmation
-- **Live Event Feed**: Always visible last 5 events for context and verification
+- **Live Event Feed**: Always visible last 3 events for context and verification
 - **Complete Log Access**: One-tap access to full event history with edit/delete functionality
 - **Minimal Disruption**: Fast feedback allows focus to stay on live game action
 - **Clear Timer State**: Clock background color immediately shows running (green) vs paused (yellow)

@@ -443,13 +443,19 @@ Control panel height: Enhanced 2-row layout for better visibility
   - **✅ Clean Blue Strip**: Game controls only (Start/Pause, Clock, Quarter)
   - **✅ Personal Foul Buttons**: In team panels, require player selection first
   - **✅ 4x3 Event Grid**: FOUL button removed from events, cleaner layout
-  - **✅ Enhanced Log**: Last 2 events without title, undo functionality
+  - **✅ Enhanced Log**: Last 3 events without title, undo functionality
 - **Event Logging System** - Database storage for recorded events and statistics
 - **Enhanced Pop-up Workflows** - Full assist/rebound/steal pop-ups (if desired)
 - **Statistics Reporting** - Frame 5 & 6 implementation
 - Database implementation to replace in-memory storage
 
 ### 📋 **Latest Changes - UX Improvements & Enhanced Game Control**
+- ✅ **LIVE EVENT FEED ENHANCEMENT**: Expanded event log visibility for better user experience
+  - **Layout Weight Adjustment**: Increased live event feed space allocation from weight 1 to 1.5
+  - **Event Grid Optimization**: Reduced event grid weight from 3 to 2 for better balance
+  - **Increased Visibility**: Now shows last 3 events instead of 2 with enhanced space allocation
+  - **Better Space Distribution**: Event feed now gets 43% vs event grid 57% (was 25%/75%)
+  - **Improved User Experience**: Users can see more recent events on wider screens
 - ✅ **UX IMPROVEMENTS COMPLETE**: Enhanced user experience with crystal clear game state feedback
   - **START Button Gating**: Button disabled (grey) until both teams have 5 players, then enabled (green)
   - **Event Logging Control**: All events blocked when timer stopped, preventing accidental logging
@@ -506,7 +512,7 @@ Control panel height: Enhanced 2-row layout for better visibility
   - **Player Selection Workflow**: Click player → Click event → Record with visual feedback
   - **Quick Visual Feedback**: Buttons flash blue for 0.3 seconds (improved from 3s for better UX)
   - **Professional Layout**: Three-panel design (Team A | Events | Team B) matching specification
-  - **Live Event Feed**: Always-visible last 5 events at bottom of Event Panel for context
+  - **Live Event Feed**: Always-visible last 3 events at bottom of Event Panel for context
   - **View Log Access**: One-tap access to complete event history (Frame 5)
 - ✅ **Enhanced League Management - Player Management**: Complete team roster management
   - **Player Management Modal**: Full-screen modal overlay for team roster management ✅
