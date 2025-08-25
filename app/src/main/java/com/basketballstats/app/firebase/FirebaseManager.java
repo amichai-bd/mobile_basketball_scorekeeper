@@ -144,8 +144,12 @@ public class FirebaseManager {
      */
     public void downloadTeams(FirestoreCallback<List<Team>> callback) {
         try {
-            getUserCollection(COLLECTION_TEAMS)
-                .get()
+            CollectionReference teamsRef = getUserCollection(COLLECTION_TEAMS);
+            if (teamsRef == null) {
+                callback.onError("User authentication required for Firebase operations");
+                return;
+            }
+            teamsRef.get()
                 .addOnSuccessListener(querySnapshot -> {
                     List<Team> teams = new ArrayList<>();
                     for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
