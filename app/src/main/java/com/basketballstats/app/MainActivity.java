@@ -18,6 +18,7 @@ import android.view.animation.RotateAnimation;
 import com.basketballstats.app.models.Game;
 import com.basketballstats.app.data.DatabaseController;
 import com.basketballstats.app.sync.SyncManager;
+import com.basketballstats.app.auth.AuthController;
 import java.util.List;
 
 /**
@@ -39,6 +40,7 @@ public class MainActivity extends Activity {
     // UI Components
     private Button btnEditLeague;
     private Button btnSync;
+    private Button btnLogout;
     private ListView lvGames;
     
     // Database and Data
@@ -86,6 +88,7 @@ public class MainActivity extends Activity {
     private void initializeViews() {
         btnEditLeague = findViewById(R.id.btnEditLeague);
         btnSync = findViewById(R.id.btnSync);
+        btnLogout = findViewById(R.id.btnLogout);
         lvGames = findViewById(R.id.lvGames);
         
         // Initialize sync rotation animation
@@ -245,6 +248,14 @@ public class MainActivity extends Activity {
             }
         });
         
+        // Logout button - sign out and return to authentication
+        btnLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                handleLogout();
+            }
+        });
+        
         // Game selection - one tap to proceed directly to game screen
         lvGames.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -293,6 +304,32 @@ public class MainActivity extends Activity {
         intent.putExtra("gameTime", game.getTime());
         intent.putExtra("navigationMode", navigationMode); // NEW: Status-aware navigation
         startActivity(intent);
+    }
+    
+    /**
+     * Handle user logout - sign out and return to authentication screen
+     */
+    private void handleLogout() {
+        try {
+            // Get authentication controller instance
+            AuthController authController = AuthController.getInstance(this);
+            
+            // Sign out from Firebase
+            authController.signOut();
+            
+            // Show confirmation message
+            Toast.makeText(this, "Signed out successfully", Toast.LENGTH_SHORT).show();
+            
+            // Navigate back to AuthActivity
+            Intent intent = new Intent(this, AuthActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+            
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Error during logout", e);
+            Toast.makeText(this, "Error signing out", Toast.LENGTH_SHORT).show();
+        }
     }
     
     /**

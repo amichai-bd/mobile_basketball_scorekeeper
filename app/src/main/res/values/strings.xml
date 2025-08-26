@@ -4,4 +4,9 @@
     <string name="team_selection_prompt">Choose Team</string>
     <string name="home_team_prompt">Select Home Team</string>
     <string name="away_team_prompt">Select Away Team</string>
+    
+    <!-- Firebase Google Sign-In Web Client ID -->
+    <!-- TODO: Replace with actual web client ID from google-services.json -->
+    <!-- This is automatically added when Firebase is properly configured -->
+    <string name="default_web_client_id">104204131485-bb2hqhs8rttv6v48ei6a7s79t9vkh1j0.apps.googleusercontent.com</string>
 </resources>

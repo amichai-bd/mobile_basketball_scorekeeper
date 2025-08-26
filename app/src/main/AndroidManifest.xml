@@ -26,9 +26,9 @@
         android:label="My App"
         android:theme="@style/Theme.AppCompat.Light">
         
-        <!-- Main Activity - App entry point -->
+        <!-- Authentication Activity - App entry point -->
         <activity 
-            android:name=".MainActivity"
+            android:name=".AuthActivity"
             android:exported="true"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -36,6 +36,12 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        
+        <!-- Main Activity - Game selection (after authentication) -->
+        <activity 
+            android:name=".MainActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
         
         <!-- Game Roster Activity (Frame 2) - DEPRECATED: Now handled by unified modal in GameActivity -->
         

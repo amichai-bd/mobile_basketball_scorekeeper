@@ -12,7 +12,20 @@
           "package_name": "com.basketballstats.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "104204131485-lmiomtvkqi4f6b395fdl6v06fb04hupq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.basketballstats.app",
+            "certificate_hash": "f06481660b0af1c400505f0e23f5388add4b31ef"
+          }
+        },
+        {
+          "client_id": "104204131485-bb2hqhs8rttv6v48ei6a7s79t9vkh1j0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCj8GR-njcGTVB8kxHW4vs73ULFw6PQNRA"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "104204131485-bb2hqhs8rttv6v48ei6a7s79t9vkh1j0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
