@@ -88,7 +88,10 @@ public class Game {
     public void setAwayTeamId(int awayTeamId) { this.awayTeamId = awayTeamId; }
     
     public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public void setStatus(String status) { 
+        this.status = status; 
+        this.updatedAt = getCurrentTimestamp();
+    }
     
     public int getHomeScore() { return homeScore; }
     public void setHomeScore(int homeScore) { this.homeScore = homeScore; }
@@ -246,18 +249,6 @@ public class Game {
     public void setToDone() {
         this.status = "done";
         this.updatedAt = getCurrentTimestamp();
-    }
-    
-    /**
-     * Validate and set status with error checking
-     */
-    public boolean setStatus(String newStatus) {
-        if (isValidStatus(newStatus)) {
-            this.status = newStatus;
-            this.updatedAt = getCurrentTimestamp();
-            return true;
-        }
-        return false;
     }
     
     /**

@@ -16,6 +16,7 @@ import android.widget.Toast;
 import com.basketballstats.app.models.Player;
 import com.basketballstats.app.models.Team;
 import com.basketballstats.app.models.TeamPlayer;
+import com.basketballstats.app.models.GamePlayer;
 import com.basketballstats.app.sync.SyncManager;
 import com.basketballstats.app.models.Game;
 import com.basketballstats.app.models.Event;
@@ -555,10 +556,10 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             
             // Save Team A players (home side)
             for (Player player : teamAPlayers) {
-                if (player.getOriginalTeamPlayerId() > 0) {
+                if (player.getId() > 0) {
                     GamePlayer gamePlayer = new GamePlayer(
                         currentGame.getId(), 
-                        player.getOriginalTeamPlayerId(), 
+                        player.getId(), // Player.id stores the original TeamPlayer.id
                         "home", 
                         true // isStarter - all initially selected players are starters
                     );
@@ -569,10 +570,10 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             
             // Save Team B players (away side)  
             for (Player player : teamBPlayers) {
-                if (player.getOriginalTeamPlayerId() > 0) {
+                if (player.getId() > 0) {
                     GamePlayer gamePlayer = new GamePlayer(
                         currentGame.getId(), 
-                        player.getOriginalTeamPlayerId(), 
+                        player.getId(), // Player.id stores the original TeamPlayer.id
                         "away", 
                         true // isStarter - all initially selected players are starters
                     );
@@ -2000,6 +2001,15 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         updateGameClockDisplay();
         updateTeamFoulsDisplay();
         updateContextAwareButtons(); // Update button text based on timer state
+        
+        // ✅ FIX: Update button states to reflect current clock status
+        updateGameToggleButton(); // Updates START/PAUSE button and colors
+        updateAllowEventsButton(); // Updates event override button
+        
+        // ✅ FIX: Update event button states (gray out when clock paused)
+        boolean bothTeamsReady = (teamAPlayers.size() == 5 && teamBPlayers.size() == 5);
+        enableEventButtons(bothTeamsReady);
+        
         // Quarter display is now handled by spinner
     }
     
@@ -2286,6 +2296,24 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     @Override
+    protected void onPause() {
+        super.onPause();
+        android.util.Log.d("GameActivity", "⏸️ onPause() CALLED - Pausing clock and saving state");
+        
+        // ✅ FIX: Properly pause clock when leaving activity
+        if (isClockRunning) {
+            // Stop the clock timer but don't show toast (user is leaving)
+            stopClock();
+            isClockRunning = false;
+            
+            // Save the paused state to database
+            saveGameStateToDatabase();
+            
+            android.util.Log.d("GameActivity", "✅ Clock paused and state saved due to activity pause");
+        }
+    }
+    
+    @Override
     protected void onResume() {
         super.onResume();
         android.util.Log.d("GameActivity", "🔄 onResume() CALLED - Reloading game data from database");
@@ -2301,6 +2329,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         
         // ✅ NEW: Update setup mode based on current game status and loaded players
         updateSetupModeAfterReload();
+        
+        android.util.Log.d("GameActivity", String.format("🔄 onResume() - Clock state loaded: isRunning=%b, time=%s", 
+            isClockRunning, formatTime(gameTimeSeconds)));
         
         android.util.Log.d("GameActivity", "🔄 onResume() calling updateAllDisplays()...");
         updateAllDisplays();
