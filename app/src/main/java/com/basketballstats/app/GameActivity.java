@@ -39,6 +39,11 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     // Database and Game State
     private DatabaseController dbController;
     private Game currentGame; // SQLite game object with persistent state
+    
+    // ✅ ARCHITECTURE NOTE: Two-model system for performance and data consistency
+    // - TeamPlayer: SQLite-persisted team roster members (database IDs)
+    // - Player: In-memory game session players (converted from TeamPlayer via toGamePlayer())
+    // - Events use Player.getId() which returns the original TeamPlayer.id for database linkage
     private List<Player> teamAPlayers, teamBPlayers;
     private Player selectedPlayer = null;
     private int eventSequenceCounter = 1; // For tracking event order
@@ -205,10 +210,29 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             // Update event sequence counter
             updateEventSequenceCounter();
             
+            // ✅ FIX: Initialize derived game state from currentGame object
+            if (currentGame != null) {
+                this.gameId = currentGame.getId();
+                this.currentQuarter = currentGame.getCurrentQuarter();
+                this.gameTimeSeconds = currentGame.getGameClockSeconds();
+                this.isClockRunning = currentGame.isClockRunning();
+            }
+            
+            // Initialize team names from loaded team objects
+            if (teamA != null) {
+                this.teamAName = teamA.getName();
+            }
+            if (teamB != null) {
+                this.teamBName = teamB.getName();
+            }
+            
             // Check if we're resuming a game or starting fresh
             isInSetupMode = teamAPlayers.isEmpty() || teamBPlayers.isEmpty();
             
             Toast.makeText(this, "Loaded game: " + teamA.getName() + " vs " + teamB.getName(), Toast.LENGTH_SHORT).show();
+            
+            android.util.Log.d("GameActivity", String.format("Game initialized - ID: %d, Quarter: %d, Clock: %d", 
+                this.gameId, this.currentQuarter, this.gameTimeSeconds));
             
         } catch (Exception e) {
             Toast.makeText(this, "Database error loading game: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -896,11 +920,7 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         // Foul button removed - now handled by team panels
     }
     
-    private void setupGameClock() {
-        // Initialize with timer paused state
-        isClockRunning = false;
-        updateGameToggleButton();
-    }
+
     
     private void selectPlayer(Player player, Button button) {
         // Deselect all players first
@@ -1098,15 +1118,34 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             return;
         }
         
-        // Visual feedback - flash button blue for 3 seconds
-        flashEventButton(getEventButton(eventType));
-        
-        // Show feedback
-        Toast.makeText(this, String.format("%s recorded for %s", 
-            eventType, selectedPlayer.getName()), Toast.LENGTH_SHORT).show();
-        
-        addToLiveEventFeed(eventType, selectedPlayer);
-        deselectAllPlayers();
+        try {
+            // ✅ FIX: Save miss event to SQLite database
+            String playerTeam = selectedPlayer.getTeam();
+            
+            // Create and save Event to database
+            Event event = new Event(currentGame.getId(), selectedPlayer.getId(), playerTeam, 
+                                   currentGame.getCurrentQuarter(), currentGame.getGameClockSeconds(), eventType);
+            event.setEventSequence(eventSequenceCounter++);
+            event.save(dbController.getDatabaseHelper());
+            
+            // Add to local event list
+            gameEvents.add(event);
+            
+            // Visual feedback - flash button blue
+            flashEventButton(getEventButton(eventType));
+            
+            // Show feedback
+            Toast.makeText(this, String.format("%s recorded for %s", 
+                eventType, selectedPlayer.getName()), Toast.LENGTH_SHORT).show();
+            
+            // Update displays and deselect
+            addToLiveEventFeedSQLite(event);
+            deselectAllPlayers();
+            
+        } catch (Exception e) {
+            Toast.makeText(this, "Error saving miss event: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            android.util.Log.e("GameActivity", "Error recording miss event", e);
+        }
         
         // Single-event safety: Reset override after event recorded
         checkAndResetSingleEventOverride();
@@ -1123,37 +1162,54 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             return;
         }
         
-        // Increment personal fouls
-        selectedPlayer.setPersonalFouls(selectedPlayer.getPersonalFouls() + 1);
-        
-        // Increment team fouls
-        String playerTeam = selectedPlayer.getTeam();
-        if ("home".equals(playerTeam)) {
-            teamAFouls++;
-        } else {
-            teamBFouls++;
+        try {
+            // ✅ FIX: Save foul event to SQLite database
+            String playerTeam = selectedPlayer.getTeam();
+            
+            // Create and save Event to database
+            Event event = new Event(currentGame.getId(), selectedPlayer.getId(), playerTeam, 
+                                   currentGame.getCurrentQuarter(), currentGame.getGameClockSeconds(), eventType);
+            event.setEventSequence(eventSequenceCounter++);
+            event.save(dbController.getDatabaseHelper());
+            
+            // Add to local event list
+            gameEvents.add(event);
+            
+            // Increment personal fouls
+            selectedPlayer.setPersonalFouls(selectedPlayer.getPersonalFouls() + 1);
+            
+            // Increment team fouls
+            if ("home".equals(playerTeam)) {
+                teamAFouls++;
+            } else {
+                teamBFouls++;
+            }
+            
+            // Visual feedback
+            if ("home".equals(playerTeam)) {
+                flashEventButton(btnTeamAFoul);
+            } else {
+                flashEventButton(btnTeamBFoul);
+            }
+            
+            // Check for foul out (5 fouls)
+            if (selectedPlayer.getPersonalFouls() >= 5) {
+                Toast.makeText(this, selectedPlayer.getName() + " fouled out! (5 fouls)", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, String.format("Foul recorded for %s (%d fouls)", 
+                    selectedPlayer.getName(), selectedPlayer.getPersonalFouls()), Toast.LENGTH_SHORT).show();
+            }
+            
+            // Update displays
+            updatePlayerButtonText();
+            updateTeamFoulsDisplay();
+            addToLiveEventFeedSQLite(event);
+            deselectAllPlayers();
+            
+        } catch (Exception e) {
+            Toast.makeText(this, "Error saving foul event: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            android.util.Log.e("GameActivity", "Error recording foul event", e);
         }
-        
-        // Visual feedback
-        if ("home".equals(playerTeam)) {
-            flashEventButton(btnTeamAFoul);
-        } else {
-            flashEventButton(btnTeamBFoul);
-        }
-        
-        // Check for foul out (5 fouls)
-        if (selectedPlayer.getPersonalFouls() >= 5) {
-            Toast.makeText(this, selectedPlayer.getName() + " fouled out! (5 fouls)", Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(this, String.format("Foul recorded for %s (%d fouls)", 
-                selectedPlayer.getName(), selectedPlayer.getPersonalFouls()), Toast.LENGTH_SHORT).show();
-        }
-        
-        // Update displays
-        updatePlayerButtonText();
-        updateTeamFoulsDisplay();
-        addToLiveEventFeed(eventType, selectedPlayer);
-        deselectAllPlayers();
         
         // Single-event safety: Reset override after event recorded
         checkAndResetSingleEventOverride();
@@ -1166,13 +1222,33 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             return;
         }
         
-        // Visual feedback
-        flashEventButton(btnTO);
-        
-        Toast.makeText(this, String.format("Turnover recorded for %s", selectedPlayer.getName()), Toast.LENGTH_SHORT).show();
-        
-        addToLiveEventFeed(eventType, selectedPlayer);
-        deselectAllPlayers();
+        try {
+            // ✅ FIX: Save turnover event to SQLite database
+            String playerTeam = selectedPlayer.getTeam();
+            
+            // Create and save Event to database
+            Event event = new Event(currentGame.getId(), selectedPlayer.getId(), playerTeam, 
+                                   currentGame.getCurrentQuarter(), currentGame.getGameClockSeconds(), eventType);
+            event.setEventSequence(eventSequenceCounter++);
+            event.save(dbController.getDatabaseHelper());
+            
+            // Add to local event list
+            gameEvents.add(event);
+            
+            // Visual feedback
+            flashEventButton(btnTO);
+            
+            // Show feedback
+            Toast.makeText(this, String.format("Turnover recorded for %s", selectedPlayer.getName()), Toast.LENGTH_SHORT).show();
+            
+            // Update displays and deselect
+            addToLiveEventFeedSQLite(event);
+            deselectAllPlayers();
+            
+        } catch (Exception e) {
+            Toast.makeText(this, "Error saving turnover event: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            android.util.Log.e("GameActivity", "Error recording turnover event", e);
+        }
         
         // Single-event safety: Reset override after event recorded
         checkAndResetSingleEventOverride();
@@ -1189,15 +1265,35 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             return;
         }
         
-        // Visual feedback
-        flashEventButton(getEventButton(eventType));
-        
-        // Show feedback
-        Toast.makeText(this, String.format("%s recorded for %s", 
-            eventType, selectedPlayer.getName()), Toast.LENGTH_SHORT).show();
-        
-        addToLiveEventFeed(eventType, selectedPlayer);
-        deselectAllPlayers();
+        try {
+            // ✅ FIX: Save event to SQLite database
+            String playerTeam = selectedPlayer.getTeam();
+            
+            // Create and save Event to database
+            Event event = new Event(currentGame.getId(), selectedPlayer.getId(), playerTeam, 
+                                   currentGame.getCurrentQuarter(), currentGame.getGameClockSeconds(), eventType);
+            event.setEventSequence(eventSequenceCounter++);
+            event.setPointsValue(points);
+            event.save(dbController.getDatabaseHelper());
+            
+            // Add to local event list
+            gameEvents.add(event);
+            
+            // Visual feedback
+            flashEventButton(getEventButton(eventType));
+            
+            // Show feedback
+            Toast.makeText(this, String.format("%s recorded for %s", 
+                eventType, selectedPlayer.getName()), Toast.LENGTH_SHORT).show();
+            
+            // Update displays and deselect
+            addToLiveEventFeedSQLite(event);
+            deselectAllPlayers();
+            
+        } catch (Exception e) {
+            Toast.makeText(this, "Error saving event: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            android.util.Log.e("GameActivity", "Error recording " + eventType + " event", e);
+        }
         
         // Single-event safety: Reset override after event recorded
         checkAndResetSingleEventOverride();
@@ -1571,9 +1667,19 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     private void openEventLog() {
         // Navigate to LogActivity (Frame 5) for complete event history
         android.content.Intent intent = new android.content.Intent(this, LogActivity.class);
-        intent.putExtra("gameId", gameId);
-        intent.putExtra("teamAName", teamAName);
-        intent.putExtra("teamBName", teamBName);
+        
+        // ✅ FIX: Use currentGame object data instead of uninitialized fields
+        if (currentGame != null) {
+            intent.putExtra("gameId", currentGame.getId());
+            intent.putExtra("teamAName", (teamA != null) ? teamA.getName() : "Team A");
+            intent.putExtra("teamBName", (teamB != null) ? teamB.getName() : "Team B");
+            
+            android.util.Log.d("GameActivity", String.format("Opening event log for game %d: %s vs %s", 
+                currentGame.getId(), teamA.getName(), teamB.getName()));
+        } else {
+            Toast.makeText(this, "Error: No game data available", Toast.LENGTH_SHORT).show();
+            return;
+        }
         
         startActivity(intent);
     }
@@ -1721,5 +1827,31 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         // Calculate team fouls (simplified for now)
         teamAFouls = 0; // TODO: Query from database
         teamBFouls = 0; // TODO: Query from database
+    }
+    
+    /**
+     * ✅ FIX: Missing setupGameClock method that was being called but didn't exist
+     * Initialize game clock state and resume if clock was running
+     */
+    private void setupGameClock() {
+        // Initialize game clock defaults if not loaded from database
+        if (currentQuarter <= 0) {
+            currentQuarter = 1;
+        }
+        if (gameTimeSeconds <= 0) {
+            gameTimeSeconds = 600; // 10:00 default
+        }
+        
+        android.util.Log.d("GameActivity", String.format("⏰ setupGameClock - Quarter: %d, Time: %d, Running: %b", 
+            currentQuarter, gameTimeSeconds, isClockRunning));
+        
+        // Update clock display immediately
+        updateGameClockDisplay();
+        
+        // If clock was running when game was saved, resume it
+        if (isClockRunning) {
+            android.util.Log.d("GameActivity", "🔄 Resuming clock from saved state");
+            startClock();
+        }
     }
 }

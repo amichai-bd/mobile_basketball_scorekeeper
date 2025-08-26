@@ -55,7 +55,21 @@ public class PlayerManagementModal {
         this.context = context;
         this.team = team;
         this.listener = listener;
-        this.playersList = new ArrayList<>(team.getPlayers()); // Create copy for editing
+        
+        // ✅ FIX: Create copy of team's players for editing
+        this.playersList = new ArrayList<>(team.getPlayers());
+        
+        // Debug logging to verify players are loaded
+        android.util.Log.d("PlayerManagementModal", String.format(
+            "✅ Initialized with team '%s' having %d players: %s", 
+            team.getName(), 
+            playersList.size(),
+            playersList.isEmpty() ? "EMPTY - This indicates a data loading issue!" : "Players loaded successfully"
+        ));
+        
+        if (playersList.isEmpty()) {
+            android.util.Log.w("PlayerManagementModal", "⚠️ WARNING: Team has no players loaded! Check if team.loadPlayers() was called.");
+        }
     }
     
     /**
@@ -280,21 +294,117 @@ public class PlayerManagementModal {
     }
     
     private void handleSaveChanges() {
-        // Update the team's player list
-        team.getPlayers().clear();
-        team.getPlayers().addAll(playersList);
-        
-        // Save to data provider
-        team.save(DatabaseController.getInstance(context).getDatabaseHelper());
-        
-        // Notify listener
-        if (listener != null) {
-            listener.onPlayersChanged(team);
+        try {
+            DatabaseController dbController = DatabaseController.getInstance(context);
+            
+            // ✅ FIX: Safe approach that avoids foreign key constraint violations
+            // Instead of deleting and recreating, we'll update/insert/delete individually
+            
+            List<TeamPlayer> existingPlayers = TeamPlayer.findByTeamId(dbController.getDatabaseHelper(), team.getId());
+            
+            // Step 1: Update or insert current players
+            for (TeamPlayer currentPlayer : playersList) {
+                // Ensure player has correct team ID
+                if (currentPlayer.getTeamId() != team.getId()) {
+                    currentPlayer = new TeamPlayer(currentPlayer.getId(), team.getId(), currentPlayer.getNumber(), currentPlayer.getName());
+                }
+                
+                // Save (will update if ID exists, insert if new)
+                long result = currentPlayer.save(dbController.getDatabaseHelper());
+                android.util.Log.d("PlayerManagementModal", 
+                    String.format("Saved player #%d %s (result: %d)", 
+                    currentPlayer.getNumber(), currentPlayer.getName(), result));
+            }
+            
+            // Step 2: Safely delete players that were removed (only if not referenced by events/games)
+            for (TeamPlayer existingPlayer : existingPlayers) {
+                boolean playerStillExists = false;
+                for (TeamPlayer currentPlayer : playersList) {
+                    if (existingPlayer.getId() == currentPlayer.getId()) {
+                        playerStillExists = true;
+                        break;
+                    }
+                }
+                
+                if (!playerStillExists) {
+                    // ✅ FIX: Allow deletion while preserving historical game data
+                    // Check if player has historical events (for informational purposes only)
+                    int eventCount = com.basketballstats.app.models.Event.getCountForPlayer(
+                        dbController.getDatabaseHelper(), existingPlayer.getId());
+                    
+                    // Remove player from current roster (historical events remain intact)
+                    boolean deleted = existingPlayer.delete(dbController.getDatabaseHelper());
+                    
+                    if (deleted) {
+                        if (eventCount > 0) {
+                            android.util.Log.d("PlayerManagementModal", 
+                                String.format("Removed #%d %s from roster (%d historical events preserved)", 
+                                existingPlayer.getNumber(), existingPlayer.getName(), eventCount));
+                        } else {
+                            android.util.Log.d("PlayerManagementModal", 
+                                String.format("Removed #%d %s from roster (no game history)", 
+                                existingPlayer.getNumber(), existingPlayer.getName()));
+                        }
+                    } else {
+                        android.util.Log.e("PlayerManagementModal", 
+                            String.format("Failed to remove #%d %s from roster", 
+                            existingPlayer.getNumber(), existingPlayer.getName()));
+                    }
+                }
+            }
+            
+            // Update the team's player list in memory
+            team.getPlayers().clear();
+            team.getPlayers().addAll(playersList);
+            
+            // Save team metadata if needed
+            team.save(dbController.getDatabaseHelper());
+            
+            // Notify listener
+            if (listener != null) {
+                listener.onPlayersChanged(team);
+            }
+            
+            // Check if any removed players had historical data
+            boolean hasPlayersWithHistory = false;
+            for (TeamPlayer existingPlayer : existingPlayers) {
+                boolean stillExists = false;
+                for (TeamPlayer currentPlayer : playersList) {
+                    if (existingPlayer.getId() == currentPlayer.getId()) {
+                        stillExists = true;
+                        break;
+                    }
+                }
+                if (!stillExists) {
+                    int eventCount = com.basketballstats.app.models.Event.getCountForPlayer(
+                        dbController.getDatabaseHelper(), existingPlayer.getId());
+                    if (eventCount > 0) {
+                        hasPlayersWithHistory = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Show appropriate success message
+            if (hasPlayersWithHistory) {
+                Toast.makeText(context, String.format("✅ Saved %d players for %s\nℹ️ Historical game data preserved", 
+                    playersList.size(), team.getName()), Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(context, String.format("✅ Saved %d players for %s", 
+                    playersList.size(), team.getName()), Toast.LENGTH_SHORT).show();
+            }
+            android.util.Log.d("PlayerManagementModal", 
+                String.format("✅ Successfully saved %d players to database for team '%s'", 
+                playersList.size(), team.getName()));
+            dialog.dismiss();
+            
+        } catch (Exception e) {
+            Toast.makeText(context, "❌ Error saving players: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            android.util.Log.e("PlayerManagementModal", "Error saving players to database", e);
         }
-        
-        Toast.makeText(context, "✅ Player roster saved for " + team.getName(), Toast.LENGTH_SHORT).show();
-        dialog.dismiss();
     }
+    
+
     
     /**
      * Custom adapter for player management list

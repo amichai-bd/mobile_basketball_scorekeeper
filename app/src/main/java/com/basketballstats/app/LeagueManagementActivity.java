@@ -527,7 +527,15 @@ public class LeagueManagementActivity extends Activity {
     }
     
     private void openPlayerManagement(Team team) {
-        PlayerManagementModal modal = new PlayerManagementModal(this, team, new PlayerManagementModal.OnPlayersChangedListener() {
+        // ✅ FIX: Load team with complete roster from SQLite database
+        Team teamWithRoster = dbController.getTeamWithRoster(team.getId());
+        
+        if (teamWithRoster == null) {
+            Toast.makeText(this, "Error: Could not load team data", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        PlayerManagementModal modal = new PlayerManagementModal(this, teamWithRoster, new PlayerManagementModal.OnPlayersChangedListener() {
             @Override
             public void onPlayersChanged(Team updatedTeam) {
                 // Refresh the teams adapter to show updated player count

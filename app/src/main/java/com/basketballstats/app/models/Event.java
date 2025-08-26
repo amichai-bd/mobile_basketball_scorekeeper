@@ -222,10 +222,12 @@ public class Event {
     
     /**
      * Display format for event log
+     * ✅ FIX: Include quarter information for LogActivity parsing
+     * Expected format: "Q1 8:45 - #23 LeBron James - 2P"
      */
     @Override
     public String toString() {
-        return getFormattedGameTime() + " - " + getDisplayDescription();
+        return getQuarterDisplay() + " " + getFormattedGameTime() + " - " + getDisplayDescription();
     }
     
     // ========== SQLITE CRUD OPERATIONS ==========
@@ -299,6 +301,21 @@ public class Event {
         }
         
         return success;
+    }
+    
+    /**
+     * Delete all events for a specific game
+     * Used for clearing game logs
+     */
+    public static int deleteByGameId(DatabaseHelper dbHelper, int gameId) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        String whereClause = DatabaseHelper.EVENTS_COLUMN_GAME_ID + " = ?";
+        String[] whereArgs = {String.valueOf(gameId)};
+        
+        int rowsAffected = db.delete(DatabaseHelper.TABLE_EVENTS, whereClause, whereArgs);
+        
+        Log.d(TAG, String.format("Deleted %d events for game ID: %d", rowsAffected, gameId));
+        return rowsAffected;
     }
     
     /**
@@ -526,6 +543,26 @@ public class Event {
             count = cursor.getInt(0);
         }
         cursor.close();
+        return count;
+    }
+    
+    /**
+     * Get event count for player (for foreign key safety checking)
+     */
+    public static int getCountForPlayer(DatabaseHelper dbHelper, int playerId) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String query = "SELECT COUNT(*) FROM " + DatabaseHelper.TABLE_EVENTS + 
+                      " WHERE " + DatabaseHelper.EVENTS_COLUMN_PLAYER_ID + " = ?";
+        String[] selectionArgs = {String.valueOf(playerId)};
+        
+        Cursor cursor = db.rawQuery(query, selectionArgs);
+        int count = 0;
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+        cursor.close();
+        
+        Log.d(TAG, String.format("Player %d has %d events recorded", playerId, count));
         return count;
     }
     

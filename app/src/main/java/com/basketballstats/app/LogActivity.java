@@ -25,6 +25,7 @@ public class LogActivity extends Activity {
     private TextView tvTitle;
     private ListView lvEventLog;
     private Button btnBackToGame;
+    private Button btnClearLog;
     
     private int gameId;
     private String teamAName, teamBName;
@@ -56,6 +57,10 @@ public class LogActivity extends Activity {
         teamAName = getIntent().getStringExtra("teamAName");
         teamBName = getIntent().getStringExtra("teamBName");
         
+        // ✅ DEBUG: Log received data to diagnose empty log issue
+        android.util.Log.d("LogActivity", String.format("📊 RECEIVED DATA - GameID: %d, TeamA: %s, TeamB: %s", 
+            gameId, teamAName, teamBName));
+        
         // ✅ FIXED: Load all events from database for this game
         loadEventsFromDatabase();
     }
@@ -67,27 +72,39 @@ public class LogActivity extends Activity {
         allEvents = new ArrayList<>();
         
         try {
+            // ✅ DEBUG: Enhanced logging to diagnose empty log issue
+            android.util.Log.d("LogActivity", "🔍 STARTING loadEventsFromDatabase() for gameId: " + gameId);
+            
             // Initialize database controller
             com.basketballstats.app.data.DatabaseController dbController = 
                 com.basketballstats.app.data.DatabaseController.getInstance(this);
+            android.util.Log.d("LogActivity", "✅ Database controller initialized");
             
             // Load all events for this game from SQLite database
             java.util.List<com.basketballstats.app.models.Event> gameEvents = 
                 com.basketballstats.app.models.Event.findByGameId(dbController.getDatabaseHelper(), gameId);
+            android.util.Log.d("LogActivity", String.format("📋 Found %d raw events in database for gameId %d", 
+                gameEvents.size(), gameId));
             
             // Convert Event objects to display strings
-            for (com.basketballstats.app.models.Event event : gameEvents) {
+            for (int i = 0; i < gameEvents.size(); i++) {
+                com.basketballstats.app.models.Event event = gameEvents.get(i);
+                android.util.Log.d("LogActivity", String.format("🔄 Processing event %d: %s (player=%d)", 
+                    i+1, event.getEventType(), event.getPlayerId()));
+                
                 // Load related objects (players) for complete display
                 event.loadRelatedObjects(dbController.getDatabaseHelper());
                 
                 // Add formatted event string to display list
-                allEvents.add(event.toString());
+                String eventString = event.toString();
+                allEvents.add(eventString);
+                android.util.Log.d("LogActivity", String.format("✅ Event %d formatted: %s", i+1, eventString));
             }
             
-            android.util.Log.d("LogActivity", "✅ Loaded " + allEvents.size() + " events from database for game " + gameId);
+            android.util.Log.d("LogActivity", String.format("🎯 FINAL RESULT: %d events loaded for display", allEvents.size()));
             
         } catch (Exception e) {
-            android.util.Log.e("LogActivity", "❌ Error loading events from database", e);
+            android.util.Log.e("LogActivity", "❌ Error loading events from database for gameId " + gameId, e);
             allEvents = new ArrayList<>(); // Fallback to empty list
         }
     }
@@ -98,6 +115,7 @@ public class LogActivity extends Activity {
         tvTitle = findViewById(R.id.tvLogTitle);
         lvEventLog = findViewById(R.id.lvEventLog);
         btnBackToGame = findViewById(R.id.btnBackToGame);
+        btnClearLog = findViewById(R.id.btnClearLog);
         
         // Set title
         String title = String.format("Event Log - %s vs %s", teamAName, teamBName);
@@ -116,6 +134,59 @@ public class LogActivity extends Activity {
                 finish(); // Return to GameActivity
             }
         });
+        
+        btnClearLog.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showClearLogConfirmation();
+            }
+        });
+    }
+    
+    /**
+     * Show confirmation dialog for clearing all events
+     */
+    private void showClearLogConfirmation() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Clear All Events")
+               .setMessage("⚠️ This will permanently delete ALL events for this game!\n\nAre you sure you want to continue?")
+               .setPositiveButton("Clear All", new DialogInterface.OnClickListener() {
+                   @Override
+                   public void onClick(DialogInterface dialog, int which) {
+                       clearAllEvents();
+                   }
+               })
+               .setNegativeButton("Cancel", null)
+               .setIcon(android.R.drawable.ic_dialog_alert)
+               .show();
+    }
+    
+    /**
+     * Clear all events for the current game from SQLite database
+     */
+    private void clearAllEvents() {
+        try {
+            com.basketballstats.app.data.DatabaseController dbController = 
+                com.basketballstats.app.data.DatabaseController.getInstance(this);
+            
+            // Delete all events for this game from SQLite database
+            int deletedCount = com.basketballstats.app.models.Event.deleteByGameId(
+                dbController.getDatabaseHelper(), gameId);
+            
+            // Clear local list and refresh adapter
+            allEvents.clear();
+            eventAdapter.notifyDataSetChanged();
+            
+            Toast.makeText(this, String.format("✅ Cleared %d events from game log", deletedCount), 
+                          Toast.LENGTH_SHORT).show();
+            
+            android.util.Log.d("LogActivity", String.format("🗑️ Successfully cleared %d events for gameId %d", 
+                deletedCount, gameId));
+            
+        } catch (Exception e) {
+            android.util.Log.e("LogActivity", "❌ Error clearing events for gameId " + gameId, e);
+            Toast.makeText(this, "Error: Could not clear events", Toast.LENGTH_SHORT).show();
+        }
     }
     
     /**
