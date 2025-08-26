@@ -26,6 +26,7 @@ public class LogActivity extends Activity {
     private ListView lvEventLog;
     private Button btnBackToGame;
     private Button btnClearLog;
+    private Button btnEndGame;
     
     private int gameId;
     private String teamAName, teamBName;
@@ -116,10 +117,14 @@ public class LogActivity extends Activity {
         lvEventLog = findViewById(R.id.lvEventLog);
         btnBackToGame = findViewById(R.id.btnBackToGame);
         btnClearLog = findViewById(R.id.btnClearLog);
+        btnEndGame = findViewById(R.id.btnEndGame);
         
         // Set title
         String title = String.format("Event Log - %s vs %s", teamAName, teamBName);
         tvTitle.setText(title);
+        
+        // ✅ NEW: Show/hide End Game button based on game status
+        updateEndGameButtonVisibility();
     }
     
     private void initializeData() {
@@ -141,16 +146,32 @@ public class LogActivity extends Activity {
                 showClearLogConfirmation();
             }
         });
+        
+        btnEndGame.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showEndGameConfirmation();
+            }
+        });
     }
     
     /**
-     * Show confirmation dialog for clearing all events
+     * Show confirmation dialog for complete game reset
+     * ✅ ENHANCED: Updated to reflect complete reset functionality
      */
     private void showClearLogConfirmation() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Clear All Events")
-               .setMessage("⚠️ This will permanently delete ALL events for this game!\n\nAre you sure you want to continue?")
-               .setPositiveButton("Clear All", new DialogInterface.OnClickListener() {
+        builder.setTitle("Reset Game Completely")
+               .setMessage("⚠️ This will COMPLETELY RESET the game:\n\n" +
+                          "• Delete ALL events\n" +
+                          "• Clear player selections\n" +
+                          "• Reset score to 0-0\n" +
+                          "• Reset to Quarter 1\n" +
+                          "• Reset timer to 10:00\n" +
+                          "• Change status to 'Not Started'\n\n" +
+                          "🔄 The game will return to setup mode.\n\n" +
+                          "Are you sure you want to continue?")
+               .setPositiveButton("Reset Game", new DialogInterface.OnClickListener() {
                    @Override
                    public void onClick(DialogInterface dialog, int which) {
                        clearAllEvents();
@@ -163,53 +184,151 @@ public class LogActivity extends Activity {
     
     /**
      * Clear all events for the current game from SQLite database
-     * ✅ ENHANCED: Also resets game scores to 0-0
+     * ✅ ENHANCED: Complete game reset - events, players, scores, quarter, timer, status
      */
     private void clearAllEvents() {
         try {
             com.basketballstats.app.data.DatabaseController dbController = 
                 com.basketballstats.app.data.DatabaseController.getInstance(this);
             
-            // Delete all events for this game from SQLite database
+            // 1. Delete all events for this game from SQLite database
             int deletedCount = com.basketballstats.app.models.Event.deleteByGameId(
                 dbController.getDatabaseHelper(), gameId);
             
-            // ✅ NEW: Reset game scores to 0-0 when clearing all events
-            resetGameScores(dbController);
+            // 2. ✅ NEW: Clear all player selections from game_players table
+            int deletedPlayers = com.basketballstats.app.models.GamePlayer.deleteByGameId(
+                dbController.getDatabaseHelper(), gameId);
             
-            // Clear local list and refresh adapter
+            // 3. ✅ NEW: Complete game reset - scores, quarter, timer, status
+            resetGameToNotStarted(dbController);
+            
+            // 4. Clear local list and refresh adapter
             allEvents.clear();
             eventAdapter.notifyDataSetChanged();
             
-            Toast.makeText(this, String.format("✅ Cleared %d events and reset scores to 0-0", deletedCount), 
-                          Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, String.format("✅ Complete reset: %d events + %d players cleared", 
+                deletedCount, deletedPlayers), Toast.LENGTH_LONG).show();
             
-            android.util.Log.d("LogActivity", String.format("🗑️ Successfully cleared %d events and reset scores for gameId %d", 
-                deletedCount, gameId));
+            android.util.Log.d("LogActivity", String.format("🔄 COMPLETE RESET: %d events + %d players cleared, game → not_started", 
+                deletedCount, deletedPlayers));
             
         } catch (Exception e) {
-            android.util.Log.e("LogActivity", "❌ Error clearing events for gameId " + gameId, e);
-            Toast.makeText(this, "Error: Could not clear events", Toast.LENGTH_SHORT).show();
+            android.util.Log.e("LogActivity", "❌ Error performing complete game reset for gameId " + gameId, e);
+            Toast.makeText(this, "Error: Could not reset game completely", Toast.LENGTH_SHORT).show();
         }
     }
     
     /**
-     * ✅ NEW: Reset game scores to 0-0 in database
+     * ✅ NEW: Complete game reset to "not_started" status
+     * Resets scores, quarter, timer, and transitions status to "not_started"
      */
-    private void resetGameScores(com.basketballstats.app.data.DatabaseController dbController) {
+    private void resetGameToNotStarted(com.basketballstats.app.data.DatabaseController dbController) {
         try {
-            // Load the game and reset scores
+            // Load the game
             com.basketballstats.app.models.Game game = 
                 com.basketballstats.app.models.Game.findById(dbController.getDatabaseHelper(), gameId);
             
             if (game != null) {
+                // Reset all game state to initial values
                 game.setHomeScore(0);
                 game.setAwayScore(0);
+                game.setCurrentQuarter(1);        // Reset to Q1
+                game.setGameClockSeconds(600);    // Reset to 10:00
+                game.setClockRunning(false);      // Stop clock
+                
+                // ✅ NEW: Transition to "not_started" status
+                game.setToNotStarted();
+                
+                // Save all changes to database
                 game.save(dbController.getDatabaseHelper());
-                android.util.Log.d("LogActivity", "✅ Reset game scores to 0-0");
+                
+                android.util.Log.d("LogActivity", "✅ Complete reset: scores → 0-0, quarter → Q1, timer → 10:00, status → not_started");
             }
         } catch (Exception e) {
-            android.util.Log.e("LogActivity", "❌ Error resetting game scores", e);
+            android.util.Log.e("LogActivity", "❌ Error performing complete game reset", e);
+        }
+    }
+    
+    /**
+     * ✅ NEW: Show/hide End Game button based on game status
+     * Only visible for games in "game_in_progress" status
+     */
+    private void updateEndGameButtonVisibility() {
+        try {
+            com.basketballstats.app.data.DatabaseController dbController = 
+                com.basketballstats.app.data.DatabaseController.getInstance(this);
+            
+            // Load the game to check its status
+            com.basketballstats.app.models.Game game = 
+                com.basketballstats.app.models.Game.findById(dbController.getDatabaseHelper(), gameId);
+            
+            if (game != null && game.isGameInProgress()) {
+                // Show End Game button only for games in progress
+                btnEndGame.setVisibility(View.VISIBLE);
+                android.util.Log.d("LogActivity", "End Game button shown - game in progress");
+            } else {
+                // Hide for not_started and done games
+                btnEndGame.setVisibility(View.GONE);
+                android.util.Log.d("LogActivity", "End Game button hidden - game not in progress");
+            }
+        } catch (Exception e) {
+            android.util.Log.e("LogActivity", "Error checking game status for End Game button", e);
+            btnEndGame.setVisibility(View.GONE); // Hide on error
+        }
+    }
+    
+    /**
+     * ✅ NEW: Show confirmation dialog for manual end game
+     */
+    private void showEndGameConfirmation() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("End Game")
+               .setMessage("🏁 End this game now?\n\n" +
+                          "This will mark the game as completed.\n" +
+                          "You can still view and edit events afterwards.\n\n" +
+                          "Continue?")
+               .setPositiveButton("End Game", new DialogInterface.OnClickListener() {
+                   @Override
+                   public void onClick(DialogInterface dialog, int which) {
+                       endGameManually();
+                   }
+               })
+               .setNegativeButton("Cancel", null)
+               .setIcon(android.R.drawable.ic_dialog_info)
+               .show();
+    }
+    
+    /**
+     * ✅ NEW: Manual end game - transition to "done" status
+     */
+    private void endGameManually() {
+        try {
+            com.basketballstats.app.data.DatabaseController dbController = 
+                com.basketballstats.app.data.DatabaseController.getInstance(this);
+            
+            // Load the game
+            com.basketballstats.app.models.Game game = 
+                com.basketballstats.app.models.Game.findById(dbController.getDatabaseHelper(), gameId);
+            
+            if (game != null && game.isGameInProgress()) {
+                // Transition to "done" status
+                game.setToDone();
+                game.save(dbController.getDatabaseHelper());
+                
+                // Update button visibility (hide End Game button)
+                updateEndGameButtonVisibility();
+                
+                Toast.makeText(this, "🏁 Game ended manually - marked as complete!", Toast.LENGTH_LONG).show();
+                android.util.Log.d("LogActivity", "✅ Manual end game: game_in_progress → done");
+                
+            } else {
+                Toast.makeText(this, "Cannot end game - not in progress", Toast.LENGTH_SHORT).show();
+                android.util.Log.w("LogActivity", "Cannot end game manually - not in game_in_progress status");
+            }
+            
+        } catch (Exception e) {
+            android.util.Log.e("LogActivity", "❌ Error ending game manually", e);
+            Toast.makeText(this, "Error: Could not end game", Toast.LENGTH_SHORT).show();
         }
     }
     

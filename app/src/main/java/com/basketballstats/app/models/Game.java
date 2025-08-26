@@ -25,7 +25,7 @@ public class Game {
     private String time; // HH:MM format (24-hour)
     private int homeTeamId;
     private int awayTeamId;
-    private String status; // "scheduled", "in_progress", "completed", "cancelled"
+    private String status; // "not_started", "game_in_progress", "done"
     private int homeScore;
     private int awayScore;
     private int currentQuarter; // 1-4
@@ -45,7 +45,7 @@ public class Game {
     
     // Constructors
     public Game() {
-        this.status = "scheduled";
+        this.status = "not_started"; // Updated for 3-state system
         this.homeScore = 0;
         this.awayScore = 0;
         this.currentQuarter = 1;
@@ -173,24 +173,100 @@ public class Game {
     }
     
     /**
-     * Check if game is in progress
+     * Check if game has not started yet
      */
+    public boolean isNotStarted() {
+        return "not_started".equals(status);
+    }
+    
+    /**
+     * Check if game is currently in progress
+     */
+    public boolean isGameInProgress() {
+        return "game_in_progress".equals(status);
+    }
+    
+    /**
+     * Check if game is completed/done
+     */
+    public boolean isDone() {
+        return "done".equals(status);
+    }
+    
+    // ========== LEGACY COMPATIBILITY METHODS ==========
+    
+    /**
+     * @deprecated Use isGameInProgress() instead
+     */
+    @Deprecated
     public boolean isInProgress() {
-        return "in_progress".equals(status);
+        return isGameInProgress();
     }
     
     /**
-     * Check if game is completed
+     * @deprecated Use isDone() instead
      */
+    @Deprecated
     public boolean isCompleted() {
-        return "completed".equals(status);
+        return isDone();
     }
     
     /**
-     * Check if game is scheduled
+     * @deprecated Use isNotStarted() instead
      */
+    @Deprecated
     public boolean isScheduled() {
-        return "scheduled".equals(status);
+        return isNotStarted();
+    }
+    
+    // ========== STATUS TRANSITION METHODS ==========
+    
+    /**
+     * Transition game to 'not_started' status
+     * Used when clearing all events and resetting game
+     */
+    public void setToNotStarted() {
+        this.status = "not_started";
+        this.updatedAt = getCurrentTimestamp();
+    }
+    
+    /**
+     * Transition game to 'game_in_progress' status
+     * Used when both teams select 5 players and game begins
+     */
+    public void setToGameInProgress() {
+        this.status = "game_in_progress";
+        this.updatedAt = getCurrentTimestamp();
+    }
+    
+    /**
+     * Transition game to 'done' status
+     * Used when Q4 timer ends or manual end game
+     */
+    public void setToDone() {
+        this.status = "done";
+        this.updatedAt = getCurrentTimestamp();
+    }
+    
+    /**
+     * Validate and set status with error checking
+     */
+    public boolean setStatus(String newStatus) {
+        if (isValidStatus(newStatus)) {
+            this.status = newStatus;
+            this.updatedAt = getCurrentTimestamp();
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Check if status value is valid for 3-state system
+     */
+    public static boolean isValidStatus(String status) {
+        return "not_started".equals(status) || 
+               "game_in_progress".equals(status) || 
+               "done".equals(status);
     }
     
     /**
@@ -210,7 +286,7 @@ public class Game {
         String homeTeamName = homeTeam != null ? homeTeam.getName() : "Team " + homeTeamId;
         String awayTeamName = awayTeam != null ? awayTeam.getName() : "Team " + awayTeamId;
         
-        if (isInProgress() || isCompleted()) {
+        if (isGameInProgress() || isDone()) {
             return homeTeamName + " " + homeScore + " - " + awayScore + " " + awayTeamName;
         } else {
             return homeTeamName + " vs " + awayTeamName;

@@ -45,6 +45,19 @@
             android:paddingHorizontal="12dp"
             android:layout_marginEnd="8dp" />
         
+        <!-- End Game Button -->
+        <Button
+            android:id="@+id/btnEndGame"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="🏁 End"
+            android:textSize="12sp"
+            android:background="#27AE60"
+            android:textColor="#FFFFFF"
+            android:paddingHorizontal="12dp"
+            android:layout_marginEnd="8dp"
+            android:visibility="gone" />
+        
         <!-- Back Button (top right) -->
         <Button
             android:id="@+id/btnBackToGame"

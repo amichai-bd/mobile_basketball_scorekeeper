@@ -191,7 +191,7 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
                         currentGame.setAwayTeamId(teamB.getId());
                         currentGame.setDate(java.text.DateFormat.getDateInstance().format(new java.util.Date()));
                         currentGame.setTime(java.text.DateFormat.getTimeInstance().format(new java.util.Date()));
-                        currentGame.setStatus("in_progress");
+                        currentGame.setStatus("game_in_progress"); // Updated for 3-state system
                         currentGame.setHomeTeam(teamA);
                         currentGame.setAwayTeam(teamB);
                         
@@ -216,6 +216,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             teamAPlayers = new ArrayList<>();
             teamBPlayers = new ArrayList<>();
             
+            // ✅ NEW: Load existing game players from database for state restoration
+            loadGamePlayers();
+            
             // Load existing game events from database
             loadGameEvents();
             
@@ -238,13 +241,22 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
                 this.teamBName = teamB.getName();
             }
             
-            // Check if we're resuming a game or starting fresh
-            isInSetupMode = teamAPlayers.isEmpty() || teamBPlayers.isEmpty();
+            // ✅ NEW: Get navigation mode from MainActivity (status-aware navigation)
+            String navigationMode = getIntent().getStringExtra("navigationMode");
+            if (navigationMode == null) {
+                navigationMode = "setup"; // Default fallback
+            }
             
-            Toast.makeText(this, "Loaded game: " + teamA.getName() + " vs " + teamB.getName(), Toast.LENGTH_SHORT).show();
+            // ✅ NEW: Determine setup mode based on game status and loaded players
+            isInSetupMode = determineSetupMode(navigationMode, currentGame);
             
-            android.util.Log.d("GameActivity", String.format("Game initialized - ID: %d, Quarter: %d, Clock: %d", 
-                this.gameId, this.currentQuarter, this.gameTimeSeconds));
+            // ✅ NEW: Enhanced status message with mode information
+            String modeInfo = isInSetupMode ? "Setup Mode" : "Game Mode";
+            String playerInfo = String.format("(TeamA: %d players, TeamB: %d players)", teamAPlayers.size(), teamBPlayers.size());
+            Toast.makeText(this, "Loaded game: " + teamA.getName() + " vs " + teamB.getName() + " - " + modeInfo + " " + playerInfo, Toast.LENGTH_LONG).show();
+            
+            android.util.Log.d("GameActivity", String.format("Game initialized - ID: %d, Quarter: %d, Clock: %d, Mode: %s, Navigation: %s", 
+                this.gameId, this.currentQuarter, this.gameTimeSeconds, modeInfo, navigationMode));
             
         } catch (Exception e) {
             Toast.makeText(this, "Database error loading game: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -366,6 +378,87 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     /**
+     * ✅ NEW: Load existing game players from database for state restoration
+     * Converts GamePlayer database records back to in-memory Player objects
+     */
+    private void loadGamePlayers() {
+        try {
+            if (currentGame != null && currentGame.getId() > 0) {
+                // Load GamePlayer records for this game
+                List<GamePlayer> gamePlayers = GamePlayer.findByGameId(dbController.getDatabaseHelper(), currentGame.getId());
+                
+                // Convert to Player objects and populate team lists
+                for (GamePlayer gamePlayer : gamePlayers) {
+                    if (gamePlayer.getTeamPlayer() != null) {
+                        // Convert GamePlayer back to Player for in-memory use
+                        TeamPlayer teamPlayer = gamePlayer.getTeamPlayer();
+                        Player player = teamPlayer.toGamePlayer(currentGame.getId(), gamePlayer.getTeamSide());
+                        
+                        // Restore game-specific state (fouls, etc.)
+                        player.setPersonalFouls(gamePlayer.getPersonalFouls());
+                        player.setOnCourt(gamePlayer.isOnCourt());
+                        
+                        // Add to appropriate team list
+                        if ("home".equals(gamePlayer.getTeamSide())) {
+                            teamAPlayers.add(player);
+                        } else if ("away".equals(gamePlayer.getTeamSide())) {
+                            teamBPlayers.add(player);
+                        }
+                    }
+                }
+                
+                android.util.Log.d("GameActivity", String.format("Loaded %d game players from database (TeamA: %d, TeamB: %d)", 
+                    gamePlayers.size(), teamAPlayers.size(), teamBPlayers.size()));
+                
+            } else {
+                android.util.Log.d("GameActivity", "No existing game or gameId - starting with empty player lists");
+            }
+        } catch (Exception e) {
+            android.util.Log.e("GameActivity", "Error loading game players from database", e);
+            // Keep empty lists as fallback
+        }
+    }
+    
+    /**
+     * ✅ NEW: Determine setup mode based on navigation mode and game state
+     * Implements the 3-state game management logic
+     */
+    private boolean determineSetupMode(String navigationMode, Game game) {
+        try {
+            switch (navigationMode) {
+                case "setup":
+                    // "not_started" games always go to Setup Mode
+                    android.util.Log.d("GameActivity", "Navigation mode: SETUP - Starting new game");
+                    return true;
+                    
+                case "resume":
+                    // "game_in_progress" games go to Game Mode if players are loaded
+                    boolean hasPlayers = (teamAPlayers.size() >= 5 && teamBPlayers.size() >= 5);
+                    if (hasPlayers) {
+                        android.util.Log.d("GameActivity", "Navigation mode: RESUME - Continuing game with existing players");
+                        return false; // Game Mode
+                    } else {
+                        android.util.Log.w("GameActivity", "Navigation mode: RESUME - But no players found, forcing Setup Mode");
+                        return true; // Setup Mode as fallback
+                    }
+                    
+                case "review":
+                    // "done" games go to Game Mode for review/editing (even if no players)
+                    android.util.Log.d("GameActivity", "Navigation mode: REVIEW - Reviewing completed game");
+                    return false; // Game Mode for editing
+                    
+                default:
+                    // Unknown mode - default to setup
+                    android.util.Log.w("GameActivity", "Unknown navigation mode: " + navigationMode + " - defaulting to Setup");
+                    return true;
+            }
+        } catch (Exception e) {
+            android.util.Log.e("GameActivity", "Error determining setup mode", e);
+            return true; // Safe fallback to Setup Mode
+        }
+    }
+    
+    /**
      * Save current game state to SQLite database
      */
     private void saveGameState() {
@@ -376,6 +469,123 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         } catch (Exception e) {
             android.util.Log.e("GameActivity", "Error saving game state", e);
             Toast.makeText(this, "Error saving game state", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    // ========== STATUS TRANSITION METHODS ==========
+    
+    /**
+     * ✅ NEW: Transition game from "not_started" to "game_in_progress"
+     * Called when both teams select 5 players
+     */
+    private void transitionToGameInProgress() {
+        try {
+            if (currentGame != null && currentGame.isNotStarted()) {
+                currentGame.setToGameInProgress();
+                currentGame.save(dbController.getDatabaseHelper());
+                
+                android.util.Log.d("GameActivity", "✅ Status Transition: not_started → game_in_progress");
+                
+                // ✅ NEW: Save player selections to database for persistence
+                savePlayerSelections();
+                
+            } else if (currentGame != null) {
+                android.util.Log.d("GameActivity", "Status transition skipped - game already in progress or done");
+            }
+        } catch (Exception e) {
+            android.util.Log.e("GameActivity", "Error transitioning to game_in_progress", e);
+        }
+    }
+    
+    /**
+     * ✅ NEW: Transition game from "game_in_progress" to "done"
+     * Called when Q4 timer completes or manual end game
+     */
+    private void transitionToDone() {
+        try {
+            if (currentGame != null && currentGame.isGameInProgress()) {
+                currentGame.setToDone();
+                currentGame.save(dbController.getDatabaseHelper());
+                
+                android.util.Log.d("GameActivity", "✅ Status Transition: game_in_progress → done");
+                Toast.makeText(this, "🏁 Game Complete!", Toast.LENGTH_LONG).show();
+                
+            } else if (currentGame != null) {
+                android.util.Log.d("GameActivity", "Status transition skipped - game already done");
+            }
+        } catch (Exception e) {
+            android.util.Log.e("GameActivity", "Error transitioning to done", e);
+        }
+    }
+    
+    /**
+     * ✅ NEW: Transition game from any status to "not_started"
+     * Called when clearing all events (complete reset)
+     */
+    private void transitionToNotStarted() {
+        try {
+            if (currentGame != null) {
+                currentGame.setToNotStarted();
+                currentGame.save(dbController.getDatabaseHelper());
+                
+                android.util.Log.d("GameActivity", "✅ Status Transition: [any] → not_started (complete reset)");
+                
+                // Note: This method is called from enhanced clear log functionality
+                // The actual reset logic (clear players, events, etc.) is handled there
+                
+            }
+        } catch (Exception e) {
+            android.util.Log.e("GameActivity", "Error transitioning to not_started", e);
+        }
+    }
+    
+    /**
+     * ✅ NEW: Save current player selections to game_players table
+     * Called when transitioning to game_in_progress to persist lineup
+     */
+    private void savePlayerSelections() {
+        try {
+            if (currentGame == null || currentGame.getId() <= 0) {
+                android.util.Log.w("GameActivity", "Cannot save player selections - no valid game");
+                return;
+            }
+            
+            // Clear existing game players for this game
+            GamePlayer.deleteByGameId(dbController.getDatabaseHelper(), currentGame.getId());
+            
+            // Save Team A players (home side)
+            for (Player player : teamAPlayers) {
+                if (player.getOriginalTeamPlayerId() > 0) {
+                    GamePlayer gamePlayer = new GamePlayer(
+                        currentGame.getId(), 
+                        player.getOriginalTeamPlayerId(), 
+                        "home", 
+                        true // isStarter - all initially selected players are starters
+                    );
+                    gamePlayer.setPersonalFouls(player.getPersonalFouls());
+                    gamePlayer.save(dbController.getDatabaseHelper());
+                }
+            }
+            
+            // Save Team B players (away side)  
+            for (Player player : teamBPlayers) {
+                if (player.getOriginalTeamPlayerId() > 0) {
+                    GamePlayer gamePlayer = new GamePlayer(
+                        currentGame.getId(), 
+                        player.getOriginalTeamPlayerId(), 
+                        "away", 
+                        true // isStarter - all initially selected players are starters
+                    );
+                    gamePlayer.setPersonalFouls(player.getPersonalFouls());
+                    gamePlayer.save(dbController.getDatabaseHelper());
+                }
+            }
+            
+            android.util.Log.d("GameActivity", String.format("✅ Saved player selections: %d TeamA + %d TeamB players", 
+                teamAPlayers.size(), teamBPlayers.size()));
+            
+        } catch (Exception e) {
+            android.util.Log.e("GameActivity", "Error saving player selections to database", e);
         }
     }
 
@@ -871,6 +1081,10 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         
         if (bothTeamsReady) {
             isInSetupMode = false; // We're now in full game mode
+            
+            // ✅ NEW: Transition to "game_in_progress" when both teams have 5 players
+            transitionToGameInProgress();
+            
             Toast.makeText(this, "🏀 Game Ready! Both teams set - events enabled.", Toast.LENGTH_LONG).show();
         } else {
             isInSetupMode = true; // Still in setup mode
@@ -1689,6 +1903,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
                         ).show();
                     } else {
                         // Q4 complete – game over
+                        // ✅ NEW: Transition to "done" status when Q4 timer reaches 0:00
+                        transitionToDone();
+                        
                         Toast.makeText(
                             GameActivity.this,
                             "Quarter 4 complete! Game over.",
@@ -2079,6 +2296,12 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         // ✅ FIX: Reload events from database in case they were modified in LogActivity
         loadGameEvents();
         
+        // ✅ NEW: Reload player selections in case game was reset to "not_started"
+        reloadGamePlayers();
+        
+        // ✅ NEW: Update setup mode based on current game status and loaded players
+        updateSetupModeAfterReload();
+        
         android.util.Log.d("GameActivity", "🔄 onResume() calling updateAllDisplays()...");
         updateAllDisplays();
         
@@ -2129,6 +2352,72 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             
         } catch (Exception e) {
             android.util.Log.e("GameActivity", "❌ Error reloading game from database", e);
+        }
+    }
+    
+    /**
+     * ✅ NEW: Reload game players from database for state restoration
+     * Called in onResume() to refresh player lineups after returning from LogActivity
+     */
+    private void reloadGamePlayers() {
+        try {
+            // Clear current player lists
+            teamAPlayers.clear();
+            teamBPlayers.clear();
+            
+            // Reload players from database
+            loadGamePlayers();
+            
+            // Recreate player buttons with updated lineups
+            createPlayerButtons();
+            
+            android.util.Log.d("GameActivity", String.format("🔄 Reloaded players: TeamA=%d, TeamB=%d", 
+                teamAPlayers.size(), teamBPlayers.size()));
+            
+        } catch (Exception e) {
+            android.util.Log.e("GameActivity", "❌ Error reloading game players", e);
+        }
+    }
+    
+    /**
+     * ✅ NEW: Update setup mode based on current game status and loaded players
+     * Called in onResume() to ensure correct mode after potential status changes
+     */
+    private void updateSetupModeAfterReload() {
+        try {
+            if (currentGame != null) {
+                String currentStatus = currentGame.getStatus();
+                boolean hasPlayers = (teamAPlayers.size() >= 5 && teamBPlayers.size() >= 5);
+                
+                // Determine setup mode based on status and players
+                boolean shouldBeInSetupMode;
+                
+                if (currentGame.isNotStarted()) {
+                    // "not_started" games should be in Setup Mode
+                    shouldBeInSetupMode = true;
+                } else if (currentGame.isGameInProgress() || currentGame.isDone()) {
+                    // "game_in_progress" and "done" games should be in Game Mode if they have players
+                    shouldBeInSetupMode = !hasPlayers;
+                } else {
+                    // Unknown status - default to Setup Mode
+                    shouldBeInSetupMode = true;
+                }
+                
+                if (isInSetupMode != shouldBeInSetupMode) {
+                    isInSetupMode = shouldBeInSetupMode;
+                    android.util.Log.d("GameActivity", String.format("🔄 Mode updated: %s (Status: %s, Players: %s)", 
+                        isInSetupMode ? "SETUP" : "GAME", currentStatus, hasPlayers ? "LOADED" : "EMPTY"));
+                }
+                
+                // Update UI accordingly
+                checkIfGameReady();
+                
+            } else {
+                android.util.Log.w("GameActivity", "Cannot update setup mode - no current game");
+            }
+            
+        } catch (Exception e) {
+            android.util.Log.e("GameActivity", "❌ Error updating setup mode after reload", e);
         }
     }
     

@@ -35,6 +35,21 @@
         android:layout_gravity="center"
         android:text="15/12/2024"
         android:textSize="14sp"
-        android:textColor="#7F8C8D" />
+        android:textColor="#7F8C8D"
+        android:layout_marginBottom="6dp" />
+    
+    <!-- Game Status -->
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="Not Started"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:background="#9E9E9E"
+        android:padding="4dp"
+        android:paddingHorizontal="8dp" />
     
 </LinearLayout>

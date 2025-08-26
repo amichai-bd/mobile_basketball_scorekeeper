@@ -23,7 +23,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     
     // Database Info
     private static final String DATABASE_NAME = "basketball_stats.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2; // Updated for 3-state game status system
     
     // Table Names
     public static final String TABLE_TEAMS = "teams";
@@ -170,10 +170,52 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         Log.w(TAG, "Upgrading database from version " + oldVersion + " to " + newVersion);
         
-        // For now, drop and recreate all tables
-        // In production, implement proper migration scripts
-        dropAllTables(db);
-        onCreate(db);
+        // Handle specific version upgrades
+        if (oldVersion < 2 && newVersion >= 2) {
+            upgradeToVersion2(db);
+        }
+        
+        // For other versions, drop and recreate (future migrations)
+        if (oldVersion < 1) {
+            dropAllTables(db);
+            onCreate(db);
+        }
+    }
+    
+    /**
+     * Upgrade database to version 2: 3-state game status system
+     * Migrate existing 'scheduled' status to 'not_started'
+     */
+    private void upgradeToVersion2(SQLiteDatabase db) {
+        Log.d(TAG, "Upgrading to version 2: Implementing 3-state game status system");
+        
+        try {
+            // Update existing games with 'scheduled' status to 'not_started'
+            String updateQuery = "UPDATE " + TABLE_GAMES + 
+                               " SET " + GAMES_COLUMN_STATUS + " = 'not_started'" +
+                               " WHERE " + GAMES_COLUMN_STATUS + " = 'scheduled'";
+            db.execSQL(updateQuery);
+            
+            // Update any 'in_progress' status to 'game_in_progress' for consistency
+            String updateInProgressQuery = "UPDATE " + TABLE_GAMES + 
+                                         " SET " + GAMES_COLUMN_STATUS + " = 'game_in_progress'" +
+                                         " WHERE " + GAMES_COLUMN_STATUS + " = 'in_progress'";
+            db.execSQL(updateInProgressQuery);
+            
+            // Update any 'completed' status to 'done' for consistency
+            String updateCompletedQuery = "UPDATE " + TABLE_GAMES + 
+                                        " SET " + GAMES_COLUMN_STATUS + " = 'done'" +
+                                        " WHERE " + GAMES_COLUMN_STATUS + " = 'completed'";
+            db.execSQL(updateCompletedQuery);
+            
+            Log.d(TAG, "Successfully migrated game status values to 3-state system");
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error during database upgrade to version 2", e);
+            // Fallback: drop and recreate tables
+            dropAllTables(db);
+            onCreate(db);
+        }
     }
     
     @Override
@@ -235,7 +277,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 GAMES_COLUMN_TIME + " TEXT NOT NULL, " +
                 GAMES_COLUMN_HOME_TEAM_ID + " INTEGER NOT NULL, " +
                 GAMES_COLUMN_AWAY_TEAM_ID + " INTEGER NOT NULL, " +
-                GAMES_COLUMN_STATUS + " TEXT DEFAULT 'scheduled', " +
+                GAMES_COLUMN_STATUS + " TEXT DEFAULT 'not_started', " +
                 GAMES_COLUMN_HOME_SCORE + " INTEGER DEFAULT 0, " +
                 GAMES_COLUMN_AWAY_SCORE + " INTEGER DEFAULT 0, " +
                 GAMES_COLUMN_CURRENT_QUARTER + " INTEGER DEFAULT 1, " +

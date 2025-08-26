@@ -275,10 +275,14 @@ public class MainActivity extends Activity {
             return;
         }
         
-        // Debug output
-        Toast.makeText(this, "Starting game: " + game.toString(), Toast.LENGTH_SHORT).show();
+        // Determine navigation mode based on game status
+        String navigationMode = getNavigationMode(game.getStatus());
+        String statusMessage = getStatusMessage(game.getStatus());
         
-        // Navigate directly to Game Activity (Frame 3) - Unified Refactor
+        // Debug output with status information
+        Toast.makeText(this, statusMessage + ": " + game.toString(), Toast.LENGTH_SHORT).show();
+        
+        // Navigate to Game Activity with status-aware mode
         Intent intent = new Intent(this, GameActivity.class);
         intent.putExtra("gameId", game.getId());
         intent.putExtra("homeTeam", game.getHomeTeam().getName());
@@ -287,7 +291,48 @@ public class MainActivity extends Activity {
         intent.putExtra("awayTeamId", game.getAwayTeamId());
         intent.putExtra("gameDate", game.getDate());
         intent.putExtra("gameTime", game.getTime());
+        intent.putExtra("navigationMode", navigationMode); // NEW: Status-aware navigation
         startActivity(intent);
+    }
+    
+    /**
+     * Determine navigation mode based on game status
+     * Used by GameActivity to initialize in correct mode
+     */
+    private String getNavigationMode(String gameStatus) {
+        switch (gameStatus) {
+            case "not_started":
+                return "setup"; // Go to Setup Mode (select players)
+                
+            case "game_in_progress":
+                return "resume"; // Go to Game Mode with state restoration
+                
+            case "done":
+                return "review"; // Go to Game Mode with full edit access
+                
+            default:
+                // Handle invalid/legacy status values - default to setup
+                return "setup";
+        }
+    }
+    
+    /**
+     * Get user-friendly status message for navigation feedback
+     */
+    private String getStatusMessage(String gameStatus) {
+        switch (gameStatus) {
+            case "not_started":
+                return "Starting new game";
+                
+            case "game_in_progress":
+                return "Resuming game";
+                
+            case "done":
+                return "Reviewing completed game";
+                
+            default:
+                return "Opening game";
+        }
     }
     
     private void openLeagueManagement() {
@@ -335,6 +380,7 @@ public class MainActivity extends Activity {
             
             TextView tvMatchup = convertView.findViewById(R.id.tvMatchup);
             TextView tvDate = convertView.findViewById(R.id.tvDate);
+            TextView tvStatus = convertView.findViewById(R.id.tvStatus);
             
             // Build matchup text with team names (load if needed)
             String homeTeamName = game.getHomeTeam() != null ? game.getHomeTeam().getName() : "Team " + game.getHomeTeamId();
@@ -347,15 +393,48 @@ public class MainActivity extends Activity {
                 dateText += " at " + game.getTime();
             }
             
-            // Show status if not scheduled
-            if (!"scheduled".equals(game.getStatus())) {
-                matchupText += " [" + game.getStatus().toUpperCase() + "]";
-            }
+            // Set status with color coding according to specification
+            setGameStatus(tvStatus, game.getStatus());
             
             tvMatchup.setText(matchupText);
             tvDate.setText(dateText);
             
             return convertView;
+        }
+        
+        /**
+         * Set game status with proper color coding
+         * - "Not Started": Grey background, white text
+         * - "Game In Progress": Blue background, white text  
+         * - "Done": Green background, white text
+         */
+        private void setGameStatus(TextView tvStatus, String status) {
+            switch (status) {
+                case "not_started":
+                    tvStatus.setText("Not Started");
+                    tvStatus.setBackgroundColor(android.graphics.Color.parseColor("#9E9E9E")); // Grey
+                    tvStatus.setTextColor(android.graphics.Color.WHITE);
+                    break;
+                    
+                case "game_in_progress":
+                    tvStatus.setText("Game In Progress");
+                    tvStatus.setBackgroundColor(android.graphics.Color.parseColor("#2196F3")); // Blue
+                    tvStatus.setTextColor(android.graphics.Color.WHITE);
+                    break;
+                    
+                case "done":
+                    tvStatus.setText("Done");
+                    tvStatus.setBackgroundColor(android.graphics.Color.parseColor("#4CAF50")); // Green
+                    tvStatus.setTextColor(android.graphics.Color.WHITE);
+                    break;
+                    
+                default:
+                    // Handle invalid/legacy status values
+                    tvStatus.setText("Unknown");
+                    tvStatus.setBackgroundColor(android.graphics.Color.parseColor("#FF9800")); // Orange warning
+                    tvStatus.setTextColor(android.graphics.Color.WHITE);
+                    break;
+            }
         }
         
         /**
