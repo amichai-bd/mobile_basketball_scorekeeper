@@ -1693,6 +1693,8 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             btnAllowEvents.setEnabled(true); // Can toggle on
         }
     }
+    
+
 
     @Override
     protected void onDestroy() {

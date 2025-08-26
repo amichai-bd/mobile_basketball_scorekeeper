@@ -56,9 +56,40 @@ public class LogActivity extends Activity {
         teamAName = getIntent().getStringExtra("teamAName");
         teamBName = getIntent().getStringExtra("teamBName");
         
-        // Get all events from GameActivity's shared storage
-        // Load all events from database for this game
-        allEvents = new ArrayList<>(); // TODO: Load from Event.findAll() based on game ID
+        // ✅ FIXED: Load all events from database for this game
+        loadEventsFromDatabase();
+    }
+    
+    /**
+     * Load events from SQLite database for the current game
+     */
+    private void loadEventsFromDatabase() {
+        allEvents = new ArrayList<>();
+        
+        try {
+            // Initialize database controller
+            com.basketballstats.app.data.DatabaseController dbController = 
+                com.basketballstats.app.data.DatabaseController.getInstance(this);
+            
+            // Load all events for this game from SQLite database
+            java.util.List<com.basketballstats.app.models.Event> gameEvents = 
+                com.basketballstats.app.models.Event.findByGameId(dbController.getDatabaseHelper(), gameId);
+            
+            // Convert Event objects to display strings
+            for (com.basketballstats.app.models.Event event : gameEvents) {
+                // Load related objects (players) for complete display
+                event.loadRelatedObjects(dbController.getDatabaseHelper());
+                
+                // Add formatted event string to display list
+                allEvents.add(event.toString());
+            }
+            
+            android.util.Log.d("LogActivity", "✅ Loaded " + allEvents.size() + " events from database for game " + gameId);
+            
+        } catch (Exception e) {
+            android.util.Log.e("LogActivity", "❌ Error loading events from database", e);
+            allEvents = new ArrayList<>(); // Fallback to empty list
+        }
     }
     
 
