@@ -96,15 +96,23 @@ Simple, clean interface for selecting a game to start recording statistics. User
 - **Clickable**: No
 
 #### Game List
-- **Description**: Clean list of available games to start
-- **Type**: Simple List
+- **Description**: Clean list of available games with status indicators
+- **Type**: Status-Aware Game Cards
 - **Location**: Center of screen
 - **Format**: Large, touch-friendly cards showing:
   - **Team A vs Team B**
   - **Date**
-- **Clickable**: Yes – Tap any game to proceed
-- **Selection**: Single tap immediately proceeds to game screen (Frame 3)
-- **Design**: Card-based layout with clear typography, generous spacing
+  - **Game Status** (text label + color coding)
+- **Status Display**:
+  - **"Not Started"**: Grey background, white text
+  - **"Game In Progress"**: Blue background, white text  
+  - **"Done"**: Green background, white text
+- **Clickable**: Yes – All statuses can be tapped
+- **Navigation Behavior**:
+  - **"Not Started"**: Go to Setup Mode (select players)
+  - **"Game In Progress"**: Go directly to Game Mode with existing state restored
+  - **"Done"**: Go to Game Mode with full edit access via log
+- **Design**: Card-based layout with clear typography, generous spacing, status color coding
 
 #### Quick Info
 - **Description**: Brief instruction text
@@ -114,10 +122,13 @@ Simple, clean interface for selecting a game to start recording statistics. User
 - **Clickable**: No
 
 ### Flow
-1. User sees clean list of available games
+1. User sees clean list of available games with status indicators
 2. User taps any game card
-3. Automatically proceeds to game screen in Setup Mode (Frame 3)
-4. **No status tracking, no mode selection, no confirmation dialogs**
+3. Navigation depends on game status:
+   - **"Not Started"**: Proceeds to game screen in Setup Mode (Frame 3)
+   - **"Game In Progress"**: Proceeds to game screen in Game Mode with all existing state restored
+   - **"Done"**: Proceeds to game screen in Game Mode with full edit access
+4. Game status automatically changes based on player actions and game progression
 
 ### Simplified Design Principles
 - **One-tap selection**: No separate "Start Game" button needed
@@ -273,11 +284,11 @@ This is the main screen where the live updates happen. The screen uses a **4-sec
 - **Middle Top**: Compact game controls (score, timer, quarter, fouls)
 - **Middle Bottom**: Maximized event buttons and live event feed area
 
-The screen has two distinct modes:
+The screen has two distinct modes based on game status:
 
-**Setup Mode**: When entering from game selection without players chosen, the full-height team panels show "Select 5 Players" buttons in their center. Event buttons are disabled until both teams have 5 players selected.
+**Setup Mode**: When entering "Not Started" games, the full-height team panels show "Select 5 Players" buttons in their center. Event buttons are disabled until both teams have 5 players selected. Once both teams have 5 players selected, game status automatically changes to "Game In Progress".
 
-**Game Mode**: Once both teams have 5 players selected, all game features become active. Players are distributed across the full-height team panels, while the maximized middle-bottom section provides ample space for event buttons and live game tracking.
+**Game Mode**: For "Game In Progress" and "Done" games, all game features are active. Players are distributed across the full-height team panels, while the maximized middle-bottom section provides ample space for event buttons and live game tracking. "Done" games allow full editing through the log.
 
 ### UI Layout Structure
 
@@ -413,10 +424,10 @@ The screen has two distinct modes:
 - **Direct Selection**: Tap dropdown → select quarter → immediate change (no confirmation)
 - **Clock Reset**: Selecting new quarter automatically resets clock to 10:00 and stops timer
 - **Auto-Advance**: When timer reaches 0:00:
-  - Automatically advance to next quarter (Q1→Q2→Q3→Q4)
-  - Reset clock to 10:00
-  - Stop timer (user must press START for next quarter)
-  - Show notification: "Quarter X Complete! Starting Quarter Y"
+  - **Q1→Q2, Q2→Q3, Q3→Q4**: Automatically advance to next quarter, reset clock to 10:00, stop timer
+  - **Q4 Complete**: Automatically change game status to "Done", show notification: "Game Complete!"
+  - Show notification: "Quarter X Complete! Starting Quarter Y" (or "Game Complete!" for Q4)
+- **Game Completion**: After Q4 ends, game automatically transitions to "Done" status
 
 ### Team Panels (Team A & Team B) - Full Height
 **Description**: Full-height team panels extending from top to bottom of screen. Team panels adapt based on whether players are selected:
@@ -1002,6 +1013,23 @@ Can view and edit the log of events
   - **Edit Button**: Modify event details (placeholder for MVP)
   - **Delete Button**: Remove event with confirmation dialog
 - **Professional UX**: Clean table format eliminates text alignment issues
+
+#### Game Management Actions
+- **Description**: Action buttons for game-level operations
+- **Type**: Action Button Row
+- **Location**: Bottom of event log table
+- **Components**:
+  - **Clear All Events Button**: 
+    - Content: "🗑️ Clear All Events"
+    - Action: Shows confirmation dialog → Resets entire game to "Not Started" status
+    - Confirmation: "Clear all events? This will reset the game to Not Started (players, score, quarter, timer all reset)"
+    - When confirmed: Deletes all events, resets game status to "not_started", clears player selections, resets score to 0-0, resets quarter to Q1, resets timer to 10:00
+  - **End Game Button**:
+    - Content: "🏁 End Game"
+    - Visibility: Only shown for "Game In Progress" games
+    - Action: Shows confirmation dialog → Changes game status to "Done"
+    - Confirmation: "End game? Game will be marked as completed."
+    - When confirmed: Changes game status to "done", preserves all game data
 
 ---
 

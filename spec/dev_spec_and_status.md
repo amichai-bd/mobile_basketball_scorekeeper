@@ -80,7 +80,7 @@ CREATE TABLE games (
     time TEXT NOT NULL, -- HH:MM format (24-hour)
     home_team_id INTEGER NOT NULL,
     away_team_id INTEGER NOT NULL,
-    status TEXT DEFAULT 'scheduled', -- 'scheduled', 'in_progress', 'completed', 'cancelled'
+    status TEXT DEFAULT 'not_started', -- 'not_started', 'game_in_progress', 'done'
     home_score INTEGER DEFAULT 0,
     away_score INTEGER DEFAULT 0,
     current_quarter INTEGER DEFAULT 1, -- 1-4
@@ -252,6 +252,49 @@ CREATE INDEX idx_sync_status ON teams(sync_status);
 CREATE INDEX idx_sync_queue_table ON sync_queue(table_name, operation);
 CREATE INDEX idx_sync_timestamp ON teams(last_sync_timestamp);
 ```
+
+### Game State Management System
+
+#### Three-State Game Status
+**Overview**: Games now use a comprehensive 3-state system for tracking game progression and enabling proper state restoration.
+
+**States**:
+1. **"not_started"**: Initial state, no players selected, default game setup
+2. **"game_in_progress"**: Active game with players selected, events being recorded
+3. **"done"**: Completed game, all data preserved, read-only access with log editing
+
+#### State Transitions
+**not_started → game_in_progress**: 
+- Trigger: Both teams select exactly 5 players
+- Auto-save: Game status immediately saved to SQLite database
+- UI: Game screen transitions from Setup Mode to Game Mode
+
+**game_in_progress → done**:
+- Trigger 1: Q4 timer reaches 0:00 (automatic completion)
+- Trigger 2: User clicks "End Game" button in LogActivity
+- Auto-save: Game status immediately saved to SQLite database
+- UI: Game marked as completed, maintains full edit access
+
+**done → not_started**:
+- Trigger: User confirms "Clear All Events" action in LogActivity
+- Reset Actions: Deletes all events, clears player selections, resets score to 0-0, resets quarter to Q1, resets timer to 10:00
+- Auto-save: Game status immediately saved to SQLite database
+- UI: Game screen returns to Setup Mode
+
+**game_in_progress → not_started**:
+- Trigger: User confirms "Clear All Events" action in LogActivity (same as done → not_started)
+
+#### State Persistence Requirements
+- **Immediate Database Writes**: All status changes saved to SQLite immediately
+- **State Restoration**: App force-close during "game_in_progress" must resume exact state
+- **Navigation Behavior**: Home page navigation adapts based on current game status
+- **Data Integrity**: State transitions preserve appropriate data or perform complete resets as specified
+
+#### UI Status Display
+- **Home Page**: Game cards show status with text labels and color coding
+- **Colors**: Grey (not_started), Blue (game_in_progress), Green (done)
+- **Navigation**: Different behaviors based on status when game card tapped
+- **Confirmation Dialogs**: Required for destructive actions (clear events, end game)
 
 ### Firebase Integration Architecture
 
@@ -732,19 +775,26 @@ Control panel height: Enhanced 2-row layout for better visibility
 - **Final Integration Testing** - Complete end-to-end testing of all SQLite migration fixes
 
 ### ⏳ Next Up  
+- **🔄 GAME STATE MANAGEMENT IMPLEMENTATION** - NEW PRIORITY:
+  - **3-State Game Status**: Implement "not_started", "game_in_progress", "done" status system
+  - **Home Page Status Display**: Add color-coded game cards with status labels
+  - **State Transition Logic**: Auto-transitions and manual triggers (clear log, end game)
+  - **Enhanced Clear Log**: Reset everything including player selections back to "not_started"
+  - **Auto-Completion**: Q4 timer end → automatic "done" status
+  - **End Game Button**: Manual completion option in LogActivity
+  - **State Restoration**: Proper game state resume after app force-close
+  - **Confirmation Dialogs**: For destructive actions (clear events, end game)
 - **✅ ALL MAJOR INFRASTRUCTURE COMPLETE** - Core foundation is fully implemented:
   - **✅ SQLite Database**: Complete 10-table schema with all CRUD operations
   - **✅ Firebase Integration**: AuthController, FirebaseManager, SyncManager all implemented
   - **✅ Manual Sync Button**: Fully functional with visual feedback states
   - **✅ Game Recording**: Complete live basketball statistics recording
   - **✅ League Management**: Full team and player management with SQLite persistence
-- **🔄 READY FOR TESTING**: Full app integration testing with SQLite + Firebase sync
-- **🔄 READY FOR DEPLOYMENT**: End-to-end testing on physical devices
+- **🔄 READY FOR TESTING**: Game state management + full app integration testing
 - **Enhanced Features** (Post-MVP):
   - **Statistics Reporting** - Advanced analytics and reports (Frame 5 & 6)
   - **Enhanced Pop-up Workflows** - Full assist/rebound/steal detailed pop-ups
   - **Multi-device Testing** - Real-time sync testing across multiple devices
-  - **Performance Optimization** - Database query optimization and caching strategies
 
 ### 📋 **Latest Changes - UX Improvements & Enhanced Game Control**
 - ✅ **LIVE EVENT FEED ENHANCEMENT**: Expanded event log visibility for better user experience
@@ -1198,13 +1248,22 @@ Control panel height: Enhanced 2-row layout for better visibility
 10. ✅ **COMPLETED**: Remove/deprecate GameRosterActivity and SubstitutionActivity
 11. ✅ **COMPLETED**: Update MainActivity navigation to go directly to GameActivity
 12. ✅ **COMPLETED**: Implement Frame 2 Integration into Frame 3 as Setup Mode
-13. **IN PROGRESS**: Enhanced League Management - Player Management Modal
+13. ✅ **COMPLETED**: Enhanced League Management - Player Management Modal
     - **Player Management Interface**: Modal overlay for team roster management
     - **CRUD Operations**: Add, edit, delete players with validation
     - **Jersey Numbers**: 0-99 range with uniqueness per team
     - **Unlimited Rosters**: No maximum player limit per team
     - **Game Dependencies**: Prevent deletion of players used in games
-14. **READY**: Mobile device testing and deployment verification of complete app flow
+14. **🔄 NEW PRIORITY**: **3-State Game Status System Implementation**
+    - **Database Schema Update**: Update games table status field to use new 3-state system
+    - **Home Page Status Display**: Color-coded game cards with status labels and navigation behavior
+    - **State Transition Logic**: Automatic and manual state changes with proper triggers
+    - **Enhanced Clear Log Functionality**: Reset everything including player selections
+    - **Auto-Completion Logic**: Q4 timer completion → "done" status
+    - **End Game Button**: Manual completion option in LogActivity
+    - **State Persistence**: Immediate SQLite saves and proper state restoration
+    - **Confirmation Dialogs**: User confirmation for destructive actions
+15. **READY**: Mobile device testing and deployment verification of complete app flow with new game state system
 
 ### 📋 **COMPREHENSIVE IMPLEMENTATION PLAN: SQLite + Firebase Sync**
 
