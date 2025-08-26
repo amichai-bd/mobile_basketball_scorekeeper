@@ -1330,25 +1330,156 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             return;
         }
         
-        // Get the last event
-        Event lastEvent = gameEvents.get(0); // Most recent is at index 0
+        try {
+            // ✅ FIX: Get the most recent event (last in chronological list)
+            Event lastEvent = gameEvents.get(gameEvents.size() - 1);
+            
+            // ✅ FIX: Delete from SQLite database (same logic as LogActivity delete)
+            boolean deleted = lastEvent.delete(dbController.getDatabaseHelper());
+            
+            if (!deleted) {
+                Toast.makeText(this, "Error: Could not undo event", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            // ✅ FIX: Reverse the game state effects
+            reverseEventEffects(lastEvent);
+            
+            // Remove from local events list
+            gameEvents.remove(gameEvents.size() - 1);
+            
+            // Update displays
+            updateRecentEventsFeed();
+            updateLiveEventFeedDisplay();
+            updateAllDisplays(); // Update scores, fouls, etc.
+            
+            // Show confirmation with event details
+            Toast.makeText(this, String.format("✅ Undone: %s", lastEvent.getEventType()), Toast.LENGTH_SHORT).show();
+            
+            android.util.Log.d("GameActivity", String.format("🔄 Undone event: %s (ID: %d)", 
+                lastEvent.getEventType(), lastEvent.getId()));
+            
+        } catch (Exception e) {
+            android.util.Log.e("GameActivity", "❌ Error undoing last event", e);
+            Toast.makeText(this, "Error: Could not undo event - " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    /**
+     * ✅ NEW: Reverse the effects of an event on game state
+     * Similar to how delete works but also updates live game state
+     */
+    private void reverseEventEffects(Event event) {
+        String eventType = event.getEventType();
+        int playerId = event.getPlayerId();
         
-        // Remove it from the events list
-        gameEvents.remove(0);
+        // Find the player in current lineups to reverse personal stats
+        Player affectedPlayer = findPlayerById(playerId);
         
-        // Update recent events list and display
-        updateRecentEventsList();
-        updateLiveEventFeedDisplay();
+        switch (eventType) {
+            case "1P":
+                // Reverse 1-point score
+                updateTeamScore(event.getTeamSide(), -1);
+                break;
+                
+            case "2P":
+                // Reverse 2-point score
+                updateTeamScore(event.getTeamSide(), -2);
+                break;
+                
+            case "3P":
+                // Reverse 3-point score
+                updateTeamScore(event.getTeamSide(), -3);
+                break;
+                
+            case "FOUL":
+                // Reverse personal and team fouls
+                if (affectedPlayer != null) {
+                    affectedPlayer.setPersonalFouls(Math.max(0, affectedPlayer.getPersonalFouls() - 1));
+                    updatePlayerButtonText(); // Refresh foul displays
+                }
+                // Reverse team fouls
+                if ("home".equals(event.getTeamSide())) {
+                    teamAFouls = Math.max(0, teamAFouls - 1);
+                } else {
+                    teamBFouls = Math.max(0, teamBFouls - 1);
+                }
+                updateTeamFoulsDisplay();
+                break;
+                
+            // Other event types (1M, 2M, 3M, OR, DR, AST, STL, BLK, TO, TIMEOUT) 
+            // don't affect scores or fouls, so no reversal needed
+            default:
+                // Non-scoring, non-foul events don't need game state reversal
+                break;
+        }
         
-        // TODO: Parse the event and undo its effects on scores/fouls
-        // For MVP, just show confirmation
-        Toast.makeText(this, "Event undone: " + lastEvent.getEventType(), Toast.LENGTH_SHORT).show();
+        android.util.Log.d("GameActivity", String.format("Reversed effects for %s event", eventType));
+    }
+    
+    /**
+     * ✅ NEW: Find player by ID in current lineups
+     */
+    private Player findPlayerById(int playerId) {
+        // Search Team A players
+        for (Player player : teamAPlayers) {
+            if (player.getId() == playerId) {
+                return player;
+            }
+        }
         
-        // NOTE: Full implementation would:
-        // 1. Parse the event type and details
-        // 2. Reverse score changes (subtract points)
-        // 3. Reverse foul changes (decrement fouls)
-        // 4. Update all displays accordingly
+        // Search Team B players
+        for (Player player : teamBPlayers) {
+            if (player.getId() == playerId) {
+                return player;
+            }
+        }
+        
+        return null; // Player not in current lineups (substituted out)
+    }
+    
+    /**
+     * ✅ NEW: Update team score by delta (positive or negative)
+     */
+    private void updateTeamScore(String teamSide, int scoreDelta) {
+        if ("home".equals(teamSide)) {
+            // Update Team A score
+            String currentScoreText = tvTeamAScore.getText().toString();
+            int currentScore = 0;
+            try {
+                currentScore = Integer.parseInt(currentScoreText);
+            } catch (NumberFormatException e) {
+                // Score display might have additional text, extract number
+                currentScore = extractScoreFromDisplay(currentScoreText);
+            }
+            int newScore = Math.max(0, currentScore + scoreDelta);
+            tvTeamAScore.setText(String.valueOf(newScore));
+        } else {
+            // Update Team B score
+            String currentScoreText = tvTeamBScore.getText().toString();
+            int currentScore = 0;
+            try {
+                currentScore = Integer.parseInt(currentScoreText);
+            } catch (NumberFormatException e) {
+                currentScore = extractScoreFromDisplay(currentScoreText);
+            }
+            int newScore = Math.max(0, currentScore + scoreDelta);
+            tvTeamBScore.setText(String.valueOf(newScore));
+        }
+    }
+    
+    /**
+     * ✅ NEW: Extract numeric score from display text like "Lakers 45"
+     */
+    private int extractScoreFromDisplay(String displayText) {
+        try {
+            // Look for last number in the string
+            String[] parts = displayText.trim().split("\\s+");
+            return Integer.parseInt(parts[parts.length - 1]);
+        } catch (Exception e) {
+            android.util.Log.w("GameActivity", "Could not extract score from: " + displayText);
+            return 0;
+        }
     }
     
         private void toggleGameTimer() {

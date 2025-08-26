@@ -374,17 +374,41 @@ public class LogActivity extends Activity {
     }
     
     private void deleteEvent(String event, int position) {
-        // Remove from shared game events (this updates the source)
-        // TODO: Remove event from database
-        boolean removed = false; // Placeholder - implement Event.delete()
-        
-        if (removed) {
-            // Update local list and refresh adapter
-            allEvents.remove(position);
-            eventAdapter.notifyDataSetChanged();
-            Toast.makeText(this, "✅ Event deleted", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, "Error: Could not delete event", Toast.LENGTH_SHORT).show();
+        try {
+            com.basketballstats.app.data.DatabaseController dbController = 
+                com.basketballstats.app.data.DatabaseController.getInstance(this);
+            
+            // ✅ FIX: Get all events from database and find the one at this position
+            java.util.List<com.basketballstats.app.models.Event> gameEvents = 
+                com.basketballstats.app.models.Event.findByGameId(dbController.getDatabaseHelper(), gameId);
+            
+            // Verify position is valid
+            if (position < 0 || position >= gameEvents.size()) {
+                Toast.makeText(this, "Error: Invalid event position", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            // Get the specific event to delete (events are ordered by sequence)
+            com.basketballstats.app.models.Event eventToDelete = gameEvents.get(position);
+            
+            // Delete from SQLite database
+            boolean deleted = eventToDelete.delete(dbController.getDatabaseHelper());
+            
+            if (deleted) {
+                // Remove from local display list and refresh
+                allEvents.remove(position);
+                eventAdapter.notifyDataSetChanged();
+                
+                Toast.makeText(this, "✅ Event deleted", Toast.LENGTH_SHORT).show();
+                android.util.Log.d("LogActivity", String.format("🗑️ Deleted event: %s (ID: %d)", 
+                    event, eventToDelete.getId()));
+            } else {
+                Toast.makeText(this, "Error: Database deletion failed", Toast.LENGTH_SHORT).show();
+            }
+            
+        } catch (Exception e) {
+            android.util.Log.e("LogActivity", "❌ Error deleting event at position " + position, e);
+            Toast.makeText(this, "Error: Could not delete event - " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 }

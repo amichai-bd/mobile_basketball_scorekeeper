@@ -848,6 +848,8 @@ Control panel height: Enhanced 2-row layout for better visibility
   - **View Log Data Fix**: Fixed gameId, teamAName, teamBName initialization for proper event log display
   - **Player Deletion with History**: Players can now be removed from current roster while preserving historical game statistics
   - **Clear Log Functionality**: Added "🗑️ Clear" button to LogActivity with confirmation dialog and `Event.deleteByGameId()` method
+  - **Individual Event Deletion Fix**: Fixed LogActivity deleteEvent() method to properly delete individual events from SQLite database
+  - **Undo Last Event Completion**: Enhanced GameActivity undoLastEvent() to properly delete from SQLite database and reverse game state effects
   - **Data Loading Consistency**: Fixed Team objects to properly load players when needed via `loadPlayers()` method
   - **Event Display Format**: Enhanced Event.toString() to include quarter information for LogActivity parsing
   - **Foreign Key Resolution**: Resolved SQLite foreign key constraints while maintaining data integrity
@@ -874,6 +876,8 @@ Control panel height: Enhanced 2-row layout for better visibility
   - **Foreign Key Constraint Bug**: Fixed player deletion blocked by historical game data - now preserves history while allowing roster changes
   - **Data Loading Inconsistency Bug**: Fixed teams loading without players via missing loadPlayers() calls
   - **Duplicate Method Compilation Bug**: Removed duplicate setupGameClock() method that was causing build failures
+  - **Individual Event Deletion Bug**: Fixed LogActivity deleteEvent() method that always returned "Error: could not delete event"
+  - **Incomplete Undo Functionality Bug**: Fixed GameActivity undoLastEvent() method that only removed from memory but didn't delete from database or reverse game effects
 - **Root Causes**: 
   - Home page wasn't refreshing data when returning from League Management
   - addNewGame/addNewTeam methods only showed success messages without saving
@@ -890,6 +894,8 @@ Control panel height: Enhanced 2-row layout for better visibility
     - Foreign key constraints prevented player deletion without CASCADE rules
     - Event.toString() missing quarter information expected by LogActivity parsing
     - Duplicate setupGameClock() method definition causing compilation failures
+    - LogActivity deleteEvent() method only had placeholder code with hardcoded "false" return value
+    - GameActivity undoLastEvent() method only removed events from memory, didn't delete from SQLite or reverse game state
 - **Solutions**: 
   - Added proper data synchronization with onResume() refresh and LeagueDataProvider updates
   - Implemented actual save functionality with proper ID generation and data persistence
@@ -912,6 +918,8 @@ Control panel height: Enhanced 2-row layout for better visibility
     - Added Event.deleteByGameId() method and clear log functionality with confirmation dialogs
     - Updated Event.toString() format to include quarter information for proper log display
     - Removed duplicate method definitions to resolve compilation errors
+    - Implemented complete deleteEvent() method in LogActivity to find and delete specific events from SQLite database
+    - Enhanced undoLastEvent() method with complete SQLite deletion, game state reversal (scores, fouls), and consistent display updates
 
 ### 📋 **Specification Compliance Notes**
 
