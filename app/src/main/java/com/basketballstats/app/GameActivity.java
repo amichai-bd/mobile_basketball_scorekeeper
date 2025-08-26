@@ -1952,40 +1952,60 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     /**
-     * Add SQLite Event to live feed
+     * ✅ ENHANCED: Add SQLite Event to live feed with immediate database refresh
      */
     private void addToLiveEventFeedSQLite(Event event) {
-        // Update recent events from database
+        android.util.Log.d("GameActivity", String.format("🔄 LIVE FEED UPDATE: Adding event %s for %s", 
+            event.getEventType(), event.getPlayer() != null ? event.getPlayer().getName() : event.getTeamSide()));
+        
+        // ✅ CRITICAL: Update recent events directly from database for immediate consistency
         updateRecentEventsFeed();
         
-        // Update live feed display
-        updateLiveEventFeedDisplay();
+        android.util.Log.d("GameActivity", "✅ Live feed update completed");
     }
     
     /**
-     * Update recent events from SQLite gameEvents list
-     * ✅ FIX: Show last 4 events instead of 2, and gameEvents is now ordered DESC (newest first)
+     * ✅ FIXED: Update recent events directly from database for immediate, accurate updates
+     * This fixes the delay issue where in-memory gameEvents list was inconsistent with database ordering
      */
     private void updateRecentEventsFeed() {
         recentEvents.clear();
-        int count = Math.min(4, gameEvents.size());
         
-        // gameEvents is now ordered DESC (newest first), so take first 4 events
-        for (int i = 0; i < count; i++) {
-            Event event = gameEvents.get(i);
-            String timeStr = String.format("%d:%02d", event.getGameTimeSeconds() / 60, event.getGameTimeSeconds() % 60);
-            String eventDescription;
+        try {
+            // ✅ CRITICAL FIX: Get fresh events directly from database instead of stale in-memory list
+            List<Event> freshEvents = Event.findByGameId(dbController.getDatabaseHelper(), currentGame.getId());
             
-            if (event.getPlayer() != null) {
-                eventDescription = String.format("Q%d %s - #%d %s - %s", 
-                    event.getQuarter(), timeStr, event.getPlayer().getJerseyNumber(), 
-                    event.getPlayer().getName(), event.getEventType());
-            } else {
-                eventDescription = String.format("Q%d %s - %s - %s", 
-                    event.getQuarter(), timeStr, event.getTeamSide().toUpperCase(), event.getEventType());
+            android.util.Log.d("GameActivity", String.format("🔄 Live feed: Loading %d fresh events from database", freshEvents.size()));
+            
+            int count = Math.min(4, freshEvents.size());
+            
+            // Database returns events ordered DESC (newest first), so take first 4 events
+            for (int i = 0; i < count; i++) {
+                Event event = freshEvents.get(i);
+                String timeStr = String.format("%d:%02d", event.getGameTimeSeconds() / 60, event.getGameTimeSeconds() % 60);
+                String eventDescription;
+                
+                if (event.getPlayer() != null) {
+                    eventDescription = String.format("Q%d %s - #%d %s - %s", 
+                        event.getQuarter(), timeStr, event.getPlayer().getJerseyNumber(), 
+                        event.getPlayer().getName(), event.getEventType());
+                } else {
+                    eventDescription = String.format("Q%d %s - %s - %s", 
+                        event.getQuarter(), timeStr, event.getTeamSide().toUpperCase(), event.getEventType());
+                }
+                
+                recentEvents.add(eventDescription); // Add in order (newest first)
             }
             
-            recentEvents.add(eventDescription); // Add in order (newest first)
+            android.util.Log.d("GameActivity", String.format("✅ Live feed: Updated with %d recent events", recentEvents.size()));
+            
+        } catch (Exception e) {
+            android.util.Log.e("GameActivity", "❌ Error updating live event feed from database", e);
+            // Fallback to in-memory list if database query fails
+            int count = Math.min(4, gameEvents.size());
+            for (int i = 0; i < count; i++) {
+                recentEvents.add(gameEvents.get(i).toString());
+            }
         }
         
         // Update display

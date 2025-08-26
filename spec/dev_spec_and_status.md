@@ -883,6 +883,8 @@ Control panel height: Enhanced 2-row layout for better visibility
   - **Comprehensive Scoring Debug System**: Added detailed logging throughout scoring flow to track exact score update path
   - **Game State Refresh Bug Fix**: Fixed onResume() not reloading currentGame object from database after LogActivity score changes
   - **Clear Events Score Sync**: Enhanced onResume() to reload game state ensuring scores reflect database changes after clearing events
+  - **Live Event Feed Delay Fix**: Fixed delayed live event feed updates by making updateRecentEventsFeed() query database directly instead of using stale in-memory list
+  - **Event Synchronization Bug**: Fixed inconsistency between in-memory gameEvents list ordering and database DESC ordering causing delayed live feed updates
 
 ### ❌ Blocked/Issues
 - None currently
@@ -929,6 +931,8 @@ Control panel height: Enhanced 2-row layout for better visibility
   - **CRITICAL Score State Corruption Bug**: Fixed saveGameStateToDatabase() overwriting correct scores from recordScoringEvent with incorrect home/away mapping
   - **CRITICAL Score Race Condition Bug**: Fixed saveGameStateToDatabase() reading stale UI values and overwriting correctly set database scores
   - **Game State Synchronization Bug**: Fixed GameActivity not refreshing currentGame object from database on onResume(), causing stale scores after LogActivity operations
+  - **Live Event Feed Delay Bug**: Fixed live event feed showing stale events due to inconsistent in-memory gameEvents list vs database ordering
+  - **Event List Synchronization Bug**: Fixed updateRecentEventsFeed() using inconsistent in-memory list instead of current database state
 - **Root Causes**: 
   - Home page wasn't refreshing data when returning from League Management
   - addNewGame/addNewTeam methods only showed success messages without saving
@@ -1004,6 +1008,9 @@ Control panel height: Enhanced 2-row layout for better visibility
     - Enhanced onResume() method with reloadGameFromDatabase() to refresh currentGame object from database after LogActivity modifications
     - Added game state synchronization logging to track score changes between activities and detect stale in-memory objects
     - Fixed clear events functionality by ensuring GameActivity receives updated scores when returning from LogActivity
+    - Enhanced updateRecentEventsFeed() to query database directly using Event.findByGameId() instead of relying on potentially stale in-memory gameEvents list
+    - Added comprehensive debug logging to live event feed updates to track immediate vs delayed update behavior
+    - Fixed live event feed synchronization by eliminating dependency on in-memory list ordering inconsistencies
     - CRITICAL FIX: Corrected saveGameStateToDatabase() to use proper home/away team mapping instead of assuming teamA=home always
     - Added comprehensive debug logging to recordScoringEvent, updateScoreDisplay, and saveGameStateToDatabase methods for score state tracking
     - Fixed score state corruption where correct scores were being overwritten by saveGameStateToDatabase with incorrect mapping logic
