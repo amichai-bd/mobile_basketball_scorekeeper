@@ -208,11 +208,12 @@ public class Event {
     }
     
     /**
-     * Get display description for event log
+     * Get display description for event log (player and event info only)
+     * ✅ FIX: Removed redundant team info since it's now shown separately in toString()
      */
     public String getDisplayDescription() {
         if (isTeamEvent()) {
-            return getTeamSide().toUpperCase() + " - " + eventType;
+            return eventType; // Team events like TIMEOUT
         } else if (player != null) {
             return "#" + player.getJerseyNumber() + " " + player.getName() + " - " + eventType;
         } else {
@@ -222,12 +223,13 @@ public class Event {
     
     /**
      * Display format for event log
-     * ✅ FIX: Include quarter information for LogActivity parsing
-     * Expected format: "Q1 8:45 - #23 LeBron James - 2P"
+     * ✅ FIX: Include quarter information and team column for LogActivity parsing
+     * Expected format: "Q1 8:45 - HOME - #23 LeBron James - 2P"
      */
     @Override
     public String toString() {
-        return getQuarterDisplay() + " " + getFormattedGameTime() + " - " + getDisplayDescription();
+        String teamDisplay = teamSide != null ? teamSide.toUpperCase() : "UNKNOWN";
+        return getQuarterDisplay() + " " + getFormattedGameTime() + " - " + teamDisplay + " - " + getDisplayDescription();
     }
     
     // ========== SQLITE CRUD OPERATIONS ==========
@@ -363,7 +365,7 @@ public class Event {
             selectionArgs,
             null,
             null,
-            DatabaseHelper.EVENTS_COLUMN_EVENT_SEQUENCE + " ASC"
+            DatabaseHelper.EVENTS_COLUMN_EVENT_SEQUENCE + " DESC"
         );
         
         while (cursor.moveToNext()) {

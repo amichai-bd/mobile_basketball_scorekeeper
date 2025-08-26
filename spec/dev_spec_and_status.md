@@ -850,9 +850,27 @@ Control panel height: Enhanced 2-row layout for better visibility
   - **Clear Log Functionality**: Added "🗑️ Clear" button to LogActivity with confirmation dialog and `Event.deleteByGameId()` method
   - **Individual Event Deletion Fix**: Fixed LogActivity deleteEvent() method to properly delete individual events from SQLite database
   - **Undo Last Event Completion**: Enhanced GameActivity undoLastEvent() to properly delete from SQLite database and reverse game state effects
+  - **Game Clock State Persistence**: Fixed clock not running by removing event data clearing and adding proper database state saving
+  - **Quarter Information Sync**: Fixed events recording wrong quarter when user manually changes quarter dropdown
+  - **Clock Display Synchronization**: Fixed 1-second lag and jumping behavior by making updateGameClockDisplay read from live timer value
+  - **Event Log Team Column**: Added team information (HOME/AWAY) to event log display format
   - **Data Loading Consistency**: Fixed Team objects to properly load players when needed via `loadPlayers()` method
   - **Event Display Format**: Enhanced Event.toString() to include quarter information for LogActivity parsing
   - **Foreign Key Resolution**: Resolved SQLite foreign key constraints while maintaining data integrity
+  - **Event Team Names Fix**: Changed all event creation to use actual team names instead of "HOME"/"AWAY" for clearer event logs
+  - **Event Log Ordering Fix**: Modified Event.findByGameId() to order by event_sequence DESC showing newest events first
+  - **Live Event Feed Sync Fix**: Fixed GameActivity.onResume() to reload events from database when returning from LogActivity
+  - **Live Event Feed Expansion**: Increased live event feed to show last 4 events instead of 2 for better game context
+  - **Event Log Display Fix**: Fixed LogActivity parseEventString() method to correctly parse and display event types in the Event column
+  - **Comprehensive Scoring System**: Implemented complete score management with automatic recalculation when events are added, deleted, or undone
+  - **Clear Events Score Reset**: Clear all events now resets game scores to 0-0 in database  
+  - **Undo Events Score Reversal**: Undo functionality now properly reverses scoring effects and recalculates scores for accuracy
+  - **Delete Events Score Recalculation**: Individual event deletion now recalculates scores from all remaining scoring events
+  - **Score-Event Synchronization**: Scores are always kept consistent with the actual scoring events in the database
+  - **Critical Scoring Logic Fix**: Fixed home/away team mapping in score recalculation - properly maps database home/away teams to UI team positions
+  - **Score Recalculation Accuracy**: Enhanced both GameActivity and LogActivity to use actual database team assignments instead of UI assumptions
+  - **Critical Score Display Fix**: Fixed updateScoreDisplay() method to properly map home/away teams to UI positions instead of assuming teamA=home
+  - **Game Clock Initialization Fix**: Enhanced setupGameClock() to properly distinguish new games (start at 10:00, wait for manual start) vs resumed games (restore saved state)
 
 ### ❌ Blocked/Issues
 - None currently
@@ -878,6 +896,24 @@ Control panel height: Enhanced 2-row layout for better visibility
   - **Duplicate Method Compilation Bug**: Removed duplicate setupGameClock() method that was causing build failures
   - **Individual Event Deletion Bug**: Fixed LogActivity deleteEvent() method that always returned "Error: could not delete event"
   - **Incomplete Undo Functionality Bug**: Fixed GameActivity undoLastEvent() method that only removed from memory but didn't delete from database or reverse game effects
+  - **Game Clock State Not Persisting Bug**: Fixed clock state not being saved to database and events being cleared, preventing clock from running properly
+  - **Quarter Sync Bug**: Fixed events recording wrong quarter information when user manually changes quarter dropdown
+  - **Clock Display Lag Bug**: Fixed 1-second lag and jumping behavior where clock display was behind actual timer value
+  - **Event Log Missing Team Info Bug**: Fixed event log missing team column information (HOME/AWAY)
+  - **Event Display Team Names Bug**: Fixed events showing "HOME"/"AWAY" instead of actual team names in both game and log displays
+  - **Event Log Ordering Bug**: Fixed event log showing oldest events first instead of newest events first
+  - **Live Event Feed Sync Bug**: Fixed live event feed not updating when events were deleted from LogActivity
+  - **Live Event Feed Capacity Bug**: Fixed live event feed showing only 2 events instead of requested 4 events
+  - **Event Log Parsing Bug**: Fixed LogActivity not displaying event types due to incorrect parsing of 4-part event string format
+  - **Score Synchronization Bug**: Fixed scores not updating when clearing all events, undoing events, or deleting individual events
+  - **Clear Events Score Bug**: Fixed clear all events leaving stale scores instead of resetting to 0-0
+  - **Undo Events Score Bug**: Fixed undo functionality not properly reversing scoring effects on game totals
+  - **Delete Event Score Bug**: Fixed individual event deletion not recalculating scores from remaining events
+  - **Score-Event Consistency Bug**: Fixed scores becoming inconsistent with actual scoring events in database
+  - **Score Recalculation Logic Bug**: Fixed critical home/away team mapping error in recalculateScoresFromEvents() assuming teamA=home always
+  - **Database Team Assignment Bug**: Fixed score recalculation not using actual database home/away assignments causing incorrect score updates
+  - **Score Display Mapping Bug**: Fixed updateScoreDisplay() incorrectly assuming teamA=home and teamB=away instead of using actual database assignments
+  - **Game Clock Auto-Start Bug**: Fixed new games automatically resuming clock state instead of waiting at 10:00 for manual start
 - **Root Causes**: 
   - Home page wasn't refreshing data when returning from League Management
   - addNewGame/addNewTeam methods only showed success messages without saving
@@ -896,6 +932,11 @@ Control panel height: Enhanced 2-row layout for better visibility
     - Duplicate setupGameClock() method definition causing compilation failures
     - LogActivity deleteEvent() method only had placeholder code with hardcoded "false" return value
     - GameActivity undoLastEvent() method only removed events from memory, didn't delete from SQLite or reverse game state
+    - Game events cleared in initializeGameState() after being loaded from database in getGameDataFromIntent()
+    - Clock state (isClockRunning) not being saved to database when manually started/stopped
+    - Event recording methods used currentGame.getCurrentQuarter() instead of local currentQuarter variable updated by dropdown
+    - updateGameClockDisplay() read from currentGame.getGameClockSeconds() (database) instead of gameTimeSeconds (live timer)
+    - Event.toString() method lacked team information display causing unclear event log entries
 - **Solutions**: 
   - Added proper data synchronization with onResume() refresh and LeagueDataProvider updates
   - Implemented actual save functionality with proper ID generation and data persistence
@@ -920,6 +961,31 @@ Control panel height: Enhanced 2-row layout for better visibility
     - Removed duplicate method definitions to resolve compilation errors
     - Implemented complete deleteEvent() method in LogActivity to find and delete specific events from SQLite database
     - Enhanced undoLastEvent() method with complete SQLite deletion, game state reversal (scores, fouls), and consistent display updates
+    - Removed gameEvents.clear() from initializeGameState() to preserve loaded events
+    - Added saveGameStateToDatabase() method that saves clock state immediately when started/stopped and every 10 seconds during countdown
+    - Changed all event recording methods to use local currentQuarter and gameTimeSeconds variables instead of currentGame getters
+    - Enhanced selectQuarter() method to save game state when quarter is manually changed via dropdown
+    - Modified updateGameClockDisplay() to read from local gameTimeSeconds variable for real-time accuracy
+    - Updated Event.toString() to include team information (HOME/AWAY) and cleaned up redundant team display in getDisplayDescription()
+    - Fixed recordScoringEvent() to use saveGameStateToDatabase() instead of saveGameState() for complete state synchronization
+    - Changed all event creation methods to use actual team names (teamAName/teamBName) instead of "home"/"away" values
+    - Modified Event.findByGameId() to order results by event_sequence DESC to show newest events first in log
+    - Enhanced GameActivity.onResume() to reload events from database ensuring live feed syncs with LogActivity changes
+    - Updated live event feed methods to display last 4 events instead of 2 for better game context and user experience
+    - Enhanced LogActivity parseEventString() method to correctly handle 4-part event format: "Q1 8:45 - LAKERS - #23 LeBron - 2P"
+    - Created comprehensive scoring system with recalculateScoresFromEvents() method in GameActivity for automatic score synchronization
+    - Enhanced LogActivity clearAllEvents() to reset game scores to 0-0 in database when clearing all events
+    - Enhanced GameActivity undoLastEvent() to use score recalculation after reversing individual event effects
+    - Added recalculateGameScores() method to LogActivity for proper score updates when deleting individual events
+    - Fixed reverseEventEffects() method to use actual team names instead of "home"/"away" for proper team identification
+    - Added reverseTeamScore() method for accurate score reversal operations
+    - Implemented score-event consistency checks ensuring database scores always match the sum of all scoring events
+    - Fixed critical recalculateScoresFromEvents() method to use actual database home/away team assignments instead of UI team positions
+    - Enhanced LogActivity recalculateGameScores() method with proper home/away team mapping for consistent score updates across all operations
+    - Added proper team assignment validation using currentGame.getHomeTeam().getName() and currentGame.getAwayTeam().getName() for accurate scoring
+    - Fixed updateScoreDisplay() method to use proper home/away to teamA/teamB mapping instead of assuming teamA=home always
+    - Enhanced setupGameClock() with new vs resumed game detection using gameEvents.isEmpty() to ensure new games start fresh at 10:00
+    - Added automatic clock state initialization for new games (quarter=1, time=600, running=false) while preserving resume logic for existing games
 
 ### 📋 **Specification Compliance Notes**
 

@@ -163,6 +163,7 @@ public class LogActivity extends Activity {
     
     /**
      * Clear all events for the current game from SQLite database
+     * ✅ ENHANCED: Also resets game scores to 0-0
      */
     private void clearAllEvents() {
         try {
@@ -173,19 +174,99 @@ public class LogActivity extends Activity {
             int deletedCount = com.basketballstats.app.models.Event.deleteByGameId(
                 dbController.getDatabaseHelper(), gameId);
             
+            // ✅ NEW: Reset game scores to 0-0 when clearing all events
+            resetGameScores(dbController);
+            
             // Clear local list and refresh adapter
             allEvents.clear();
             eventAdapter.notifyDataSetChanged();
             
-            Toast.makeText(this, String.format("✅ Cleared %d events from game log", deletedCount), 
+            Toast.makeText(this, String.format("✅ Cleared %d events and reset scores to 0-0", deletedCount), 
                           Toast.LENGTH_SHORT).show();
             
-            android.util.Log.d("LogActivity", String.format("🗑️ Successfully cleared %d events for gameId %d", 
+            android.util.Log.d("LogActivity", String.format("🗑️ Successfully cleared %d events and reset scores for gameId %d", 
                 deletedCount, gameId));
             
         } catch (Exception e) {
             android.util.Log.e("LogActivity", "❌ Error clearing events for gameId " + gameId, e);
             Toast.makeText(this, "Error: Could not clear events", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    /**
+     * ✅ NEW: Reset game scores to 0-0 in database
+     */
+    private void resetGameScores(com.basketballstats.app.data.DatabaseController dbController) {
+        try {
+            // Load the game and reset scores
+            com.basketballstats.app.models.Game game = 
+                com.basketballstats.app.models.Game.findById(dbController.getDatabaseHelper(), gameId);
+            
+            if (game != null) {
+                game.setHomeScore(0);
+                game.setAwayScore(0);
+                game.save(dbController.getDatabaseHelper());
+                android.util.Log.d("LogActivity", "✅ Reset game scores to 0-0");
+            }
+        } catch (Exception e) {
+            android.util.Log.e("LogActivity", "❌ Error resetting game scores", e);
+        }
+    }
+    
+    /**
+     * ✅ FIXED: Recalculate game scores from all remaining scoring events
+     * CRITICAL FIX: Properly map team names to home/away based on database assignment
+     */
+    private void recalculateGameScores(com.basketballstats.app.data.DatabaseController dbController) {
+        try {
+            // Load the game with team information
+            com.basketballstats.app.models.Game game = 
+                com.basketballstats.app.models.Game.findById(dbController.getDatabaseHelper(), gameId);
+            
+            if (game == null) return;
+            
+            // Load the teams to get actual home/away assignment
+            game.loadTeams(dbController.getDatabaseHelper());
+            
+            // Get all remaining events for this game
+            java.util.List<com.basketballstats.app.models.Event> remainingEvents = 
+                com.basketballstats.app.models.Event.findByGameId(dbController.getDatabaseHelper(), gameId);
+            
+            int homeScore = 0;
+            int awayScore = 0;
+            
+            // ✅ CRITICAL FIX: Get actual home/away team names from database
+            String homeTeamName = game.getHomeTeam() != null ? game.getHomeTeam().getName() : teamAName;
+            String awayTeamName = game.getAwayTeam() != null ? game.getAwayTeam().getName() : teamBName;
+            
+            // Calculate scores from all scoring events using actual home/away mapping
+            for (com.basketballstats.app.models.Event event : remainingEvents) {
+                int points = 0;
+                switch (event.getEventType()) {
+                    case "1P": points = 1; break;
+                    case "2P": points = 2; break;
+                    case "3P": points = 3; break;
+                    default: continue; // Skip non-scoring events
+                }
+                
+                // ✅ FIXED: Use actual home/away team names instead of assuming teamA=home
+                if (homeTeamName.equals(event.getTeamSide())) {
+                    homeScore += points;
+                } else if (awayTeamName.equals(event.getTeamSide())) {
+                    awayScore += points;
+                }
+            }
+            
+            // ✅ FIXED: Always update database with correct home/away scores
+            game.setHomeScore(homeScore);
+            game.setAwayScore(awayScore);
+            game.save(dbController.getDatabaseHelper());
+            
+            android.util.Log.d("LogActivity", String.format("🔄 Recalculated scores: HOME[%s]=%d AWAY[%s]=%d", 
+                homeTeamName, homeScore, awayTeamName, awayScore));
+                
+        } catch (Exception e) {
+            android.util.Log.e("LogActivity", "❌ Error recalculating game scores", e);
         }
     }
     
@@ -262,9 +343,9 @@ public class LogActivity extends Activity {
         /**
          * Parse event string into table columns
          * Expected formats:
-         * - Player events: "Q1 8:45 - #23 LeBron James - 2P"
-         * - Team events: "Q1 8:45 - Lakers - TIMEOUT"
-         * - Legacy format: "8:45 - #23 LeBron James - 2P" (without quarter)
+         * - Player events: "Q1 8:45 - LAKERS - #23 LeBron James - 2P" (4 parts)
+         * - Team events: "Q1 8:45 - LAKERS - TIMEOUT" (3 parts)
+         * - Legacy format: "8:45 - #23 LeBron James - 2P" (without quarter, 3 parts)
          */
         private String[] parseEventString(String event) {
             String[] result = new String[4]; // Quarter, Time, Player, Event
@@ -273,25 +354,39 @@ public class LogActivity extends Activity {
                 // Split by " - "
                 String[] parts = event.split(" - ");
                 
-                if (parts.length >= 3) {
-                    // Check if first part contains quarter info "Q1 8:45" or just time "8:45"
+                if (parts.length >= 4) {
+                    // New 4-part format: "Q1 8:45 - LAKERS - #23 LeBron James - 2P"
                     String[] timeInfo = parts[0].split(" ");
                     
                     if (timeInfo.length >= 2 && timeInfo[0].startsWith("Q")) {
-                        // New format with quarter: "Q1 8:45"
                         result[0] = timeInfo[0]; // Quarter (Q1)
                         result[1] = timeInfo[1]; // Time (8:45)
                     } else {
-                        // Legacy format without quarter: "8:45"
                         result[0] = "Q1"; // Default quarter
                         result[1] = parts[0]; // Time (8:45)
                     }
                     
-                    // Second part: Player name or team name
-                    result[2] = parts[1]; // "#23 LeBron James" or "Lakers"
+                    // Skip team name (parts[1]) for display, use player name
+                    result[2] = parts[2]; // "#23 LeBron James"
+                    result[3] = parts[3]; // "2P"
                     
-                    // Third part: Event type
-                    result[3] = parts[2]; // "2P", "TIMEOUT", etc.
+                } else if (parts.length == 3) {
+                    // 3-part format: Could be team event or legacy player event
+                    String[] timeInfo = parts[0].split(" ");
+                    
+                    if (timeInfo.length >= 2 && timeInfo[0].startsWith("Q")) {
+                        // "Q1 8:45 - LAKERS - TIMEOUT" (team event)
+                        result[0] = timeInfo[0]; // Quarter (Q1)
+                        result[1] = timeInfo[1]; // Time (8:45)
+                        result[2] = parts[1]; // "LAKERS"
+                        result[3] = parts[2]; // "TIMEOUT"
+                    } else {
+                        // Legacy format: "8:45 - #23 LeBron James - 2P"
+                        result[0] = "Q1"; // Default quarter
+                        result[1] = parts[0]; // Time (8:45)
+                        result[2] = parts[1]; // "#23 LeBron James"
+                        result[3] = parts[2]; // "2P"
+                    }
                     
                 } else if (parts.length == 2) {
                     // Handle format: "Player - Event"
@@ -395,6 +490,9 @@ public class LogActivity extends Activity {
             boolean deleted = eventToDelete.delete(dbController.getDatabaseHelper());
             
             if (deleted) {
+                // ✅ NEW: Recalculate scores from remaining events
+                recalculateGameScores(dbController);
+                
                 // Remove from local display list and refresh
                 allEvents.remove(position);
                 eventAdapter.notifyDataSetChanged();

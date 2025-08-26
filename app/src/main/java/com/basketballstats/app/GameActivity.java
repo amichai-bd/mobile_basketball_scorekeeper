@@ -302,9 +302,8 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         // Initialize event tracking
         recentEvents = new ArrayList<>();
         
-                // Clear game events when starting new game (for MVP)
-        // TODO: In full implementation, load from database
-        gameEvents.clear();
+        // ✅ FIX: Don't clear game events! They were just loaded from database in getGameDataFromIntent()
+        // Events are already loaded via loadGameEvents() - keep them!
     }
     
     /**
@@ -987,6 +986,10 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             pauseClock();
         }
         
+        // ✅ FIX: Save game state to database when quarter is manually changed
+        // This ensures currentGame.getCurrentQuarter() stays in sync with currentQuarter
+        saveGameStateToDatabase();
+        
         // Update displays (including context-aware button text)
         updateAllDisplays();
         
@@ -996,6 +999,8 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         } else {
             Toast.makeText(this, "Quarter " + quarter + " selected - Clock reset to 10:00", Toast.LENGTH_SHORT).show();
         }
+        
+        android.util.Log.d("GameActivity", String.format("📅 Quarter manually changed to Q%d, game state saved", quarter));
     }
     
     // Context-Aware Button Text Updates
@@ -1071,17 +1076,18 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
                 currentGame.setAwayScore(currentGame.getAwayScore() + points);
             }
             
-            // Create and save Event to database
-            Event event = new Event(currentGame.getId(), selectedPlayer.getId(), playerTeam, 
-                                   currentGame.getCurrentQuarter(), currentGame.getGameClockSeconds(), eventType);
+            // ✅ FIX: Use actual team name instead of "home"/"away"
+            String actualTeamName = "home".equals(playerTeam) ? teamAName : teamBName;
+            Event event = new Event(currentGame.getId(), selectedPlayer.getId(), actualTeamName, 
+                                   currentQuarter, gameTimeSeconds, eventType);
             event.setEventSequence(eventSequenceCounter++);
             event.save(dbController.getDatabaseHelper());
             
             // Add to local event list
             gameEvents.add(event);
             
-            // Save updated game state
-            saveGameState();
+            // ✅ FIX: Use comprehensive save method to sync all state
+            saveGameStateToDatabase();
             
             // Visual feedback - flash button blue for 3 seconds
             flashEventButton(getEventButton(eventType));
@@ -1122,9 +1128,10 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             // ✅ FIX: Save miss event to SQLite database
             String playerTeam = selectedPlayer.getTeam();
             
-            // Create and save Event to database
-            Event event = new Event(currentGame.getId(), selectedPlayer.getId(), playerTeam, 
-                                   currentGame.getCurrentQuarter(), currentGame.getGameClockSeconds(), eventType);
+            // ✅ FIX: Use actual team name instead of "home"/"away"
+            String actualTeamName = "home".equals(playerTeam) ? teamAName : teamBName;
+            Event event = new Event(currentGame.getId(), selectedPlayer.getId(), actualTeamName, 
+                                   currentQuarter, gameTimeSeconds, eventType);
             event.setEventSequence(eventSequenceCounter++);
             event.save(dbController.getDatabaseHelper());
             
@@ -1166,9 +1173,10 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             // ✅ FIX: Save foul event to SQLite database
             String playerTeam = selectedPlayer.getTeam();
             
-            // Create and save Event to database
-            Event event = new Event(currentGame.getId(), selectedPlayer.getId(), playerTeam, 
-                                   currentGame.getCurrentQuarter(), currentGame.getGameClockSeconds(), eventType);
+            // ✅ FIX: Use actual team name instead of "home"/"away"
+            String actualTeamName = "home".equals(playerTeam) ? teamAName : teamBName;
+            Event event = new Event(currentGame.getId(), selectedPlayer.getId(), actualTeamName, 
+                                   currentQuarter, gameTimeSeconds, eventType);
             event.setEventSequence(eventSequenceCounter++);
             event.save(dbController.getDatabaseHelper());
             
@@ -1226,9 +1234,10 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             // ✅ FIX: Save turnover event to SQLite database
             String playerTeam = selectedPlayer.getTeam();
             
-            // Create and save Event to database
-            Event event = new Event(currentGame.getId(), selectedPlayer.getId(), playerTeam, 
-                                   currentGame.getCurrentQuarter(), currentGame.getGameClockSeconds(), eventType);
+            // ✅ FIX: Use actual team name instead of "home"/"away"
+            String actualTeamName = "home".equals(playerTeam) ? teamAName : teamBName;
+            Event event = new Event(currentGame.getId(), selectedPlayer.getId(), actualTeamName, 
+                                   currentQuarter, gameTimeSeconds, eventType);
             event.setEventSequence(eventSequenceCounter++);
             event.save(dbController.getDatabaseHelper());
             
@@ -1269,9 +1278,10 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             // ✅ FIX: Save event to SQLite database
             String playerTeam = selectedPlayer.getTeam();
             
-            // Create and save Event to database
-            Event event = new Event(currentGame.getId(), selectedPlayer.getId(), playerTeam, 
-                                   currentGame.getCurrentQuarter(), currentGame.getGameClockSeconds(), eventType);
+            // ✅ FIX: Use actual team name instead of "home"/"away"
+            String actualTeamName = "home".equals(playerTeam) ? teamAName : teamBName;
+            Event event = new Event(currentGame.getId(), selectedPlayer.getId(), actualTeamName, 
+                                   currentQuarter, gameTimeSeconds, eventType);
             event.setEventSequence(eventSequenceCounter++);
             event.setPointsValue(points);
             event.save(dbController.getDatabaseHelper());
@@ -1342,11 +1352,17 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
                 return;
             }
             
-            // ✅ FIX: Reverse the game state effects
+            // ✅ ENHANCED: Reverse the game state effects and recalculate scores
             reverseEventEffects(lastEvent);
             
             // Remove from local events list
             gameEvents.remove(gameEvents.size() - 1);
+            
+            // ✅ NEW: Recalculate scores from all remaining events to ensure accuracy
+            recalculateScoresFromEvents();
+            
+            // Save updated game state to database
+            saveGameStateToDatabase();
             
             // Update displays
             updateRecentEventsFeed();
@@ -1366,8 +1382,8 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     /**
-     * ✅ NEW: Reverse the effects of an event on game state
-     * Similar to how delete works but also updates live game state
+     * ✅ ENHANCED: Reverse the effects of an event on game state
+     * Updated to use actual team names instead of "home"/"away"
      */
     private void reverseEventEffects(Event event) {
         String eventType = event.getEventType();
@@ -1379,17 +1395,17 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         switch (eventType) {
             case "1P":
                 // Reverse 1-point score
-                updateTeamScore(event.getTeamSide(), -1);
+                reverseTeamScore(event.getTeamSide(), 1);
                 break;
                 
             case "2P":
                 // Reverse 2-point score
-                updateTeamScore(event.getTeamSide(), -2);
+                reverseTeamScore(event.getTeamSide(), 2);
                 break;
                 
             case "3P":
                 // Reverse 3-point score
-                updateTeamScore(event.getTeamSide(), -3);
+                reverseTeamScore(event.getTeamSide(), 3);
                 break;
                 
             case "FOUL":
@@ -1398,10 +1414,10 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
                     affectedPlayer.setPersonalFouls(Math.max(0, affectedPlayer.getPersonalFouls() - 1));
                     updatePlayerButtonText(); // Refresh foul displays
                 }
-                // Reverse team fouls
-                if ("home".equals(event.getTeamSide())) {
+                // Reverse team fouls using actual team names
+                if (teamAName.equals(event.getTeamSide())) {
                     teamAFouls = Math.max(0, teamAFouls - 1);
-                } else {
+                } else if (teamBName.equals(event.getTeamSide())) {
                     teamBFouls = Math.max(0, teamBFouls - 1);
                 }
                 updateTeamFoulsDisplay();
@@ -1414,7 +1430,8 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
                 break;
         }
         
-        android.util.Log.d("GameActivity", String.format("Reversed effects for %s event", eventType));
+        android.util.Log.d("GameActivity", String.format("Reversed effects for %s event by team %s", 
+            eventType, event.getTeamSide()));
     }
     
     /**
@@ -1439,32 +1456,119 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     /**
-     * ✅ NEW: Update team score by delta (positive or negative)
+     * ✅ ENHANCED: Update team score by delta (positive or negative)
+     * Updated to use actual team names instead of "home"/"away"
      */
     private void updateTeamScore(String teamSide, int scoreDelta) {
-        if ("home".equals(teamSide)) {
+        if (teamAName.equals(teamSide)) {
             // Update Team A score
             String currentScoreText = tvTeamAScore.getText().toString();
-            int currentScore = 0;
-            try {
-                currentScore = Integer.parseInt(currentScoreText);
-            } catch (NumberFormatException e) {
-                // Score display might have additional text, extract number
-                currentScore = extractScoreFromDisplay(currentScoreText);
-            }
+            int currentScore = extractScoreFromDisplay(currentScoreText);
             int newScore = Math.max(0, currentScore + scoreDelta);
             tvTeamAScore.setText(String.valueOf(newScore));
-        } else {
+            // Update database
+            if (currentGame != null) {
+                currentGame.setHomeScore(newScore);
+            }
+        } else if (teamBName.equals(teamSide)) {
             // Update Team B score
             String currentScoreText = tvTeamBScore.getText().toString();
-            int currentScore = 0;
-            try {
-                currentScore = Integer.parseInt(currentScoreText);
-            } catch (NumberFormatException e) {
-                currentScore = extractScoreFromDisplay(currentScoreText);
-            }
+            int currentScore = extractScoreFromDisplay(currentScoreText);
             int newScore = Math.max(0, currentScore + scoreDelta);
             tvTeamBScore.setText(String.valueOf(newScore));
+            // Update database
+            if (currentGame != null) {
+                currentGame.setAwayScore(newScore);
+            }
+        }
+    }
+    
+    /**
+     * ✅ NEW: Reverse team score (subtract points)
+     */
+    private void reverseTeamScore(String teamName, int points) {
+        if (teamAName.equals(teamName)) {
+            // Reverse Team A score
+            String currentScoreText = tvTeamAScore.getText().toString();
+            int currentScore = extractScoreFromDisplay(currentScoreText);
+            int newScore = Math.max(0, currentScore - points);
+            tvTeamAScore.setText(String.valueOf(newScore));
+            // Update database
+            if (currentGame != null) {
+                currentGame.setHomeScore(newScore);
+            }
+        } else if (teamBName.equals(teamName)) {
+            // Reverse Team B score
+            String currentScoreText = tvTeamBScore.getText().toString();
+            int currentScore = extractScoreFromDisplay(currentScoreText);
+            int newScore = Math.max(0, currentScore - points);
+            tvTeamBScore.setText(String.valueOf(newScore));
+            // Update database
+            if (currentGame != null) {
+                currentGame.setAwayScore(newScore);
+            }
+        }
+    }
+    
+    /**
+     * ✅ FIXED: Recalculate scores from all scoring events in database
+     * Used when clearing events or deleting individual events
+     * 
+     * CRITICAL FIX: Properly map team names to home/away based on database assignment
+     */
+    private void recalculateScoresFromEvents() {
+        if (currentGame == null) return;
+        
+        try {
+            // Get all scoring events for this game
+            List<Event> allEvents = Event.findByGameId(dbController.getDatabaseHelper(), currentGame.getId());
+            
+            int homeScore = 0;
+            int awayScore = 0;
+            
+            // ✅ CRITICAL FIX: Get actual home/away team names from database
+            String homeTeamName = currentGame.getHomeTeam() != null ? currentGame.getHomeTeam().getName() : teamAName;
+            String awayTeamName = currentGame.getAwayTeam() != null ? currentGame.getAwayTeam().getName() : teamBName;
+            
+            // Calculate scores from all scoring events using actual home/away mapping
+            for (Event event : allEvents) {
+                int points = 0;
+                switch (event.getEventType()) {
+                    case "1P": points = 1; break;
+                    case "2P": points = 2; break;
+                    case "3P": points = 3; break;
+                    default: continue; // Skip non-scoring events
+                }
+                
+                // ✅ FIXED: Use actual home/away team names instead of assuming teamA=home
+                if (homeTeamName.equals(event.getTeamSide())) {
+                    homeScore += points;
+                } else if (awayTeamName.equals(event.getTeamSide())) {
+                    awayScore += points;
+                }
+            }
+            
+            // ✅ FIXED: Update UI based on actual home/away assignment
+            // teamA is always displayed on left, teamB on right, but they might not be home/away
+            if (teamAName.equals(homeTeamName)) {
+                // Team A is home team
+                tvTeamAScore.setText(String.valueOf(homeScore));
+                tvTeamBScore.setText(String.valueOf(awayScore));
+            } else {
+                // Team A is away team (Team B is home)
+                tvTeamAScore.setText(String.valueOf(awayScore));
+                tvTeamBScore.setText(String.valueOf(homeScore));
+            }
+            
+            // ✅ FIXED: Always update database with correct home/away scores
+            currentGame.setHomeScore(homeScore);
+            currentGame.setAwayScore(awayScore);
+            
+            android.util.Log.d("GameActivity", String.format("🔄 Recalculated scores: HOME[%s]=%d AWAY[%s]=%d", 
+                homeTeamName, homeScore, awayTeamName, awayScore));
+                
+        } catch (Exception e) {
+            android.util.Log.e("GameActivity", "Error recalculating scores from events", e);
         }
     }
     
@@ -1502,6 +1606,11 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
                 if (gameTimeSeconds > 0) {
                     gameTimeSeconds--;
                     updateGameClockDisplay();
+                    
+                    // ✅ FIX: Save game state every 10 seconds to avoid too frequent DB writes
+                    if (gameTimeSeconds % 10 == 0) {
+                        saveGameStateToDatabase();
+                    }
                     
                     // Update context-aware buttons when timer changes from 10:00 to 9:59
                     if (gameTimeSeconds == 599) { // Just crossed from 10:00 to 9:59
@@ -1548,6 +1657,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         // Update timer state and button
         isClockRunning = true;
         
+        // ✅ FIX: Save clock state to database immediately
+        saveGameStateToDatabase();
+        
         // Auto-reset override toggle when timer starts
         allowEventsOverride = false;
         
@@ -1574,6 +1686,10 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         
         // Update timer state and button
         isClockRunning = false;
+        
+        // ✅ FIX: Save clock state to database immediately
+        saveGameStateToDatabase();
+        
         updateGameToggleButton();
         updateAllowEventsButton(); // CRITICAL: Update Allow Events button when timer pauses
         
@@ -1624,19 +1740,31 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     private void updateScoreDisplay() {
-        // Update team scores for blue strip layout using SQLite currentGame
+        // ✅ FIXED: Update team scores for blue strip layout using correct home/away mapping
         if (currentGame != null) {
-            tvTeamAScore.setText(String.valueOf(currentGame.getHomeScore()));
-            tvTeamBScore.setText(String.valueOf(currentGame.getAwayScore()));
+            // Get actual home/away team names from database
+            String homeTeamName = currentGame.getHomeTeam() != null ? currentGame.getHomeTeam().getName() : teamAName;
+            String awayTeamName = currentGame.getAwayTeam() != null ? currentGame.getAwayTeam().getName() : teamBName;
+            
+            // Map scores correctly based on actual home/away assignment
+            if (teamAName.equals(homeTeamName)) {
+                // Team A is home team
+                tvTeamAScore.setText(String.valueOf(currentGame.getHomeScore()));
+                tvTeamBScore.setText(String.valueOf(currentGame.getAwayScore()));
+            } else {
+                // Team A is away team (Team B is home)
+                tvTeamAScore.setText(String.valueOf(currentGame.getAwayScore()));
+                tvTeamBScore.setText(String.valueOf(currentGame.getHomeScore()));
+            }
         }
     }
     
     private void updateGameClockDisplay() {
-        if (currentGame != null) {
-            int minutes = currentGame.getGameClockSeconds() / 60;
-            int seconds = currentGame.getGameClockSeconds() % 60;
-            tvGameClock.setText(String.format("%d:%02d", minutes, seconds));
-        }
+        // ✅ FIX: Use local gameTimeSeconds (live timer value) instead of currentGame.getGameClockSeconds() (database value)
+        // This fixes the 1-second lag issue where display was behind the actual timer
+        int minutes = gameTimeSeconds / 60;
+        int seconds = gameTimeSeconds % 60;
+        tvGameClock.setText(String.format("%d:%02d", minutes, seconds));
     }
     
     // Quarter display now handled by spinner - no separate method needed
@@ -1743,11 +1871,14 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     
     /**
      * Update recent events from SQLite gameEvents list
+     * ✅ FIX: Show last 4 events instead of 2, and gameEvents is now ordered DESC (newest first)
      */
     private void updateRecentEventsFeed() {
         recentEvents.clear();
-        int count = Math.min(2, gameEvents.size());
-        for (int i = gameEvents.size() - count; i < gameEvents.size(); i++) {
+        int count = Math.min(4, gameEvents.size());
+        
+        // gameEvents is now ordered DESC (newest first), so take first 4 events
+        for (int i = 0; i < count; i++) {
             Event event = gameEvents.get(i);
             String timeStr = String.format("%d:%02d", event.getGameTimeSeconds() / 60, event.getGameTimeSeconds() % 60);
             String eventDescription;
@@ -1761,7 +1892,7 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
                     event.getQuarter(), timeStr, event.getTeamSide().toUpperCase(), event.getEventType());
             }
             
-            recentEvents.add(0, eventDescription); // Add at beginning (most recent first)
+            recentEvents.add(eventDescription); // Add in order (newest first)
         }
         
         // Update display
@@ -1816,9 +1947,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     private void updateRecentEventsList() {
-        // Update recent events from gameEvents (last 2)
+        // ✅ FIX: Update recent events from gameEvents (last 4 instead of 2)
         recentEvents.clear();
-        int count = Math.min(2, gameEvents.size());
+        int count = Math.min(4, gameEvents.size());
         for (int i = 0; i < count; i++) {
             recentEvents.add(gameEvents.get(i).toString());
         }
@@ -1827,9 +1958,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     @Override
     protected void onResume() {
         super.onResume();
-        // Refresh recent events in case they were modified in LogActivity
-        updateRecentEventsList();
-        updateLiveEventFeedDisplay();
+        // ✅ FIX: Reload events from database in case they were modified in LogActivity
+        loadGameEvents();
+        updateAllDisplays();
     }
     
     // Note: Static methods removed - LogActivity should access events via SQLite database
@@ -1853,6 +1984,53 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             case "FOUL": return null; // FOUL button moved to team panels
             default: return null;
         }
+    }
+    
+    /**
+     * ✅ FIX: Save current game state (clock, quarter, scores) to database
+     * Called when clock starts/stops or changes quarter
+     */
+    private void saveGameStateToDatabase() {
+        if (currentGame == null) return;
+        
+        try {
+            // Update game object with current state
+            currentGame.setCurrentQuarter(currentQuarter);
+            currentGame.setGameClockSeconds(gameTimeSeconds);
+            currentGame.setClockRunning(isClockRunning);
+            
+            // Update scores from UI display
+            try {
+                String teamAScoreText = tvTeamAScore.getText().toString();
+                String teamBScoreText = tvTeamBScore.getText().toString();
+                currentGame.setHomeScore(extractScoreFromDisplay(teamAScoreText));
+                currentGame.setAwayScore(extractScoreFromDisplay(teamBScoreText));
+            } catch (Exception e) {
+                android.util.Log.w("GameActivity", "Could not extract scores for database save");
+            }
+            
+            // Save to database
+            long result = currentGame.save(dbController.getDatabaseHelper());
+            
+            if (result > 0) {
+                android.util.Log.d("GameActivity", String.format("💾 Saved game state - Q%d %s Clock:%b", 
+                    currentQuarter, formatTime(gameTimeSeconds), isClockRunning));
+            } else {
+                android.util.Log.w("GameActivity", "Failed to save game state to database");
+            }
+            
+        } catch (Exception e) {
+            android.util.Log.e("GameActivity", "Error saving game state to database", e);
+        }
+    }
+    
+    /**
+     * Helper method to format time in MM:SS format
+     */
+    private String formatTime(int seconds) {
+        int minutes = seconds / 60;
+        int secs = seconds % 60;
+        return String.format("%d:%02d", minutes, secs);
     }
     
     // Single-Event Safety: Auto-reset override after each event
@@ -1961,10 +2139,14 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     /**
-     * ✅ FIX: Missing setupGameClock method that was being called but didn't exist
-     * Initialize game clock state and resume if clock was running
+     * ✅ ENHANCED: Initialize game clock state - properly handle new vs resumed games
+     * NEW games: Clock starts at 10:00 and waits for manual start
+     * RESUMED games: Restore saved clock state and resume if was running
      */
     private void setupGameClock() {
+        // Determine if this is a new game (no events recorded yet)
+        boolean isNewGame = gameEvents.isEmpty();
+        
         // Initialize game clock defaults if not loaded from database
         if (currentQuarter <= 0) {
             currentQuarter = 1;
@@ -1973,14 +2155,22 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             gameTimeSeconds = 600; // 10:00 default
         }
         
-        android.util.Log.d("GameActivity", String.format("⏰ setupGameClock - Quarter: %d, Time: %d, Running: %b", 
-            currentQuarter, gameTimeSeconds, isClockRunning));
+        // ✅ NEW GAME LOGIC: Always start fresh for new games
+        if (isNewGame) {
+            currentQuarter = 1;
+            gameTimeSeconds = 600; // Always start at 10:00
+            isClockRunning = false; // Never auto-start for new games
+            android.util.Log.d("GameActivity", "🆕 New game detected - Clock set to 10:00, waiting for manual start");
+        }
+        
+        android.util.Log.d("GameActivity", String.format("⏰ setupGameClock - Quarter: %d, Time: %d, Running: %b, IsNew: %b", 
+            currentQuarter, gameTimeSeconds, isClockRunning, isNewGame));
         
         // Update clock display immediately
         updateGameClockDisplay();
         
-        // If clock was running when game was saved, resume it
-        if (isClockRunning) {
+        // Only resume clock for existing games that were running
+        if (isClockRunning && !isNewGame) {
             android.util.Log.d("GameActivity", "🔄 Resuming clock from saved state");
             startClock();
         }
