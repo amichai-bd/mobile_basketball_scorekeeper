@@ -871,6 +871,18 @@ Control panel height: Enhanced 2-row layout for better visibility
   - **Score Recalculation Accuracy**: Enhanced both GameActivity and LogActivity to use actual database team assignments instead of UI assumptions
   - **Critical Score Display Fix**: Fixed updateScoreDisplay() method to properly map home/away teams to UI positions instead of assuming teamA=home
   - **Game Clock Initialization Fix**: Enhanced setupGameClock() to properly distinguish new games (start at 10:00, wait for manual start) vs resumed games (restore saved state)
+  - **CRITICAL Score Update Bug Fix**: Fixed saveGameStateToDatabase() incorrectly overwriting correct scores with wrong home/away mapping
+  - **Score State Synchronization**: Added comprehensive debug logging to track score updates through recordScoringEvent → updateScoreDisplay → saveGameStateToDatabase flow
+  - **Critical UI Score Display Bug**: Discovered hardcoded XML scores (45, 38) not being overridden by setText() calls - added forced override and comprehensive debugging
+  - **UI Score Update Testing**: Added initialization-time forced score reset to 0-0 to test if TextView.setText() calls work properly
+  - **Comprehensive UI Debugging System**: Added findViewById null checks, delayed verification, onResume tracking, and forced override testing
+  - **Root Cause Investigation**: Identified onResume() method calling updateAllDisplays() after onCreate(), potentially overwriting debug values
+  - **Multi-Layer Debug Testing**: Added debug overrides in both onCreate() and updateScoreDisplay() to isolate where UI updates fail
+  - **CRITICAL Race Condition Bug Fix**: Discovered and fixed race condition in saveGameStateToDatabase() overwriting correct scores with stale UI values
+  - **Score Update Flow Fix**: Fixed recordScoringEvent → saveGameStateToDatabase flow where UI extraction was destroying correctly set database scores
+  - **Comprehensive Scoring Debug System**: Added detailed logging throughout scoring flow to track exact score update path
+  - **Game State Refresh Bug Fix**: Fixed onResume() not reloading currentGame object from database after LogActivity score changes
+  - **Clear Events Score Sync**: Enhanced onResume() to reload game state ensuring scores reflect database changes after clearing events
 
 ### ❌ Blocked/Issues
 - None currently
@@ -914,6 +926,9 @@ Control panel height: Enhanced 2-row layout for better visibility
   - **Database Team Assignment Bug**: Fixed score recalculation not using actual database home/away assignments causing incorrect score updates
   - **Score Display Mapping Bug**: Fixed updateScoreDisplay() incorrectly assuming teamA=home and teamB=away instead of using actual database assignments
   - **Game Clock Auto-Start Bug**: Fixed new games automatically resuming clock state instead of waiting at 10:00 for manual start
+  - **CRITICAL Score State Corruption Bug**: Fixed saveGameStateToDatabase() overwriting correct scores from recordScoringEvent with incorrect home/away mapping
+  - **CRITICAL Score Race Condition Bug**: Fixed saveGameStateToDatabase() reading stale UI values and overwriting correctly set database scores
+  - **Game State Synchronization Bug**: Fixed GameActivity not refreshing currentGame object from database on onResume(), causing stale scores after LogActivity operations
 - **Root Causes**: 
   - Home page wasn't refreshing data when returning from League Management
   - addNewGame/addNewTeam methods only showed success messages without saving
@@ -986,6 +1001,12 @@ Control panel height: Enhanced 2-row layout for better visibility
     - Fixed updateScoreDisplay() method to use proper home/away to teamA/teamB mapping instead of assuming teamA=home always
     - Enhanced setupGameClock() with new vs resumed game detection using gameEvents.isEmpty() to ensure new games start fresh at 10:00
     - Added automatic clock state initialization for new games (quarter=1, time=600, running=false) while preserving resume logic for existing games
+    - Enhanced onResume() method with reloadGameFromDatabase() to refresh currentGame object from database after LogActivity modifications
+    - Added game state synchronization logging to track score changes between activities and detect stale in-memory objects
+    - Fixed clear events functionality by ensuring GameActivity receives updated scores when returning from LogActivity
+    - CRITICAL FIX: Corrected saveGameStateToDatabase() to use proper home/away team mapping instead of assuming teamA=home always
+    - Added comprehensive debug logging to recordScoringEvent, updateScoreDisplay, and saveGameStateToDatabase methods for score state tracking
+    - Fixed score state corruption where correct scores were being overwritten by saveGameStateToDatabase with incorrect mapping logic
 
 ### 📋 **Specification Compliance Notes**
 

@@ -128,6 +128,18 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         
         // Update initial display
         updateAllDisplays();
+        
+        // ✅ SUCCESS: UI updates work! Now let's debug the real scoring logic
+        android.util.Log.d("GameActivity", "✅ UI SYSTEM VERIFIED: setText() calls work correctly!");
+        android.util.Log.d("GameActivity", String.format("📱 Initial XML values: TeamA='%s', TeamB='%s'", 
+            tvTeamAScore != null ? tvTeamAScore.getText().toString() : "NULL",
+            tvTeamBScore != null ? tvTeamBScore.getText().toString() : "NULL"));
+            
+        // Check current database values
+        if (currentGame != null) {
+            android.util.Log.d("GameActivity", String.format("🏀 Database scores: HOME=%d, AWAY=%d", 
+                currentGame.getHomeScore(), currentGame.getAwayScore()));
+        }
     }
     
     private void getGameDataFromIntent() {
@@ -253,6 +265,18 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         tvTeamAFouls = findViewById(R.id.tvTeamAFouls);
         tvTeamBFouls = findViewById(R.id.tvTeamBFouls);
         btnGameToggle = findViewById(R.id.btnGameToggle);
+        
+        // ✅ CRITICAL DEBUG: Check if TextViews were actually found
+        android.util.Log.d("GameActivity", "🔍 FINDVIEWBYID RESULTS:");
+        android.util.Log.d("GameActivity", String.format("tvTeamAScore = %s", tvTeamAScore != null ? "FOUND" : "NULL"));
+        android.util.Log.d("GameActivity", String.format("tvTeamBScore = %s", tvTeamBScore != null ? "FOUND" : "NULL"));
+        
+        if (tvTeamAScore != null) {
+            android.util.Log.d("GameActivity", String.format("tvTeamAScore current text: '%s'", tvTeamAScore.getText().toString()));
+        }
+        if (tvTeamBScore != null) {
+            android.util.Log.d("GameActivity", String.format("tvTeamBScore current text: '%s'", tvTeamBScore.getText().toString()));
+        }
         
         // Team panel components
         llTeamAPlayers = findViewById(R.id.llTeamAPlayers);
@@ -1070,11 +1094,30 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         try {
             // Record scoring event to SQLite database
             String playerTeam = selectedPlayer.getTeam();
+            
+            // ✅ DEBUG: Log scoring details to identify the issue
+            android.util.Log.d("GameActivity", String.format("🏀 SCORING EVENT: Player=%s, Team=%s, Points=%d", 
+                selectedPlayer.getName(), playerTeam, points));
+            android.util.Log.d("GameActivity", String.format("📊 BEFORE: HomeScore=%d, AwayScore=%d", 
+                currentGame.getHomeScore(), currentGame.getAwayScore()));
+            
             if ("home".equals(playerTeam)) {
-                currentGame.setHomeScore(currentGame.getHomeScore() + points);
+                int oldScore = currentGame.getHomeScore();
+                int newHomeScore = oldScore + points;
+                currentGame.setHomeScore(newHomeScore);
+                android.util.Log.d("GameActivity", String.format("✅ Updated HOME score: %d + %d = %d", 
+                    oldScore, points, newHomeScore));
             } else {
-                currentGame.setAwayScore(currentGame.getAwayScore() + points);
+                int oldScore = currentGame.getAwayScore(); 
+                int newAwayScore = oldScore + points;
+                currentGame.setAwayScore(newAwayScore);
+                android.util.Log.d("GameActivity", String.format("✅ Updated AWAY score: %d + %d = %d", 
+                    oldScore, points, newAwayScore));
             }
+            
+            android.util.Log.d("GameActivity", String.format("📊 AFTER SCORE UPDATE: HomeScore=%d, AwayScore=%d", 
+                currentGame.getHomeScore(), currentGame.getAwayScore()));
+            android.util.Log.d("GameActivity", "📊 About to call saveGameStateToDatabase()...");
             
             // ✅ FIX: Use actual team name instead of "home"/"away"
             String actualTeamName = "home".equals(playerTeam) ? teamAName : teamBName;
@@ -1088,6 +1131,10 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             
             // ✅ FIX: Use comprehensive save method to sync all state
             saveGameStateToDatabase();
+            
+            // ✅ VERIFICATION: Check if scores were preserved after save
+            android.util.Log.d("GameActivity", String.format("📊 AFTER SAVE: HomeScore=%d, AwayScore=%d", 
+                currentGame.getHomeScore(), currentGame.getAwayScore()));
             
             // Visual feedback - flash button blue for 3 seconds
             flashEventButton(getEventButton(eventType));
@@ -1139,15 +1186,15 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             gameEvents.add(event);
             
             // Visual feedback - flash button blue
-            flashEventButton(getEventButton(eventType));
-            
-            // Show feedback
-            Toast.makeText(this, String.format("%s recorded for %s", 
-                eventType, selectedPlayer.getName()), Toast.LENGTH_SHORT).show();
-            
+        flashEventButton(getEventButton(eventType));
+        
+        // Show feedback
+        Toast.makeText(this, String.format("%s recorded for %s", 
+            eventType, selectedPlayer.getName()), Toast.LENGTH_SHORT).show();
+        
             // Update displays and deselect
             addToLiveEventFeedSQLite(event);
-            deselectAllPlayers();
+        deselectAllPlayers();
             
         } catch (Exception e) {
             Toast.makeText(this, "Error saving miss event: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -1182,37 +1229,37 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             
             // Add to local event list
             gameEvents.add(event);
-            
-            // Increment personal fouls
-            selectedPlayer.setPersonalFouls(selectedPlayer.getPersonalFouls() + 1);
-            
-            // Increment team fouls
-            if ("home".equals(playerTeam)) {
-                teamAFouls++;
-            } else {
-                teamBFouls++;
-            }
-            
-            // Visual feedback
-            if ("home".equals(playerTeam)) {
-                flashEventButton(btnTeamAFoul);
-            } else {
-                flashEventButton(btnTeamBFoul);
-            }
-            
-            // Check for foul out (5 fouls)
-            if (selectedPlayer.getPersonalFouls() >= 5) {
-                Toast.makeText(this, selectedPlayer.getName() + " fouled out! (5 fouls)", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(this, String.format("Foul recorded for %s (%d fouls)", 
-                    selectedPlayer.getName(), selectedPlayer.getPersonalFouls()), Toast.LENGTH_SHORT).show();
-            }
-            
-            // Update displays
-            updatePlayerButtonText();
-            updateTeamFoulsDisplay();
+        
+        // Increment personal fouls
+        selectedPlayer.setPersonalFouls(selectedPlayer.getPersonalFouls() + 1);
+        
+        // Increment team fouls
+        if ("home".equals(playerTeam)) {
+            teamAFouls++;
+        } else {
+            teamBFouls++;
+        }
+        
+        // Visual feedback
+        if ("home".equals(playerTeam)) {
+            flashEventButton(btnTeamAFoul);
+        } else {
+            flashEventButton(btnTeamBFoul);
+        }
+        
+        // Check for foul out (5 fouls)
+        if (selectedPlayer.getPersonalFouls() >= 5) {
+            Toast.makeText(this, selectedPlayer.getName() + " fouled out! (5 fouls)", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this, String.format("Foul recorded for %s (%d fouls)", 
+                selectedPlayer.getName(), selectedPlayer.getPersonalFouls()), Toast.LENGTH_SHORT).show();
+        }
+        
+        // Update displays
+        updatePlayerButtonText();
+        updateTeamFoulsDisplay();
             addToLiveEventFeedSQLite(event);
-            deselectAllPlayers();
+        deselectAllPlayers();
             
         } catch (Exception e) {
             Toast.makeText(this, "Error saving foul event: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -1243,16 +1290,16 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             
             // Add to local event list
             gameEvents.add(event);
-            
-            // Visual feedback
-            flashEventButton(btnTO);
-            
+        
+        // Visual feedback
+        flashEventButton(btnTO);
+        
             // Show feedback
-            Toast.makeText(this, String.format("Turnover recorded for %s", selectedPlayer.getName()), Toast.LENGTH_SHORT).show();
-            
+        Toast.makeText(this, String.format("Turnover recorded for %s", selectedPlayer.getName()), Toast.LENGTH_SHORT).show();
+        
             // Update displays and deselect
             addToLiveEventFeedSQLite(event);
-            deselectAllPlayers();
+        deselectAllPlayers();
             
         } catch (Exception e) {
             Toast.makeText(this, "Error saving turnover event: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -1288,17 +1335,17 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             
             // Add to local event list
             gameEvents.add(event);
-            
-            // Visual feedback
-            flashEventButton(getEventButton(eventType));
-            
-            // Show feedback
-            Toast.makeText(this, String.format("%s recorded for %s", 
-                eventType, selectedPlayer.getName()), Toast.LENGTH_SHORT).show();
-            
+        
+        // Visual feedback
+        flashEventButton(getEventButton(eventType));
+        
+        // Show feedback
+        Toast.makeText(this, String.format("%s recorded for %s", 
+            eventType, selectedPlayer.getName()), Toast.LENGTH_SHORT).show();
+        
             // Update displays and deselect
             addToLiveEventFeedSQLite(event);
-            deselectAllPlayers();
+        deselectAllPlayers();
             
         } catch (Exception e) {
             Toast.makeText(this, "Error saving event: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -1366,7 +1413,7 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             
             // Update displays
             updateRecentEventsFeed();
-            updateLiveEventFeedDisplay();
+        updateLiveEventFeedDisplay();
             updateAllDisplays(); // Update scores, fouls, etc.
             
             // Show confirmation with event details
@@ -1741,21 +1788,67 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     
     private void updateScoreDisplay() {
         // ✅ FIXED: Update team scores for blue strip layout using correct home/away mapping
+        android.util.Log.d("GameActivity", "🖥️ updateScoreDisplay() CALLED!");
+        
         if (currentGame != null) {
             // Get actual home/away team names from database
             String homeTeamName = currentGame.getHomeTeam() != null ? currentGame.getHomeTeam().getName() : teamAName;
             String awayTeamName = currentGame.getAwayTeam() != null ? currentGame.getAwayTeam().getName() : teamBName;
             
+            // ✅ DEBUG: Log display update details
+            android.util.Log.d("GameActivity", String.format("🖥️ UPDATE DISPLAY: DB HomeScore=%d, AwayScore=%d", 
+                currentGame.getHomeScore(), currentGame.getAwayScore()));
+            android.util.Log.d("GameActivity", String.format("🏠 HOME team: %s, AWAY team: %s", homeTeamName, awayTeamName));
+            android.util.Log.d("GameActivity", String.format("📱 UI teamA: %s, teamB: %s", teamAName, teamBName));
+            
             // Map scores correctly based on actual home/away assignment
             if (teamAName.equals(homeTeamName)) {
                 // Team A is home team
-                tvTeamAScore.setText(String.valueOf(currentGame.getHomeScore()));
-                tvTeamBScore.setText(String.valueOf(currentGame.getAwayScore()));
+            tvTeamAScore.setText(String.valueOf(currentGame.getHomeScore()));
+            tvTeamBScore.setText(String.valueOf(currentGame.getAwayScore()));
+                android.util.Log.d("GameActivity", String.format("✅ UI UPDATE: TeamA(HOME)=%d, TeamB(AWAY)=%d", 
+                    currentGame.getHomeScore(), currentGame.getAwayScore()));
             } else {
                 // Team A is away team (Team B is home)
                 tvTeamAScore.setText(String.valueOf(currentGame.getAwayScore()));
                 tvTeamBScore.setText(String.valueOf(currentGame.getHomeScore()));
+                android.util.Log.d("GameActivity", String.format("✅ UI UPDATE: TeamA(AWAY)=%d, TeamB(HOME)=%d", 
+                    currentGame.getAwayScore(), currentGame.getHomeScore()));
             }
+            
+            // ✅ DEBUG: Verify UI actually updated after setText calls
+            android.util.Log.d("GameActivity", String.format("🔍 POST-UPDATE: UI shows TeamA='%s', TeamB='%s'", 
+                tvTeamAScore.getText().toString(), tvTeamBScore.getText().toString()));
+                
+        } else {
+            android.util.Log.w("GameActivity", "❌ Cannot update score display: currentGame is null");
+        }
+        
+        // ✅ DEBUG: The UI updates work! Now check if database scores are correct
+        android.util.Log.d("GameActivity", String.format("🔧 REAL SCORES: currentGame.getHomeScore()=%d, currentGame.getAwayScore()=%d", 
+            currentGame.getHomeScore(), currentGame.getAwayScore()));
+        android.util.Log.d("GameActivity", String.format("🔧 TEAM MAPPING: teamAName='%s', homeTeamName='%s' (match=%b)", 
+            teamAName, 
+            currentGame.getHomeTeam() != null ? currentGame.getHomeTeam().getName() : "null",
+            teamAName.equals(currentGame.getHomeTeam() != null ? currentGame.getHomeTeam().getName() : teamAName)));
+            
+        // ✅ SHOW REAL SCORES: Now that race condition is fixed, display actual scores
+        if (tvTeamAScore != null && tvTeamBScore != null) {
+            // Get actual home/away team names from database for proper mapping
+            String homeTeamName = currentGame.getHomeTeam() != null ? currentGame.getHomeTeam().getName() : teamAName;
+            
+            if (teamAName.equals(homeTeamName)) {
+                // Team A is home team - show home score on left, away on right
+                tvTeamAScore.setText(String.valueOf(currentGame.getHomeScore()));
+                tvTeamBScore.setText(String.valueOf(currentGame.getAwayScore()));
+            } else {
+                // Team A is away team - show away score on left, home on right
+                tvTeamAScore.setText(String.valueOf(currentGame.getAwayScore()));
+                tvTeamBScore.setText(String.valueOf(currentGame.getHomeScore()));
+            }
+            
+            android.util.Log.d("GameActivity", String.format("✅ FINAL UI: TeamA='%s', TeamB='%s'", 
+                tvTeamAScore.getText().toString(), tvTeamBScore.getText().toString()));
         }
     }
     
@@ -1764,7 +1857,7 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
         // This fixes the 1-second lag issue where display was behind the actual timer
         int minutes = gameTimeSeconds / 60;
         int seconds = gameTimeSeconds % 60;
-        tvGameClock.setText(String.format("%d:%02d", minutes, seconds));
+            tvGameClock.setText(String.format("%d:%02d", minutes, seconds));
     }
     
     // Quarter display now handled by spinner - no separate method needed
@@ -1958,9 +2051,65 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     @Override
     protected void onResume() {
         super.onResume();
+        android.util.Log.d("GameActivity", "🔄 onResume() CALLED - Reloading game data from database");
+        
+        // ✅ CRITICAL FIX: Reload current game from database in case scores were modified in LogActivity
+        reloadGameFromDatabase();
+        
         // ✅ FIX: Reload events from database in case they were modified in LogActivity
         loadGameEvents();
+        
+        android.util.Log.d("GameActivity", "🔄 onResume() calling updateAllDisplays()...");
         updateAllDisplays();
+        
+        android.util.Log.d("GameActivity", String.format("🔄 onResume() FINISHED - Current scores: TeamA='%s', TeamB='%s'", 
+            tvTeamAScore != null ? tvTeamAScore.getText().toString() : "NULL",
+            tvTeamBScore != null ? tvTeamBScore.getText().toString() : "NULL"));
+    }
+    
+    /**
+     * ✅ NEW: Reload current game from database to get updated scores/state
+     * Called in onResume() to refresh game state after returning from LogActivity
+     */
+    private void reloadGameFromDatabase() {
+        if (currentGame == null || dbController == null) return;
+        
+        try {
+            // Reload game from database using current game ID
+            Game refreshedGame = Game.findById(dbController.getDatabaseHelper(), currentGame.getId());
+            
+            if (refreshedGame != null) {
+                // Load teams with rosters
+                refreshedGame.loadTeams(dbController.getDatabaseHelper());
+                
+                // Check if scores changed
+                boolean scoresChanged = (currentGame.getHomeScore() != refreshedGame.getHomeScore() || 
+                                       currentGame.getAwayScore() != refreshedGame.getAwayScore());
+                
+                if (scoresChanged) {
+                    android.util.Log.d("GameActivity", String.format("🔄 SCORES UPDATED: OLD[%d-%d] → NEW[%d-%d]", 
+                        currentGame.getHomeScore(), currentGame.getAwayScore(),
+                        refreshedGame.getHomeScore(), refreshedGame.getAwayScore()));
+                }
+                
+                // Update the current game object with fresh data
+                currentGame = refreshedGame;
+                
+                // Update derived state
+                this.currentQuarter = currentGame.getCurrentQuarter();
+                this.gameTimeSeconds = currentGame.getGameClockSeconds();
+                this.isClockRunning = currentGame.isClockRunning();
+                
+                android.util.Log.d("GameActivity", String.format("✅ Reloaded game: Q%d, Clock:%d, Scores:[%d-%d]", 
+                    currentQuarter, gameTimeSeconds, currentGame.getHomeScore(), currentGame.getAwayScore()));
+                
+            } else {
+                android.util.Log.w("GameActivity", "❌ Could not reload game from database");
+            }
+            
+        } catch (Exception e) {
+            android.util.Log.e("GameActivity", "❌ Error reloading game from database", e);
+        }
     }
     
     // Note: Static methods removed - LogActivity should access events via SQLite database
@@ -1987,8 +2136,9 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
     }
     
     /**
-     * ✅ FIX: Save current game state (clock, quarter, scores) to database
+     * ✅ FIXED: Save current game state (clock, quarter, scores) to database
      * Called when clock starts/stops or changes quarter
+     * CRITICAL FIX: Use proper home/away mapping for scores
      */
     private void saveGameStateToDatabase() {
         if (currentGame == null) return;
@@ -1999,15 +2149,11 @@ public class GameActivity extends Activity implements PlayerSelectionModal.Playe
             currentGame.setGameClockSeconds(gameTimeSeconds);
             currentGame.setClockRunning(isClockRunning);
             
-            // Update scores from UI display
-            try {
-                String teamAScoreText = tvTeamAScore.getText().toString();
-                String teamBScoreText = tvTeamBScore.getText().toString();
-                currentGame.setHomeScore(extractScoreFromDisplay(teamAScoreText));
-                currentGame.setAwayScore(extractScoreFromDisplay(teamBScoreText));
-            } catch (Exception e) {
-                android.util.Log.w("GameActivity", "Could not extract scores for database save");
-            }
+            // ✅ CRITICAL FIX: DON'T overwrite scores from UI - they're already set correctly by event recording!
+            // The scores were already updated correctly in recordScoringEvent() via currentGame.setHomeScore()
+            // Reading from UI and overwriting causes a race condition where stale UI values destroy correct scores
+            android.util.Log.d("GameActivity", String.format("💾 PRESERVING SCORES: HOME=%d, AWAY=%d (already set by event recording)", 
+                currentGame.getHomeScore(), currentGame.getAwayScore()));
             
             // Save to database
             long result = currentGame.save(dbController.getDatabaseHelper());
