@@ -109,3 +109,5 @@ ehthumbs.db
 
 # Gradle Wrapper (comment out if you want to track the wrapper)
 # gradle/wrapper/gradle-wrapper.jar
+# Keep keystore file but exclude sensitive password files
+keystore.properties

@@ -20,9 +20,19 @@ android {
         // testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        release {
+            storeFile file('../basketball-stats-release.keystore')
+            storePassword 'basketballstats123'
+            keyAlias 'basketball-stats'
+            keyPassword 'basketballstats123'
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
+            signingConfig signingConfigs.release
             // TODO: Configure ProGuard if needed for release builds
             // proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }

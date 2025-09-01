@@ -27,19 +27,19 @@ jobs:
           # space-separated list prevents parsing error
           packages: "platform-tools platforms;android-34 build-tools;34.0.0"
 
-      - name: Build debug APK
+      - name: Build release APK
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon clean assembleDebug
+          ./gradlew --no-daemon clean assembleRelease
       
       - name: Check APK was built
         run: |
-          ls -la app/build/outputs/apk/debug/
-          file app/build/outputs/apk/debug/app-debug.apk
+          ls -la app/build/outputs/apk/release/
+          file app/build/outputs/apk/release/app-release.apk
       
       - name: Rename APK for release
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk basketball-stats-v1.0.${{ github.run_number }}.apk
+          cp app/build/outputs/apk/release/app-release.apk basketball-stats-v1.0.${{ github.run_number }}.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -47,12 +47,19 @@ jobs:
           tag_name: v1.0.${{ github.run_number }}
           name: Basketball Stats v1.0.${{ github.run_number }}
           body: |
-            🏀 Basketball Statistics App - Debug Build
+            🏀 Basketball Statistics App - Release Build
+            
+            **Features:**
+            - Complete basketball statistics recording (13+ events)
+            - Live game tracking with timer and scoring
+            - Team and player management
+            - Event log with edit/delete functionality
+            - Firebase authentication and cloud sync
             
             **Installation Instructions:**
             1. Download the APK file below
             2. Enable "Install from unknown sources" in your Android settings
-            3. Install and enjoy!
+            3. Install and enjoy recording basketball stats!
             
             Built from commit: ${{ github.sha }}
           files: basketball-stats-v1.0.${{ github.run_number }}.apk
